@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import type { TagEntry, Conflit } from '../hooks/useRevue';
+import { useLangue } from '../i18n/context';
 
 interface PseudoTableauProps {
   tags: TagEntry[];
@@ -38,6 +39,7 @@ export function PseudoTableau({
   onRetirerValeur,
   onAjouterTag,
 }: PseudoTableauProps) {
+  const { t } = useLangue();
   const [editionTag, setEditionTag] = useState<string | null>(null);
   const [nouveauNom, setNouveauNom] = useState('');
   const [nouvelleValeur, setNouvelleValeur] = useState('');
@@ -57,14 +59,14 @@ export function PseudoTableau({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>
-        Pseudos ({tags.length})
+        {t('tableau.titre', tags.length)}
       </h3>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--couleur-bordure)' }}>
-            <th style={{ textAlign: 'left', padding: 'var(--espacement-sm)', fontWeight: 600 }}>Tag</th>
-            <th style={{ textAlign: 'left', padding: 'var(--espacement-sm)', fontWeight: 600 }}>Valeurs</th>
+            <th style={{ textAlign: 'left', padding: 'var(--espacement-sm)', fontWeight: 600 }}>{t('tableau.enTete.tag')}</th>
+            <th style={{ textAlign: 'left', padding: 'var(--espacement-sm)', fontWeight: 600 }}>{t('tableau.enTete.valeurs')}</th>
             <th style={{ textAlign: 'right', padding: 'var(--espacement-sm)', fontWeight: 600 }}></th>
           </tr>
         </thead>
@@ -141,7 +143,7 @@ export function PseudoTableau({
               </td>
               <td style={{ padding: 'var(--espacement-sm)' }}>
                 {entry.valeurs.length === 0 ? (
-                  <span style={{ color: 'var(--couleur-texte-secondaire)', fontStyle: 'italic' }}>vide</span>
+                  <span style={{ color: 'var(--couleur-texte-secondaire)', fontStyle: 'italic' }}>{t('tableau.vide')}</span>
                 ) : (
                   <ul style={{ margin: 0, paddingLeft: 'var(--espacement-md)', listStyle: 'disc' }}>
                     {entry.valeurs.map((v, idx) => (
@@ -153,7 +155,7 @@ export function PseudoTableau({
                           e.dataTransfer.effectAllowed = 'move';
                         }}
                         onDragOver={(e) => {
-                          e.preventDefault(); // toujours autoriser le drop
+                          e.preventDefault();
                         }}
                         onDrop={(e) => {
                           e.preventDefault();
@@ -196,7 +198,7 @@ export function PseudoTableau({
                             fontSize: '0.75rem',
                             padding: 0,
                           }}
-                          title="Retirer"
+                          title={t('tableau.tooltip.retirer')}
                         >
                           ✕
                         </button>
@@ -215,7 +217,7 @@ export function PseudoTableau({
                     marginTop: entry.valeurs.length > 0 ? 'var(--espacement-xs)' : 0,
                     padding: 0,
                   }}
-                  title="Ajouter une valeur"
+                  title={t('tableau.tooltip.ajouterValeur')}
                 >
                   ➕
                 </button>
@@ -234,7 +236,7 @@ export function PseudoTableau({
                           setNouvelleValeur('');
                         }
                       }}
-                      placeholder="Nouvelle valeur…"
+                      placeholder={t('tableau.placeholder.nouvelleValeur')}
                       autoFocus
                       onClick={e => e.stopPropagation()}
                       style={{ flex: 1, fontSize: '0.8rem' }}
@@ -246,7 +248,7 @@ export function PseudoTableau({
                 <button
                   onClick={e => { e.stopPropagation(); onSupprimer(entry.tag); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--couleur-erreur)', fontSize: '0.8rem' }}
-                  title="Supprimer"
+                  title={t('tableau.tooltip.supprimer')}
                 >
                   🗑
                 </button>
@@ -261,13 +263,13 @@ export function PseudoTableau({
           <input
             value={typeAjout}
             onChange={e => setTypeAjout(e.target.value.toUpperCase())}
-            placeholder="Type (ex: PERSONNE)"
+            placeholder={t('tableau.placeholder.type')}
             style={{ flex: 1, fontSize: '0.8rem' }}
           />
           <input
             value={valeurAjout}
             onChange={e => setValeurAjout(e.target.value)}
-            placeholder="Valeur"
+            placeholder={t('tableau.placeholder.valeur')}
             style={{ flex: 1, fontSize: '0.8rem' }}
           />
           <button
@@ -289,13 +291,13 @@ export function PseudoTableau({
               fontSize: '0.8rem',
             }}
           >
-            Ajouter
+            {t('tableau.bouton.ajouter')}
           </button>
           <button
             onClick={() => setShowAjoutManuel(false)}
             style={{ padding: '4px 8px', background: 'none', border: '1px solid var(--couleur-bordure)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
           >
-            Annuler
+            {t('tableau.bouton.annuler')}
           </button>
         </div>
       ) : (
@@ -311,7 +313,7 @@ export function PseudoTableau({
             fontSize: '0.875rem',
           }}
         >
-          + Ajouter un pseudo
+          {t('tableau.bouton.ajouterPseudo')}
         </button>
       )}
     </div>

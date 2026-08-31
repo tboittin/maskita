@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { PseudoTableau } from './PseudoTableau';
+import { renderAvecI18n } from '../test/renderAvecI18n';
 
 const TAGS = [
   { tag: '[EMAIL]', valeurs: ['test@exemple.fr'], estNouveau: false },
@@ -30,36 +31,36 @@ describe('PseudoTableau', () => {
   };
 
   it('affiche les tags', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('[TEL]').length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche les valeurs', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     expect(screen.getByText('test@exemple.fr')).toBeInTheDocument();
     expect(screen.getByText('0612345678')).toBeInTheDocument();
   });
 
   it('affiche "vide" pour un tag sans valeur', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     const vides = screen.getAllByText('vide');
     expect(vides.length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche les conflits', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     expect(screen.getByText(/existe aussi dans/)).toBeInTheDocument();
   });
 
   it('affiche le bouton + Ajouter un pseudo', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     const boutons = screen.getAllByText('+ Ajouter un pseudo');
     expect(boutons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('ouvre le formulaire au clic sur Ajouter un pseudo', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     const boutons = screen.getAllByText('+ Ajouter un pseudo');
     fireEvent.click(boutons[0]);
     expect(screen.getAllByPlaceholderText('Type (ex: PERSONNE)').length).toBeGreaterThanOrEqual(1);
@@ -68,7 +69,7 @@ describe('PseudoTableau', () => {
 
   it('appelle onAjouterTag avec les valeurs saisies', () => {
     const onAjouterTag = vi.fn();
-    render(<PseudoTableau {...props} onAjouterTag={onAjouterTag} />);
+    renderAvecI18n(<PseudoTableau {...props} onAjouterTag={onAjouterTag} />);
 
     const boutons = screen.getAllByText('+ Ajouter un pseudo');
     fireEvent.click(boutons[0]);
@@ -85,7 +86,7 @@ describe('PseudoTableau', () => {
   });
 
   it('annule le formulaire d\'ajout manuel', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     const boutons = screen.getAllByText('+ Ajouter un pseudo');
     fireEvent.click(boutons[0]);
     fireEvent.click(screen.getByText('Annuler'));
@@ -94,7 +95,7 @@ describe('PseudoTableau', () => {
 
   it('appelle onSupprimer au clic sur 🗑', () => {
     const onSupprimer = vi.fn();
-    render(<PseudoTableau {...props} onSupprimer={onSupprimer} />);
+    renderAvecI18n(<PseudoTableau {...props} onSupprimer={onSupprimer} />);
     const poubelles = screen.getAllByTitle('Supprimer');
     fireEvent.click(poubelles[0]);
     expect(onSupprimer).toHaveBeenCalledWith('[EMAIL]');
@@ -102,14 +103,14 @@ describe('PseudoTableau', () => {
 
   it('appelle onRetirerValeur au clic sur ✕', () => {
     const onRetirerValeur = vi.fn();
-    render(<PseudoTableau {...props} onRetirerValeur={onRetirerValeur} />);
+    renderAvecI18n(<PseudoTableau {...props} onRetirerValeur={onRetirerValeur} />);
     const retirerBtns = screen.getAllByTitle('Retirer');
     fireEvent.click(retirerBtns[0]);
     expect(onRetirerValeur).toHaveBeenCalledWith('[EMAIL]', 'test@exemple.fr');
   });
 
   it('ouvre l\'input d\'ajout de valeur au clic sur +valeur', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     const plusValeurs = screen.getAllByTitle('Ajouter une valeur');
     fireEvent.click(plusValeurs[0]);
     expect(screen.getByPlaceholderText('Nouvelle valeur…')).toBeInTheDocument();
@@ -117,7 +118,7 @@ describe('PseudoTableau', () => {
 
   it('appelle onAjouterValeur avec Enter dans l\'input', () => {
     const onAjouterValeur = vi.fn();
-    render(<PseudoTableau {...props} onAjouterValeur={onAjouterValeur} />);
+    renderAvecI18n(<PseudoTableau {...props} onAjouterValeur={onAjouterValeur} />);
     fireEvent.click(screen.getAllByTitle('Ajouter une valeur')[0]);
     const inputNouveau = screen.getByPlaceholderText('Nouvelle valeur…');
     fireEvent.change(inputNouveau, { target: { value: 'nouveau@email.fr' } });
@@ -126,7 +127,7 @@ describe('PseudoTableau', () => {
   });
 
   it('ferme l\'input d\'ajout de valeur avec Escape', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     fireEvent.click(screen.getAllByTitle('Ajouter une valeur')[0]);
     const inputNouveau = screen.getByPlaceholderText('Nouvelle valeur…');
     fireEvent.keyDown(inputNouveau, { key: 'Escape' });
@@ -135,13 +136,13 @@ describe('PseudoTableau', () => {
 
   it('appelle onTagClick au clic sur une ligne', () => {
     const onTagClick = vi.fn();
-    render(<PseudoTableau {...props} onTagClick={onTagClick} />);
+    renderAvecI18n(<PseudoTableau {...props} onTagClick={onTagClick} />);
     fireEvent.click(screen.getByText('[EMAIL]'));
     expect(onTagClick).toHaveBeenCalledWith('[EMAIL]');
   });
 
   it('ouvre l\'édition du tag au double-clic', () => {
-    render(<PseudoTableau {...props} />);
+    renderAvecI18n(<PseudoTableau {...props} />);
     fireEvent.doubleClick(screen.getByText('[EMAIL]'));
     const inputs = screen.getAllByDisplayValue('[EMAIL]');
     expect(inputs.length).toBeGreaterThanOrEqual(1);
@@ -149,7 +150,7 @@ describe('PseudoTableau', () => {
 
   it('renomme le tag avec Enter', () => {
     const onRenommer = vi.fn();
-    render(<PseudoTableau {...props} onRenommer={onRenommer} />);
+    renderAvecI18n(<PseudoTableau {...props} onRenommer={onRenommer} />);
     fireEvent.doubleClick(screen.getByText('[EMAIL]'));
     const input = screen.getByDisplayValue('[EMAIL]');
     fireEvent.change(input, { target: { value: '[EMAIL_MODIFIE]' } });
@@ -159,7 +160,7 @@ describe('PseudoTableau', () => {
 
   it('annule le renommage avec Escape', () => {
     const onRenommer = vi.fn();
-    render(<PseudoTableau {...props} onRenommer={onRenommer} />);
+    renderAvecI18n(<PseudoTableau {...props} onRenommer={onRenommer} />);
     fireEvent.doubleClick(screen.getByText('[EMAIL]'));
     const input = screen.getByDisplayValue('[EMAIL]');
     fireEvent.keyDown(input, { key: 'Escape' });
@@ -168,7 +169,7 @@ describe('PseudoTableau', () => {
 
   it('annule le renommage au blur si vide', () => {
     const onRenommer = vi.fn();
-    render(<PseudoTableau {...props} onRenommer={onRenommer} />);
+    renderAvecI18n(<PseudoTableau {...props} onRenommer={onRenommer} />);
     fireEvent.doubleClick(screen.getByText('[EMAIL]'));
     const input = screen.getByDisplayValue('[EMAIL]');
     fireEvent.change(input, { target: { value: '' } });

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { EcranRestauration } from './EcranRestauration';
+import { renderAvecI18n } from '../test/renderAvecI18n';
 import * as mammoth from 'mammoth';
 import { buildDocument } from '../utils/buildDocument';
 
@@ -24,7 +25,7 @@ describe('EcranRestauration', () => {
   });
 
   it('affiche les deux zones de dépôt', () => {
-    render(<EcranRestauration />);
+    renderAvecI18n(<EcranRestauration />);
     expect(screen.getByText(/Rapport modifié/)).toBeInTheDocument();
     expect(screen.getByText(/Clé .key.json correspondante/)).toBeInTheDocument();
   });
@@ -35,7 +36,7 @@ describe('EcranRestauration', () => {
       messages: [],
     });
 
-    render(<EcranRestauration />);
+    renderAvecI18n(<EcranRestauration />);
 
     const inputs = screen.getAllByTestId('input-fichier');
 
@@ -72,7 +73,7 @@ describe('EcranRestauration', () => {
       messages: [],
     });
 
-    render(<EcranRestauration />);
+    renderAvecI18n(<EcranRestauration />);
 
     const inputs = screen.getAllByTestId('input-fichier');
 
@@ -109,7 +110,7 @@ describe('EcranRestauration', () => {
       messages: [],
     });
 
-    render(<EcranRestauration />);
+    renderAvecI18n(<EcranRestauration />);
 
     const inputs = screen.getAllByTestId('input-fichier');
 

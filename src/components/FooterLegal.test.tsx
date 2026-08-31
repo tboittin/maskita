@@ -1,21 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { FooterLegal } from './FooterLegal';
+import { renderAvecI18n } from '../test/renderAvecI18n';
 
 describe('FooterLegal', () => {
   it('affiche le bouton "Mentions légales"', () => {
-    render(<FooterLegal />);
+    renderAvecI18n(<FooterLegal />);
     expect(screen.getByText('Mentions légales')).toBeInTheDocument();
   });
 
   it('ouvre la popup au clic sur le bouton', () => {
-    render(<FooterLegal />);
+    renderAvecI18n(<FooterLegal />);
     fireEvent.click(screen.getByText('Mentions légales'));
     expect(screen.getByRole('dialog', { name: 'Mentions légales' })).toBeInTheDocument();
   });
 
   it('affiche les sections avec les données du fichier legal.json', () => {
-      render(<FooterLegal />);
+      renderAvecI18n(<FooterLegal />);
       fireEvent.click(screen.getByText('Mentions légales'));
 
       expect(screen.getByText('Éditeur')).toBeInTheDocument();
@@ -28,7 +29,7 @@ describe('FooterLegal', () => {
     });
 
   it('ferme la popup au clic sur "Fermer"', () => {
-    render(<FooterLegal />);
+    renderAvecI18n(<FooterLegal />);
     fireEvent.click(screen.getByText('Mentions légales'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
@@ -37,7 +38,7 @@ describe('FooterLegal', () => {
   });
 
   it('ferme la popup au clic sur l\'overlay', () => {
-    render(<FooterLegal />);
+    renderAvecI18n(<FooterLegal />);
     fireEvent.click(screen.getByText('Mentions légales'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 

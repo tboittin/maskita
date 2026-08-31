@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import legal from '../legal.json';
+import { useLangue } from '../i18n/context';
 
 const styleOverlay: React.CSSProperties = {
   position: 'fixed',
@@ -29,6 +30,7 @@ const styleFooter: React.CSSProperties = {
 };
 
 export function FooterLegal() {
+  const { t } = useLangue();
   const [ouvert, setOuvert] = useState(false);
 
   return (
@@ -44,7 +46,7 @@ export function FooterLegal() {
             cursor: 'pointer',
           }}
         >
-          Mentions légales
+          {t('footer.mentions')}
         </button>
       </footer>
 
@@ -52,7 +54,7 @@ export function FooterLegal() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Mentions légales"
+          aria-label={t('footer.titre')}
           style={styleOverlay}
           onClick={() => setOuvert(false)}
         >
@@ -65,7 +67,7 @@ export function FooterLegal() {
                 color: 'var(--couleur-texte)',
               }}
             >
-              Mentions légales
+              {t('footer.titre')}
             </h3>
 
             <div
@@ -80,7 +82,7 @@ export function FooterLegal() {
             >
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  Éditeur
+                  {t('footer.editeur')}
                 </h4>
                 <p>{legal.editorName}</p>
                 <p>{legal.adress}</p>
@@ -89,28 +91,28 @@ export function FooterLegal() {
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  Hébergement
+                  {t('footer.hebergement')}
                 </h4>
                 <p>{legal.provider}</p>
               </section>
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  Protection des données
+                  {t('footer.donnees')}
                 </h4>
                 <p>{legal.privacy}</p>
               </section>
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  Propriété intellectuelle
+                  {t('footer.propriete')}
                 </h4>
                 <p>{legal.intellectualProperty}</p>
               </section>
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  Responsabilité
+                  {t('footer.responsabilite')}
                 </h4>
                 <p>{legal.liability}</p>
               </section>
@@ -130,7 +132,7 @@ export function FooterLegal() {
                 fontSize: '0.875rem',
               }}
             >
-              Fermer
+              {t('footer.fermer')}
             </button>
           </div>
         </div>

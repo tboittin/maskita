@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { FileDropZone } from './FileDropZone';
+import { renderAvecI18n } from '../test/renderAvecI18n';
 
 function creerFichierMock(nom = 'rapport.docx'): File {
   return new File(['contenu'], nom, {
@@ -11,14 +12,14 @@ function creerFichierMock(nom = 'rapport.docx'): File {
 describe('FileDropZone', () => {
   it('affiche le message par défaut', () => {
     const onFichierChoisi = vi.fn();
-    render(<FileDropZone onFichierChoisi={onFichierChoisi} />);
+    renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
     expect(screen.getByText(/glisser-déposer.*\.docx/i)).toBeInTheDocument();
   });
 
   it('affiche le nom du fichier courant', () => {
     const onFichierChoisi = vi.fn();
-    render(
+    renderAvecI18n(
       <FileDropZone onFichierChoisi={onFichierChoisi} fichierCourant="mon-rapport.docx" />,
     );
 
@@ -27,7 +28,7 @@ describe('FileDropZone', () => {
 
   it('affiche une erreur', () => {
     const onFichierChoisi = vi.fn();
-    render(
+    renderAvecI18n(
       <FileDropZone onFichierChoisi={onFichierChoisi} erreur="Format invalide" />,
     );
 
@@ -36,14 +37,14 @@ describe('FileDropZone', () => {
 
   it('affiche un état de chargement', () => {
     const onFichierChoisi = vi.fn();
-    render(<FileDropZone onFichierChoisi={onFichierChoisi} chargement />);
+    renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} chargement />);
 
     expect(screen.getByText(/extraction en cours/i)).toBeInTheDocument();
   });
 
   it('appelle onFichierChoisi quand on sélectionne un fichier', () => {
     const onFichierChoisi = vi.fn();
-    render(<FileDropZone onFichierChoisi={onFichierChoisi} />);
+    renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
     const input = screen.getByTestId('input-fichier') as HTMLInputElement;
     const fichier = creerFichierMock();
@@ -56,7 +57,7 @@ describe('FileDropZone', () => {
 
   it('change de style au drag over', () => {
     const onFichierChoisi = vi.fn();
-    const { container } = render(
+    const { container } = renderAvecI18n(
       <FileDropZone onFichierChoisi={onFichierChoisi} />,
     );
 
@@ -72,7 +73,7 @@ describe('FileDropZone', () => {
 
   it('appelle onFichierChoisi au drop', () => {
     const onFichierChoisi = vi.fn();
-    const { container } = render(
+    const { container } = renderAvecI18n(
       <FileDropZone onFichierChoisi={onFichierChoisi} />,
     );
 
@@ -86,7 +87,7 @@ describe('FileDropZone', () => {
 
   it('contient un input fichier avec accept .docx', () => {
     const onFichierChoisi = vi.fn();
-    render(<FileDropZone onFichierChoisi={onFichierChoisi} />);
+    renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
     const input = screen.getByTestId('input-fichier') as HTMLInputElement;
 

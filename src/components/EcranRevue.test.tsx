@@ -1,35 +1,36 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { EcranRevue } from './EcranRevue';
+import { renderAvecI18n } from '../test/renderAvecI18n';
 
 const TEXTE = 'Contact : test@exemple.fr ou 0612345678';
 const MAPPING = { '[EMAIL]': ['test@exemple.fr'] };
 
 describe('EcranRevue', () => {
   it('affiche le tableau des tags', () => {
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
     expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche le texte pseudonymisé', () => {
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
     expect(screen.getByText(/Texte pseudonymisé/)).toBeInTheDocument();
     expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
   });
 
   it('affiche le texte lisible', () => {
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
     expect(screen.getByText(/Texte lisible/)).toBeInTheDocument();
   });
 
   it('affiche le bouton Valider', () => {
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
     expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
   });
 
   it('appelle onValider au clic sur le bouton (mapping inchangé)', () => {
     const onValider = vi.fn();
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={onValider} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={onValider} />);
 
     fireEvent.click(screen.getByText('Valider et télécharger'));
 
@@ -42,7 +43,7 @@ describe('EcranRevue', () => {
 
   it('affiche une popup si mapping modifié', () => {
     const onValider = vi.fn();
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={{}} onValider={onValider} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={{}} onValider={onValider} />);
 
     // Ajouter une valeur pour modifier le mapping
     fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
@@ -63,7 +64,7 @@ describe('EcranRevue', () => {
 
   it('appelle onValider après avoir cliqué Continuer dans la popup', () => {
     const onValider = vi.fn();
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={{}} onValider={onValider} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={{}} onValider={onValider} />);
 
     // Ajouter une valeur pour modifier le mapping
     fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
@@ -82,7 +83,7 @@ describe('EcranRevue', () => {
 
   it('relance l\'analyse au clic sur Relancer dans la popup', () => {
     const onValider = vi.fn();
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={{}} onValider={onValider} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={{}} onValider={onValider} />);
 
     // Ajouter une valeur pour modifier le mapping
     fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
@@ -103,7 +104,7 @@ describe('EcranRevue', () => {
   });
 
   it('affiche le bouton + Ajouter un pseudo', () => {
-    render(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+    renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
     expect(screen.getByText('+ Ajouter un pseudo')).toBeInTheDocument();
   });
 });

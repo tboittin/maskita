@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type DragEvent, type ChangeEvent } from 'react';
+import { useLangue } from '../i18n/context';
 
 interface FileDropZoneProps {
   onFichierChoisi: (fichier: File) => void;
@@ -17,6 +18,7 @@ export function FileDropZone({
   accept = '.docx',
   libelle = accept ?? '.docx',
 }: FileDropZoneProps) {
+  const { t } = useLangue();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -70,7 +72,7 @@ export function FileDropZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      aria-label={`Zone de dépôt de fichier ${libelle}`}
+      aria-label={t('dropzone.ariaLabel', libelle)}
       style={{
         display: 'block',
         border: `2px dashed ${dragOver ? 'var(--couleur-primaire)' : erreur ? 'var(--couleur-erreur)' : 'var(--couleur-bordure)'}`,
@@ -94,10 +96,10 @@ export function FileDropZone({
       {chargement ? (
         <div>
           <p style={{ fontWeight: 600, color: 'var(--couleur-primaire)' }}>
-            Extraction en cours…
+            {t('dropzone.chargement')}
           </p>
           <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            Veuillez patienter
+            {t('dropzone.patienter')}
           </p>
         </div>
       ) : fichierCourant ? (
@@ -106,16 +108,16 @@ export function FileDropZone({
             {fichierCourant}
           </p>
           <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            Cliquer ou glisser-déposer pour changer de fichier
+            {t('dropzone.changer')}
           </p>
         </div>
       ) : (
         <div>
           <p style={{ fontWeight: 600, color: 'var(--couleur-texte)' }}>
-            Glisser-déposer un fichier {libelle} ici
+            {t('dropzone.deposer', libelle)}
           </p>
           <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            ou cliquer pour parcourir
+            {t('dropzone.ouCliquer')}
           </p>
         </div>
       )}

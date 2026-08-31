@@ -3,6 +3,7 @@ import { PseudoTableau } from './PseudoTableau';
 import { TexteApercu } from './TexteApercu';
 import { PopupConfirmation } from './PopupConfirmation';
 import { useRevue } from '../hooks/useRevue';
+import { useLangue } from '../i18n/context';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRevueProps {
@@ -16,6 +17,7 @@ export function EcranRevue({
   mappingInitial,
   onValider,
 }: EcranRevueProps) {
+  const { t } = useLangue();
   const revue = useRevue(texteOriginal, mappingInitial);
   const [popupOuverte, setPopupOuverte] = useState(false);
   const [syncScroll, setSyncScroll] = useState(true);
@@ -230,8 +232,8 @@ export function EcranRevue({
     : null;
 
   const pickerTitre = pickerPayload?.tagSource
-    ? `Déplacer « ${pickerPayload.valeur} » vers quel tag ?`
-    : 'Ajouter à quel tag ?';
+    ? t('revue.picker.titre.deplacer', pickerPayload.valeur)
+    : t('revue.picker.titre.ajouter');
 
   const valeurSelectionnee = revue.valeurSurbrillance
     ? { tag: revue.tagSurbrillance!, valeur: revue.valeurSurbrillance }
@@ -273,7 +275,7 @@ export function EcranRevue({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)', position: 'relative' }}>
           <div style={{ position: 'relative' }}>
             <TexteApercu
-              titre="Texte pseudonymisé"
+              titre={t('revue.titre.pseudo')}
               texte={revue.textePseudonymise}
               mapping={revue.mappingFinal}
               tagSurbrillance={revue.tagSurbrillance}
@@ -289,14 +291,14 @@ export function EcranRevue({
                 display: 'flex', gap: 'var(--espacement-xs)',
                 padding: 'var(--espacement-sm)', zIndex: 10,
               }}>
-                <BoutonAction label="Nouveau tag" onClick={handleNouveauTag} />
-                <BoutonAction label="Nouvelle valeur" onClick={handleNouvelleValeur} />
+                <BoutonAction label={t('revue.bouton.nouveauTag')} onClick={handleNouveauTag} />
+                <BoutonAction label={t('revue.bouton.nouvelleValeur')} onClick={handleNouvelleValeur} />
               </div>
             )}
           </div>
           <div style={{ position: 'relative' }}>
             <TexteApercu
-              titre="Texte lisible"
+              titre={t('revue.titre.lisible')}
               texte={texteOriginal}
               mapping={revue.mappingFinal}
               tagSurbrillance={revue.tagSurbrillance}
@@ -313,8 +315,8 @@ export function EcranRevue({
                 display: 'flex', gap: 'var(--espacement-xs)',
                 padding: 'var(--espacement-sm)', zIndex: 10,
               }}>
-                <BoutonAction label="Nouveau tag" onClick={handleNouveauTag} />
-                <BoutonAction label="Nouvelle valeur" onClick={handleNouvelleValeur} />
+                <BoutonAction label={t('revue.bouton.nouveauTag')} onClick={handleNouveauTag} />
+                <BoutonAction label={t('revue.bouton.nouvelleValeur')} onClick={handleNouvelleValeur} />
               </div>
             )}
           </div>
@@ -339,7 +341,7 @@ export function EcranRevue({
               gap: '4px',
             }}
           >
-            📦 Déplacer « {valeurSelectionnee.valeur} »
+            {t('revue.bouton.deplacer', valeurSelectionnee.valeur)}
           </button>
         </div>
       )}
@@ -347,8 +349,8 @@ export function EcranRevue({
       {/* Barre d'outils */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 'var(--espacement-md)', alignItems: 'center' }}>
-          <CheckboxInput checked={syncScroll} onChange={setSyncScroll} label="Scroll synchronisé" />
-          <CheckboxInput checked={recentrer} onChange={setRecentrer} label="Recentrer auto" />
+          <CheckboxInput checked={syncScroll} onChange={setSyncScroll} label={t('revue.checkbox.sync')} />
+          <CheckboxInput checked={recentrer} onChange={setRecentrer} label={t('revue.checkbox.recentrer')} />
         </div>
         <button onClick={handleClicValider} style={{
           padding: 'var(--espacement-sm) var(--espacement-lg)',
@@ -356,7 +358,7 @@ export function EcranRevue({
           border: 'none', borderRadius: 'var(--rayon-bordure)',
           cursor: 'pointer', fontWeight: 600, fontSize: '1rem',
         }}>
-          Valider et télécharger
+          {t('revue.bouton.valider')}
         </button>
       </div>
 
@@ -375,11 +377,11 @@ export function EcranRevue({
               {pickerTitre}
             </h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-md)' }}>
-              Valeur : <strong>{pickerPayload.valeur}</strong>
+              {t('revue.picker.valeur', pickerPayload.valeur)}
             </p>
             <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)' }}>
               {tagsExistants
-                .filter(t => t !== pickerPayload.tagSource) // ne pas proposer le tag source
+                .filter(t => t !== pickerPayload.tagSource)
                 .map((tag) => (
                   <button key={tag} onClick={() => handlePickerSelect(tag)}
                     style={{
@@ -392,7 +394,7 @@ export function EcranRevue({
                 ))}
               {tagsExistants.filter(t => t !== pickerPayload.tagSource).length === 0 && (
                 <p style={{ color: 'var(--couleur-texte-secondaire)', fontStyle: 'italic', fontSize: '0.875rem' }}>
-                  Aucun autre tag disponible.
+                  {t('revue.picker.aucun')}
                 </p>
               )}
             </div>
@@ -402,7 +404,7 @@ export function EcranRevue({
                 background: 'none', border: '1px solid var(--couleur-bordure)',
                 borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
                 color: 'var(--couleur-texte-secondaire)', fontSize: '0.875rem',
-              }}>Annuler</button>
+              }}>{t('revue.picker.annuler')}</button>
             </div>
           </div>
         </div>
@@ -420,21 +422,21 @@ export function EcranRevue({
             boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
           }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte)' }}>
-              Vider le tag ?
+              {t('revue.supprimer.titre')}
             </h3>
             <p style={{ fontSize: '0.9375rem', color: 'var(--couleur-texte-secondaire)', lineHeight: 1.6, marginBottom: 'var(--espacement-md)' }}>
-              Êtes-vous sûr de vouloir vider les valeurs de <strong>{supprimerTag}</strong> ?
+              {t('revue.supprimer.message', supprimerTag)}
             </p>
             {tagSupprime.valeurs.length > 0 && (
               <div style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-md)' }}>
-                <p style={{ marginBottom: 'var(--espacement-xs)' }}>Valeurs qui seront supprimées :</p>
+                <p style={{ marginBottom: 'var(--espacement-xs)' }}>{t('revue.supprimer.valeurs')}</p>
                 <ul style={{ margin: 0, paddingLeft: 'var(--espacement-md)' }}>
                   {tagSupprime.valeurs.map(v => <li key={v}>{v}</li>)}
                 </ul>
               </div>
             )}
             <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-lg)', fontStyle: 'italic' }}>
-              Le tag restera visible mais vide. Vous pourrez y ajouter des valeurs plus tard.
+              {t('revue.supprimer.note')}
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--espacement-sm)' }}>
               <button onClick={handleAnnulerSuppression} style={{
@@ -442,13 +444,13 @@ export function EcranRevue({
                 background: 'none', border: '1px solid var(--couleur-bordure)',
                 borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
                 color: 'var(--couleur-texte-secondaire)', fontSize: '0.875rem',
-              }}>Annuler</button>
+              }}>{t('revue.supprimer.annuler')}</button>
               <button onClick={handleConfirmerSuppression} style={{
                 padding: 'var(--espacement-sm) var(--espacement-md)',
                 background: 'var(--couleur-erreur)', color: 'white',
                 border: 'none', borderRadius: 'var(--rayon-bordure)',
                 cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
-              }}>Vider</button>
+              }}>{t('revue.supprimer.confirmer')}</button>
             </div>
           </div>
         </div>
@@ -456,10 +458,10 @@ export function EcranRevue({
 
       {popupOuverte && (
         <PopupConfirmation
-          titre="Modifications détectées"
-          message="Vous avez modifié le mapping. Voulez-vous relancer l'analyse depuis le rapport d'origine, ou continuer avec les données actuelles ?"
-          boutonConfirmer="Continuer"
-          boutonAnnuler="Relancer l'analyse"
+          titre={t('revue.modifs.titre')}
+          message={t('revue.modifs.message')}
+          boutonConfirmer={t('revue.modifs.confirmer')}
+          boutonAnnuler={t('revue.modifs.relancer')}
           onConfirmer={handleContinuer}
           onAnnuler={handleRelancer}
         />

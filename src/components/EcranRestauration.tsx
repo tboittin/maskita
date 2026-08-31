@@ -5,9 +5,11 @@ import { buildDocument } from '../utils/buildDocument';
 import { declencherTelechargement } from '../utils/telechargement';
 import { PopupConfirmation } from './PopupConfirmation';
 import { nomContientValeursMapping } from '../utils/mapping';
+import { useLangue } from '../i18n/context';
 import type { Mapping } from '../utils/mapping';
 
 export function EcranRestauration() {
+  const { t } = useLangue();
   const {
     texteRestauré,
     chargement,
@@ -59,7 +61,7 @@ export function EcranRestauration() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div>
         <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
-          Rapport modifié (avec des tags)
+          {t('restauration.titre.rapport')}
         </h3>
         <FileDropZone
           onFichierChoisi={handleDocxChoisi}
@@ -72,7 +74,7 @@ export function EcranRestauration() {
 
       <div>
         <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte-secondaire)' }}>
-          Clé .key.json correspondante <span style={{ fontWeight: 400 }}>(obligatoire)</span>
+          {t('restauration.titre.cle')} <span style={{ fontWeight: 400 }}>{t('restauration.obligatoire')}</span>
         </h3>
         <FileDropZone
           onFichierChoisi={handleCleChoisie}
@@ -92,7 +94,7 @@ export function EcranRestauration() {
           }}
         >
           <h4 style={{ fontSize: '0.875rem', fontWeight: 600, margin: '0 0 var(--espacement-sm) 0' }}>
-            Aperçu du texte restauré
+            {t('restauration.apercu')}
           </h4>
           <div
             style={{
@@ -127,7 +129,7 @@ export function EcranRestauration() {
               fontSize: '0.875rem',
             }}
           >
-            Recommencer
+            {t('restauration.bouton.recommencer')}
           </button>
           <button
             onClick={handleTelecharger}
@@ -142,17 +144,17 @@ export function EcranRestauration() {
               fontSize: '1rem',
             }}
           >
-            Télécharger le rapport restauré
+            {t('restauration.bouton.telecharger')}
           </button>
         </div>
       )}
 
       {warningNom && (
         <PopupConfirmation
-          titre="Nom de fichier sensible"
-          message={`Le nom du fichier source contient des données potentiellement identifiantes : ${warningNom.valeursSuspectes.join(', ')}.\n\nFichier concerné : ${warningNom.nomFichier}\n\nConseil : renommez le fichier source avant de le traiter pour éviter toute fuite via le nom du fichier téléchargé.\n\nVoulez-vous télécharger quand même ?`}
-          boutonConfirmer="Télécharger quand même"
-          boutonAnnuler="Annuler"
+          titre={t('app.warning.titre')}
+          message={t('app.warning.message', warningNom.valeursSuspectes.join(', '), warningNom.nomFichier)}
+          boutonConfirmer={t('app.warning.confirmer')}
+          boutonAnnuler={t('app.warning.annuler')}
           onConfirmer={() => {
             setWarningNom(null);
             executerTelechargement();

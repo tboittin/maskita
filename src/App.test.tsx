@@ -29,6 +29,7 @@ function creerCle(mapping: Record<string, string[]>, nom = 'key.json'): File {
 
 describe('App', () => {
   beforeEach(() => {
+    localStorage.setItem('maskita-langue', 'fr');
     vi.clearAllMocks();
     // jsdom n'implémente pas createObjectURL — on le mocke
     URL.createObjectURL = vi.fn(() => 'blob:http://localhost/test');

@@ -11,6 +11,7 @@ import { declencherTelechargement } from './utils/telechargement';
 import { FooterLegal } from './components/FooterLegal';
 import { PopupConfirmation } from './components/PopupConfirmation';
 import { nomContientValeursMapping } from './utils/mapping';
+import { I18nProvider, useLangue } from './i18n/context';
 
 type Onglet = 'anonymiser' | 'restaurer';
 type Etape = 'upload' | 'revue';
@@ -22,7 +23,8 @@ interface WarningDownload {
   valeursSuspectes: string[];
 }
 
-function App() {
+function AppInterieur() {
+  const { t, langue, basculer } = useLangue();
   const [onglet, setOnglet] = useState<Onglet>('anonymiser');
   const [messageSucces, setMessageSucces] = useState<string | null>(null);
   const {
@@ -35,6 +37,12 @@ function App() {
   const [mapping, setMapping] = useState<Mapping | null>(null);
   const [warningNom, setWarningNom] = useState<WarningDownload | null>(null);
   const [analysePrete, setAnalysePrete] = useState(false);
+
+  // Synchroniser l'attribut lang du document et le titre
+  useEffect(() => {
+    document.documentElement.lang = langue;
+    document.title = 'Maskita';
+  }, [langue]);
 
   const handleFichierChoisi = useCallback(
     async (file: File) => { await uploader(file); },
@@ -73,10 +81,10 @@ function App() {
       const blobCle = new Blob([contenuCle], { type: 'application/json' });
       declencherTelechargement(blobCle, `${nomBase}.key.json`);
 
-      setMessageSucces('Fichiers téléchargés avec succès ✓');
+      setMessageSucces(t('app.succes'));
       setTimeout(() => setMessageSucces(null), 5000);
     },
-    [fichier, extension],
+    [fichier, extension, t],
   );
 
   const handleValider = useCallback(
@@ -127,12 +135,32 @@ function App() {
           width: '100%',
         }}
       >
-        <header style={{ textAlign: 'center' }}>
+        <header style={{ textAlign: 'center', position: 'relative' }}>
+          <div style={{ position: 'absolute', right: 0, top: 0 }}>
+            <button
+              onClick={basculer}
+              title={langue === 'fr' ? 'Switch to English' : 'Passer en français'}
+              style={{
+                background: 'none',
+                border: '1px solid var(--couleur-bordure)',
+                borderRadius: 'var(--rayon-bordure)',
+                padding: '4px 10px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                color: 'var(--couleur-texte-secondaire)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              {langue === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR'}
+            </button>
+          </div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--couleur-texte)' }}>
-            Maskita
+            {t('app.titre')}
           </h1>
           <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            Pseudonymisation de documents — 100% dans le navigateur.
+            {t('app.sousTitre')}
           </p>
         </header>
 
@@ -174,7 +202,7 @@ function App() {
                 flexShrink: 0,
               }}
             >
-              {o === 'anonymiser' ? '🔒 Anonymiser' : '🔓 Restaurer'}
+              {t(`app.onglet.${o}`)}
             </button>
           ))}
         </nav>
@@ -201,7 +229,7 @@ function App() {
           <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
             <div>
               <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
-                Rapport (.docx, .txt, .md)
+                {t('app.section.rapport')}
               </h3>
               <FileDropZone
                 onFichierChoisi={handleFichierChoisi}
@@ -214,7 +242,7 @@ function App() {
 
             <div>
               <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte-secondaire)' }}>
-                Clé .key.json existante <span style={{ fontWeight: 400 }}>(optionnel)</span>
+                {t('app.section.cle')} <span style={{ fontWeight: 400 }}>({t('app.optionnel')})</span>
               </h3>
               <FileDropZone
                 onFichierChoisi={handleCleChoisie}
@@ -240,7 +268,7 @@ function App() {
                     marginTop: 'var(--espacement-sm)',
                   }}
                 >
-                  Lancer l'analyse
+                  {t('app.bouton.analyser')}
                 </button>
               </div>
             )}
@@ -267,7 +295,7 @@ function App() {
                   fontSize: '0.875rem',
                 }}
               >
-                ← Recommencer avec un autre fichier
+                {t('app.bouton.recommencer')}
               </button>
             </div>
           </section>
@@ -284,10 +312,10 @@ function App() {
 
       {warningNom && (
         <PopupConfirmation
-          titre="Nom de fichier sensible"
-          message={`Le nom du fichier source contient des données potentiellement identifiantes : ${warningNom.valeursSuspectes.join(', ')}.\n\nFichier concerné : ${warningNom.nomFichier}\n\nConseil : renommez le fichier source avant de le traiter pour éviter toute fuite via le nom du fichier téléchargé.\n\nVoulez-vous télécharger quand même ?`}
-          boutonConfirmer="Télécharger quand même"
-          boutonAnnuler="Annuler"
+          titre={t('app.warning.titre')}
+          message={t('app.warning.message', warningNom.valeursSuspectes.join(', '), warningNom.nomFichier)}
+          boutonConfirmer={t('app.warning.confirmer')}
+          boutonAnnuler={t('app.warning.annuler')}
           onConfirmer={() => {
             const w = warningNom;
             setWarningNom(null);
@@ -300,4 +328,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <I18nProvider>
+      <AppInterieur />
+    </I18nProvider>
+  );
+}
