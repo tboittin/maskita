@@ -82,6 +82,8 @@ export const en: Dictionnaire = {
   /* FooterLegal */
   'footer.mentions': 'Legal notice',
   'footer.titre': 'Legal notice',
+  'footer.github': 'Source code',
+  'footer.githubText': 'Open source — view the code on GitHub',
   'footer.editeur': 'Publisher',
   'footer.hebergement': 'Hosting',
   'footer.donnees': 'Data protection',

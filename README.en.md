@@ -21,6 +21,10 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+🔗 **Live version** : [maskita.vercel.app](https://maskita.vercel.app)
+
+📦 **Source code** : [github.com/tboittin/maskita](https://github.com/tboittin/maskita)
+
 ## Usage
 
 ### 1. Anonymise

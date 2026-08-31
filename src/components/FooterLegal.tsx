@@ -112,6 +112,22 @@ export function FooterLegal() {
 
               <section>
                 <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+                  {t('footer.github')}
+                </h4>
+                <p>
+                  <a
+                    href={legal.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--couleur-primaire)', textDecoration: 'underline' }}
+                  >
+                    {t('footer.githubText')}
+                  </a>
+                </p>
+              </section>
+
+              <section>
+                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
                   {t('footer.responsabilite')}
                 </h4>
                 <p>{legal.liability}</p>

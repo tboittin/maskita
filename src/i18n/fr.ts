@@ -80,6 +80,8 @@ export const fr = {
   /* FooterLegal */
   'footer.mentions': 'Mentions légales',
   'footer.titre': 'Mentions légales',
+  'footer.github': 'Code source',
+  'footer.githubText': 'Projet open source — accéder au code sur GitHub',
   'footer.editeur': 'Éditeur',
   'footer.hebergement': 'Hébergement',
   'footer.donnees': 'Protection des données',
