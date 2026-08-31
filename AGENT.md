@@ -4,7 +4,7 @@ Instructions pour l'agent travaillant sur ce projet.
 
 ## Contexte
 
-Maskita est un outil de pseudonymisation de rapports de psychologue (.docx)
+Maskita est un outil de pseudonymisation de rapports (.docx, .txt, .md).
 **100% dans le navigateur**. Aucun serveur, aucune donnée sortante.
 
 Voir `Spec.md` pour l'architecture complète, `Readme.md` pour la présentation.

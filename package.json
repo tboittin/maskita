@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Pseudonymisation de rapports de psychologue (.docx) — 100% dans le navigateur",
+  "description": "Pseudonymisation de rapports (.docx, .txt, .md) — 100% dans le navigateur",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

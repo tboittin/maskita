@@ -1,6 +1,6 @@
 # Maskita — Spec
 
-Outil de pseudonymisation de rapports de psychologue (.docx) **100% côté navigateur**.
+Outil de pseudonymisation de rapports (.docx, .txt, .md) **100% côté navigateur**.
 Aucun serveur, aucune donnée sortante, aucune installation Python ou LLM.
 
 ---
