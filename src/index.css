@@ -1,0 +1,60 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --couleur-primaire: #4f46e5;
+  --couleur-secondaire: #6366f1;
+  --couleur-fond: #f8fafc;
+  --couleur-surface: #ffffff;
+  --couleur-texte: #1e293b;
+  --couleur-texte-secondaire: #64748b;
+  --couleur-bordure: #e2e8f0;
+  --couleur-succes: #22c55e;
+  --couleur-erreur: #ef4444;
+  --couleur-avertissement: #f59e0b;
+  --rayon-bordure: 8px;
+  --espacement-xs: 4px;
+  --espacement-sm: 8px;
+  --espacement-md: 16px;
+  --espacement-lg: 24px;
+  --espacement-xl: 32px;
+  --police-principale: 'Inter', system-ui, -apple-system, sans-serif;
+  --police-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--police-principale);
+  color: var(--couleur-texte);
+  background: var(--couleur-fond);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--couleur-primaire);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}

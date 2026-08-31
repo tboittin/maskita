@@ -1,0 +1,21 @@
+#!/bin/bash
+# Pre-commit hook — bloque si les tests ne passent pas
+# Installé automatiquement par le projet NanoMask
+
+echo "🚀 Lancement des tests avant commit..."
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Utilise le chemin direct vers vitest (pnpm a des problèmes de résolution sur WSL)
+node node_modules/vitest/vitest.mjs run 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "❌ COMMIT BLOQUÉ : certains tests ont échoué."
+  echo "   Corrigez les tests avant de committer."
+  exit 1
+fi
+
+echo "✅ Tests OK, commit autorisé."
+exit 0

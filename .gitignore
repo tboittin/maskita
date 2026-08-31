@@ -1,0 +1,45 @@
+# Dépendances
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/settings.json
+.idea/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# TypeScript (fichiers générés par composite/emitDeclarationOnly)
+*.tsbuildinfo
+
+# rapports fictifs tests
+fixtures/
+
+# output des tests
+test-output.txt
+
+coverage/
+
+# Rétrospective projet
+EXPERIENCE.MD
+
+# Suivi de progression
+PROGRESS.MD
