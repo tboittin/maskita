@@ -1,305 +1,365 @@
 # DESIGN-SYSTEM.md — Maskita
 
-Design system du projet Maskita : tokens, composants, patterns d'interaction
-et règles d'accessibilité. Ce document décrit l'existant (ce qui est déjà en
-place dans le code) et fixe les conventions pour la suite.
+Design system **idéal** du projet Maskita.
+
+Ce document ne décrit pas l'existant : il exprime la **vision** — l'identité
+visuelle, les tokens, les composants et les comportements que Maskita mérite,
+en cohérence avec sa philosophie. L'état actuel du code est mentionné en
+"écart à combler" quand nécessaire, jamais comme contrainte.
 
 ---
 
-## 1. Principes directeurs
+## 1. Manifeste — la philosophie devient design
 
-1. **La confidentialité se voit.** Maskita traite tout dans le navigateur, zéro
-   donnée sortante. L'interface doit être sobre, lisible, sans chrome inutile :
-   elle inspire confiance par sa clarté.
-2. **Un seul bouton principal par écran.** À chaque étape, une action primaire
-   dominante ("Lancer l'analyse", "Valider et télécharger"). Le reste est
-   secondaire ou silencieux.
-3. **Densité maîtrisée.** Les rapports sont longs : on privilégie des panneaux
-   scrollables (maxHeight) plutôt que des pages interminables, et le texte reste
-   lisible (interligne 1.6–1.7).
-4. **Interaction directe.** Sélection de texte → actions inline ; glisser-déposer
-   partout où c'est naturel ; double-clic pour renommer. Pas de menus cachés.
-5. **Toujours un échappatoire.** Toute popup se ferme par le clic sur l'overlay
-   (sauf confirmation destructive), par Annuler/Escape, et le bouton principal
-   est toujours identifiable.
-6. **Français dans l'interface et le code** (projet FR), avec i18n FR/EN complet
-   pour les textes utilisateur.
+Maskita est un outil de pseudonymisation **100 % navigateur** : zéro serveur,
+zéro donnée sortante, zéro trace. Il manipule les documents les plus sensibles
+qui existent (rapports de psychologie, données de santé) et rend leur traitement
+par des LLM sûrs.
 
----
+Le design system découle de cette identité, mot par mot :
 
-## 2. Tokens de design
-
-Les tokens vivent dans `src/index.css` sous `:root`. Ils portent des noms
-français. **Aucune couleur, aucun espacement en dur dans les composants** :
-toujours passer par les variables.
-
-### 2.1 Couleurs
-
-| Token | Valeur | Usage |
-|---|---|---|
-| `--couleur-primaire` | `#4f46e5` (indigo) | Actions principales, liens, focus, onglet actif, drag-over fichier |
-| `--couleur-secondaire` | `#6366f1` | Variante interactive plus claire (à réserver) |
-| `--couleur-fond` | `#f8fafc` | Fond de page |
-| `--couleur-surface` | `#ffffff` | Cartes, panneaux, tableaux, zones de texte |
-| `--couleur-texte` | `#1e293b` (slate-800) | Texte principal |
-| `--couleur-texte-secondaire` | `#64748b` (slate-500) | Sous-texte, libellés, boutons secondaires |
-| `--couleur-bordure` | `#e2e8f0` (slate-200) | Bordures, séparateurs, boutons outline |
-| `--couleur-succes` | `#22c55e` (green-500) | Tags nouveaux, succès |
-| `--couleur-erreur` | `#ef4444` (red-500) | Erreurs, conflits, actions destructives |
-| `--couleur-avertissement` | `#f59e0b` (amber-500) | Avertissements (réservé) |
-
-**Règles :**
-- Contraste AA vérifié : `--couleur-texte` et `--couleur-texte-secondaire` sur fond
-  blanc passent 4.5:1. Ne pas utiliser `--couleur-texte-secondaire` sous 0.75rem.
-- Les surbrillances utilisent des **variantes translucides** des couleurs, pas de
-  nouveaux tokens :
-  - tag actif : `rgba(79, 70, 229, 0.12)` (primaire)
-  - valeur spécifique : `rgba(79, 70, 229, 0.35)`
-  - autre tag : `rgba(34, 197, 94, 0.10)` (succès)
-  - ligne de tableau active : `rgba(79, 70, 229, 0.08)`
-  - drag-over de valeur : `rgba(34, 197, 94, 0.08)`
-- Message de succès : fond `#f0fdf4`, texte `#166534`, bordure `--couleur-succes`.
-
-### 2.2 Typographie
-
-- `--police-principale: 'Inter', system-ui, -apple-system, sans-serif` — tout l'UI.
-- `--police-mono: 'JetBrains Mono', 'Fira Code', monospace` — **uniquement** pour
-  les tags (`[EMAIL]`, `[PERSONNE]`) et les valeurs de mapping.
-- Taille de base : 16px (`html { font-size: 16px }`).
-- Interligne : 1.6 (corps global), 1.7 (aperçus de texte).
-
-| Usage | Taille | Poids |
-|---|---|---|
-| Titre de page (h1) | 1.75rem | 700 |
-| Titre de popup | 1.125rem | 600 |
-| Titre de tableau / picker | 1rem | 600 |
-| Bouton principal, "Lancer l'analyse" | 1rem | 600 |
-| Onglets | 0.9375rem | 400 / 600 (actif) |
-| Corps UI, tableaux, aperçus | 0.875rem | 400 |
-| Footer, badge GitHub | 0.8125rem | 400 |
-| Erreurs, tooltips, boutons flottants | 0.75–0.78rem | 500 / 600 |
-
-### 2.3 Espacements
-
-Échelle de 4px, toujours via les tokens :
-
-| Token | Valeur | Usage typique |
-|---|---|---|
-| `--espacement-xs` | 4px | Gaps serrés (icônes), paddings de boutons mini |
-| `--espacement-sm` | 8px | Padding boutons, gaps d'onglets, marges sous titres |
-| `--espacement-md` | 16px | Gap entre sections/cartes, padding panneaux |
-| `--espacement-lg` | 24px | Padding page (maxWidth 1200px), padding popups |
-| `--espacement-xl` | 32px | Zone de dépôt (FileDropZone) |
-
-### 2.4 Rayons et ombres
-
-- `--rayon-bordure: 8px` — défaut (boutons, cartes, inputs, popups).
-- `4px` — inputs compacts et boutons inline du tableau.
-- Ombres :
-  - popup modale : `0 8px 32px rgba(0,0,0,0.15)`
-  - boutons flottants sur aperçu : `0 2px 6px rgba(0,0,0,0.15)`
-  - pas d'ombre sur les cartes statiques (flat design).
-
-### 2.5 Z-index
-
-| Valeur | Usage |
+| La philosophie dit… | …donc le design fait |
 |---|---|
-| 10 | Boutons flottants superposés aux aperçus |
-| 1000 | Overlays modaux (popup, picker, suppression) |
+| "Aucune donnée ne quitte la machine" | Une interface **calme, fermée, sans fuite visuelle** : pas de fenêtres qui débordent, pas d'éléments qui "s'échappent", tout reste à l'intérieur de panneaux nets |
+| "La confidentialité d'abord" | Le **masque** comme métaphore centrale : les données sensibles sont *voilées* (tags), jamais exposées par le design lui-même |
+| "L'utilisateur est seul garant" | **Transparence radicale** : chaque action est visible, explicable, réversible. Le design rend le pipeline lisible (étapes, états, confirmations) |
+| "Outil de confiance" | Une esthétique **sobre et haut de gamme**, type cabinet de confiance (1Password, Proton, Signal) : pas de gadgets, de la matière et du soin |
+| "Simple : un npm install suffit" | **Zéro friction cognitive** : un seul chemin principal, des actions contextuelles, le moins de jargon possible |
+| "Les noms, adresses sont ajoutés à la main" | L'interface récompense le **travail humain** : la revue est le cœur, elle doit être agréable, pas une corvée |
 
-### 2.6 Transitions et durées
-
-- `0.15s ease` — hover, couleurs, bordures, onglets.
-- `0.2s ease` — zones de drag & drop (fond + bordure).
-- `smooth` pour les défilements déclenchés (scrollIntoView).
-- Message de succès : affiché 5 s puis disparaît.
-
----
-
-## 3. Layout
-
-- **Conteneur principal** : `max-width: 1200px`, centré, `padding: var(--espacement-lg)`,
-  colonne flex, gap `--espacement-lg`. La page scrolle verticalement.
-- **Header** : centré. Le toggle de langue est en **position absolute top-right**
-  (le header reste centré mais les actions utiles sont aux coins).
-- **Navigation** : barre d'onglets avec `border-bottom: 2px` — primaire si actif,
-  transparent sinon ; `nowrap` + `overflow-x: auto` (mobile).
-- **Écran de revue (split)** : grille `grid-template-columns: 1fr 1fr` avec gap md.
-  - Gauche : tableau des pseudos (maxHeight 500px, scroll Y interne).
-  - Droite : deux aperçus empilés (chacun maxHeight 200px, scroll Y interne).
-  - Barre d'outils sous les volets : checkboxes (scroll sync, recentrer) à gauche,
-    bouton "Valider et télécharger" à droite.
-- **Breakpoints** : la grille 2 colonnes doit passer à 1 colonne sous ~900px
-  (recommandation à implémenter — aujourd'hui les volets se compressent).
+**Le ton :** confident, pas clinique. Le design doit faire penser "cabinet
+médical haut de gamme + outil développeur soigné". Sombre-léger, précis,
+chaleureux à la marge.
 
 ---
 
-## 4. Composants
+## 2. Direction artistique — "Le Masque"
 
-### 4.1 Boutons
+### 2.1 Concept
 
-| Variante | Style |
-|---|---|
-| **Primaire** | fond `--couleur-primaire`, texte blanc, rayon 8, padding `sm lg`, weight 600 |
-| **Secondaire / outline** | fond none, bordure 1px `--couleur-bordure`, texte secondaire, rayon 8 |
-| **Ghost (lien)** | fond none, bordure none, texte secondaire (ex. "Mentions légales") |
-| **Danger / destructif** | fond `--couleur-erreur`, texte blanc (ex. "Vider" dans la popup) |
-| **Inline / mini** | 0.8rem, padding 4px 8–12px, pour les actions du tableau |
+Le mot *maskita* (masque) est l'idée directrice. Un masque :
+- **protège** (confidentialité),
+- **transforme** (le visible devient anonyme) tout en restant **reconnaissable**
+  (le tag `[PERSONNE]` garde la forme du texte),
+- se **retire** (la restauration).
 
-**États requis :**
-- `hover` : assombrir légèrement le fond (`filter: brightness(0.95)` ou une
-  variante plus sombre — à définir une fois, centralisée).
-- `focus-visible` : anneau `2px solid var(--couleur-primaire)` + offset 2px
-  (à généraliser — aujourd'hui incohérent).
-- `disabled` : opacité 0.5, curseur `not-allowed`.
+Trois gestes visuels à décliner partout :
 
-### 4.2 FileDropZone
+1. **Le voile** — les données pseudonymisées sont *derrière un voile* :
+   surbrillance douce, fond translucide, jamais de noir opaque sur du texte.
+2. **Le sceau** — la validation est un acte solennel : le bouton principal
+   scelle le document (état "scellé" après téléchargement, succès avec cachet).
+3. **Le fil** — le parcours s'écrit comme un fil continu : étapes numérotées,
+   transitions horizontales, tout est *cousu* d'un bout à l'autre.
 
-Zone cliquable entière (label + input file caché `data-testid="input-fichier"`).
+### 2.2 Palette idéale
 
-| État | Bordure (2px dashed) | Fond |
+Trois familles, chacune avec un rôle :
+
+| Famille | Rôle | Couleurs |
 |---|---|---|
-| Normal | `--couleur-bordure` | `--couleur-surface` |
-| Drag-over | `--couleur-primaire` | `rgba(79,70,229,0.05)` |
-| Erreur | `--couleur-erreur` | — |
-| Chargement | — | — (texte primaire "Extraction en cours…") |
+| **Encre** (neutres) | Structure, texte, surfaces. Le "marbre" du cabinet | Slate/zinc profond : `#0f172a`, `#334155`, `#64748b`, `#e2e8f0`, `#f8fafc`, blanc |
+| **Sceau** (primaire) | Actions principales, focus, liens. L'indigo actuel est bon mais doit gagner en profondeur | Indigo : `#4338ca` (primaire), `#6366f1` (hover), `#eef2ff` (fond subtil) |
+| **Signal** (statuts) | Uniquement pour l'état des données, jamais pour décorer | vert `#16a34a` (nouveau / sûr), rouge `#dc2626` (conflit / danger), ambre `#d97706` (attention), bleu info `#2563eb` (information) |
 
-Libellés : titre en weight 600, sous-texte en 0.875rem secondaire.
-`aria-label` descriptif (localisé).
+**Règle d'or : la couleur ne décore pas, elle informe.** Un élément n'est coloré
+que s'il porte une information (état du tag, action primaire, erreur). Tout le
+reste reste en encre.
 
-### 4.3 PseudoTableau
+### 2.3 Typographie idéale
 
-- Titre : "Pseudos (N)" en 1rem/600.
-- En-têtes : **Tag** / **Valeurs** (0.875rem/600), séparés par bordure basse.
-- **Code couleur des tags** (le tag lui-même, pas la ligne) :
-  - vert `--couleur-succes` → nouveau tag (détecté à l'analyse)
-  - texte normal → tag existant (clé importée)
-  - gris secondaire → tag vide
-  - rouge / ⚠ sous le tag → conflit (message détaillé en 0.75rem)
-- Valeurs : liste à puces, draggable (grabbing), bouton ✕ rouge (title localisé),
-  bouton ➕ d'ajout inline ; input d'ajout "Nouvelle valeur…" (0.8rem).
-- Ajout manuel : bouton "+ Ajouter un pseudo" (bordure dashed, texte primaire) →
-  deux inputs (Type / Valeur) + boutons Ajouter / Annuler.
-- Interactions : clic ligne → surbrillance tag ; double-clic tag → édition
-  (input mono, Enter valide, Escape annule) ; drag & drop valeur entre tags ou
-  pour réordonner.
+Le texte EST le produit (on manipule des rapports). La typographie doit être
+exceptionnelle :
 
-### 4.4 TexteApercu
+- **Lecture** : une serif moderne et chaleureuse pour les aperçus de documents —
+  *Source Serif 4* ou *Newsreader* — pour que le rapport conserve son caractère
+  de document, même pseudonymisé. C'est le point le plus transformateur du
+  design system.
+- **UI** : *Inter* (ou *Geist*) en graisses 400/500/600, tailles resserrées
+  mais lisibles.
+- **Données** : *JetBrains Mono* / *IBM Plex Mono* pour les tags `[PERSONNE]`,
+  les valeurs de mapping et tout ce qui est "machine" (clés, fichiers).
+  Le mono = "ceci est une donnée protégée".
+- Échelle modulaire 1.25 (major third) : 16 / 20 / 25 / 31px…, interligne 1.6,
+  mesure de texte 60–70 caractères.
 
-- Carte `--couleur-surface`, bordure, rayon 8, padding md, `maxHeight: 200px`,
-  scroll Y, `white-space: pre-wrap`.
-- Tags en `--police-mono`.
-- Surbrillances (voir 2.1) : tag cliqué = bleu ; valeur ciblée = bleu foncé ;
-  autre tag = vert translucide. Transition 0.15s.
-- Sélection de texte → `onMouseUp` → les boutons flottants "Nouveau tag" /
-  "Nouvelle valeur" apparaissent en haut à droite du panneau (z-index 10).
+### 2.4 Espace, géométrie
 
-### 4.5 Popups modales (PopupConfirmation, picker, suppression)
-
-Structure commune :
-- Overlay `rgba(0,0,0,0.4)` en `position: fixed; inset: 0`, z-index 1000,
-  centrage flex. **Clic sur l'overlay = annuler** ; la carte stoppe la propagation.
-- Carte : blanc, rayon 8, padding lg, ombre `0 8px 32px rgba(0,0,0,0.15)`,
-  `max-width: 400–600px`, `width: 90%`, `max-height: 70vh` + scroll si besoin.
-- Titre 1.125rem/600, message 0.9375rem secondaire interligne 1.6, boutons alignés
-  à droite (Annuler outline + Confirmer primaire ; Confirmer danger si destructif).
-- Accessibilité : `role="dialog"`, `aria-modal="true"`, `aria-label` = titre.
-
-### 4.6 CheckboxInput (barre d'outils revue)
-
-Label inline (0.875rem secondaire) avec checkbox native ; cliquable dans son
-ensemble (`user-select: none`). État persistant pendant la session.
-
-### 4.7 Header, badge GitHub, footer
-
-- Header : h1 Maskita 1.75rem/700, sous-titre secondaire, badge GitHub en dessous
-  (pill border, icône SVG 16px, texte "Open source — GitHub", hover → primaire).
-- Footer : bordure haute, texte secondaire 0.8125rem, bouton "Mentions légales".
+- Grille **4px** (token) ; marges de page 24–32px ; conteneur 1100px (la lecture
+  prime sur le remplissage).
+- **Rayons** : 6px (contrôles), 12px (panneaux), 16px (modales) — un rayon
+  unique 8px aplatit le relief ; trois niveaux donnent de la hiérarchie.
+- **Ombres** : uniquement pour élever (modales, menus, drag) ; les panneaux de
+  lecture ne portent **pas** d'ombre mais une fine bordure 1px — la donnée doit
+  sembler posée, pas flottante.
 
 ---
 
-## 5. Patterns d'interaction
+## 3. Principes de design (checklist de toute décision)
 
-| Pattern | Comportement |
-|---|---|
-| Glisser-déposer fichier | Drop sur la zone → extraction immédiate ; changement possible ensuite |
-| Drag & drop valeurs | Réordonner dans un tag / déplacer vers un autre tag (drop ciblé, fond vert) |
-| Sélection de texte | Sélection dans l'aperçu → actions flottantes contextuelles |
-| Highlight croisé | Clic tag → surbrillance bleue dans les 2 aperçus + scroll du tableau (smooth, centré) |
-| Scroll synchronisé | Checkbox activée par défaut ; les 2 aperçus défilent en ratio |
-| Recentrage auto | Clic valeur → scroll du texte vers l'occurrence (checkbox) |
-| Double-clic | Renommer un tag |
-| Escape | Ferme les popups / annule les éditions inline |
-| Clic hors zone | Ferme popup, picker, sélection courante |
-| Détection de conflits | Même valeur dans 2 tags, sous-chaînes → ⚠ rouge, blocage au download (popup) |
-
----
-
-## 6. États globaux et retour utilisateur
-
-- **Chargement extraction** : texte primaire "Extraction en cours…" + invite.
-- **Succès téléchargement** : bandeau vert centré (fond `#f0fdf4`, texte `#166534`,
-  bordure succes), `role="status"`, disparaît après 5 s.
-- **Erreurs de fichier** : `role="alert"`, texte erreur sous la zone.
-- **Avertissement nom de fichier** : popup avec valeurs suspectes listées, conseil,
-  bouton "Télécharger quand même" (dangereux) + "Annuler".
+1. **Une action principale par écran.** Tout le reste est secondaire ou invisible.
+2. **Jamais de données affichées par accident.** Miniatures de texte toujours
+   floutées/voilées ; le nom du fichier n'apparaît jamais en clair s'il est
+   suspect (le warning existant devient un réflexe visuel : le voile se trouble).
+3. **Le pipeline est visible.** Trois étapes (Déposer → Vérifier → Sceller) avec
+   un stepper discret. L'utilisateur sait toujours où il est et ce qui va se passer.
+4. **Tout est réversible.** Annuler, Escape, clic hors zone : chaque action a un
+   retour ; les actions destructives demandent un second geste précis (taper le
+   tag à vider, pas juste cliquer "Vider").
+5. **Le détail fait la confiance.** Micro-interactions propres, focus visibles,
+   états cohérents : c'est le soin du détail qui dit "vos données sont entre de
+   bonnes mains".
+6. **Performance = respect.** Le bundle doit rester léger (l'app est déjà
+   ~276 kB gzip) : chaque ajout visuel se paie en octets, on choisit en
+   connaissance de cause.
 
 ---
 
-## 7. Accessibilité
+## 4. Tokens idéaux
 
-- `<html lang>` synchronisé avec la langue active ; `document.title` fixé.
-- `aria-label` sur les zones de drop ; `role="alert"` sur les erreurs ;
-  `role="status"` sur les succès ; `role="dialog"` + `aria-modal` sur les popups.
-- Cibles tactiles : boutons mini du tableau ≥ 28px, boutons principaux ≥ 36px.
-- Navigation clavier : focus visible à généraliser (anneau primaire), Escape
-  gère les popups/éditions.
-- Le texte ne doit jamais être la seule information : les icônes (✕, 🗑, ➕) ont
-  toutes un `title` localisé.
-- **Contraste** : ne pas écrire de texte secondaire sur fond primaire, ni de
-  texte blanc sur `--couleur-avertissement`.
+```css
+:root {
+  /* Couleurs — encre */
+  --encre-900: #0f172a;
+  --encre-700: #334155;
+  --encre-500: #64748b;
+  --encre-300: #cbd5e1;
+  --encre-200: #e2e8f0;
+  --encre-100: #f1f5f9;
+  --encre-50:  #f8fafc;
 
----
+  /* Couleurs — sceau (indigo profond) */
+  --sceau-600: #4338ca;   /* primaire */
+  --sceau-500: #4f46e5;   /* hover */
+  --sceau-100: #eef2ff;   /* fond sélection */
 
-## 8. i18n
+  /* Couleurs — signal */
+  --signal-succes: #16a34a;
+  --signal-erreur: #dc2626;
+  --signal-attention: #d97706;
+  --signal-info: #2563eb;
 
-- Tous les textes utilisateur passent par `t('cle')` (dictionnaires `fr.ts` /
-  `en.ts`) — aucun texte en dur dans les composants.
-- Les libellés qui incluent une valeur utilisent des fonctions de traduction
-  (`'tableau.titre': (n) => ...`).
-- Les `title`, `aria-label`, placeholders et messages de popup sont localisés.
-- **Longueurs** : prévoir des libellés EN plus courts mais complets ; ne pas
-  casser la mise en page (badges, boutons `white-space: nowrap` si besoin).
-- Langue persistée en `localStorage` (`maskita-langue`), défaut = détection
-  navigateur puis français.
+  /* Typographie */
+  --police-ui: 'Inter', system-ui, sans-serif;
+  --police-lecture: 'Source Serif 4', Georgia, serif;
+  --police-donnees: 'JetBrains Mono', monospace;
 
----
+  /* Espace 4px */
+  --espace-1: 4px; --espace-2: 8px; --espace-3: 12px;
+  --espace-4: 16px; --espace-6: 24px; --espace-8: 32px;
 
-## 9. Recommandations d'évolution (à faire lorsque pertinent)
+  /* Géométrie */
+  --rayon-controle: 6px;
+  --rayon-panneau: 12px;
+  --rayon-modale: 16px;
 
-1. **Centraliser les styles inline récurrents** : les boutons (4 variantes),
-   les popups et les inputs sont dupliqués entre `EcranRevue`, `PseudoTableau`,
-   `FileDropZone`, `FooterLegal`. Extraire des composants `Bouton`, `Modal`,
-   `Input` ou des classes utilitaires CSS — sans changer le rendu actuel.
-2. **Définir les états manquants** : hover des boutons primaires, `focus-visible`
-   global, `disabled` — aujourd'hui incohérents entre composants.
-3. **Responsive** : la grille 2 colonnes de l'écran de revue doit passer à 1
-   colonne sous ~900px ; vérifier les panneaux à 200/500px sur mobile.
-4. **Mode sombre** : les tokens sont déjà en variables CSS ; ajouter
-   `data-theme="dark"` et redéfinir les tokens suffira.
-5. **Accessibilité** : audit `focus-visible` et navigation clavier des popups
-   (focus trap) quand le temps le permet.
+  /* Ombres */
+  --ombre-elevee: 0 12px 32px rgba(15, 23, 42, 0.16);
+  --ombre-flottante: 0 4px 12px rgba(15, 23, 42, 0.10);
 
----
-
-## 10. Vérification
-
-Toute évolution du design system doit respecter :
-
-```bash
-pnpm test        # toute la suite (148 tests)
-pnpm typecheck   # tsc --noEmit
+  /* Motion */
+  --duree-rapide: 120ms;
+  --duree-base: 200ms;
+  --courbe: cubic-bezier(0.2, 0, 0, 1);
+}
 ```
 
-Et les règles du projet : français, plan avant implémentation, zéro donnée
-sortante, tests pour chaque nouveau composant.
+(decorum : les tokens actuels `--couleur-*` sont conservés comme alias dépréciés
+durant la migration, puis supprimés.)
+
+---
+
+## 5. Layout
+
+- **Stepper global** : trois jalons discrets en haut de la zone de travail —
+  `Déposer` → `Vérifier` → `Sceller`. Les jalons passés sont cliquables (retour
+  en arrière), le jalon actif porte le sceau.
+- **Écran de revue (le cœur)** :
+  - Tableau des pseudos à gauche (colonne 320–380px), aperçus à droite,
+    grille 1fr / 1.6fr — le texte a faim de place.
+  - Les deux aperçus sont **côte à côte sur desktop** (pseudonymisé / lisible),
+    pas empilés : la comparaison est le geste principal de la revue. Sur mobile,
+    bascule par onglets "Masqué / Lisible".
+  - Barre d'actions flottante en bas à droite (comme un éditeur) : "Sceller et
+    télécharger" toujours visible, même quand on a défilé.
+- **Responsive** : passage 1 colonne sous 900px, actions repliées dans un
+  bottom-bar fixe.
+- **Header** : titre centré, badge GitHub + toggle langue en haut à droite,
+  alignés sur une même ligne (plus de chevauchement absolu).
+
+---
+
+## 6. Composants idéaux
+
+### 6.1 Boutons
+- **Primaire (sceller)** : fond sceau, texte blanc, rayon 6, hauteur 40px,
+  weight 500. Au clic de validation : micro-animation de "sceau" (petit cachet
+  ✓ qui s'imprime).
+- **Secondaire** : fond encre-50, bordure encre-200, texte encre-700.
+- **Ghost** : texte encre-500, hover encre-900.
+- **Danger** : fond signal-erreur, uniquement dans les modales.
+- États : hover = sceau-500 ; `focus-visible` = anneau 2px sceau-500 offset 2px
+  **partout** ; disabled = opacité .45 + `aria-disabled` + message pourquoi
+  (tooltip) quand c'est un blocage métier (ex. "chargez un fichier d'abord").
+
+### 6.2 FileDropZone
+Repensée comme un **portique de sécurité** :
+- Zone en pointillés (4px, `--rayon-panneau`), icône centrée, texte :
+  "Déposez votre rapport ici".
+- Au survol/drag : la zone s'illumine en sceau-100, la bordure devient continue.
+- **Un fichier déposé = une carte de prévisualisation** (nom, taille, type,
+  risque du nom de fichier évalué immédiatement) — pas juste un label.
+- L'état "extraction" montre un voile animé (pulsation douce) sur la zone.
+
+### 6.3 PseudoTableau
+- En-têtes sticky dans le panneau scrollable.
+- Ligne de tag : tag mono + pastille d'état (vert flèche ↑ = nouveau,
+  blanc = existant, rouge ⚠ = conflit, gris = vide) — le code couleur reste
+  mais devient une **pastille** plutôt qu'une couleur de texte (accessibilité).
+- Conflit : la ligne tremble légèrement à l'apparition, message expliqué sous
+  le tag + lien "voir le conflit" qui sync-scrolle les deux aperçus.
+- Ajout manuel : petit formulaire inline dans un *popover* ancré au bouton
+  "+ Ajouter un pseudo" (pas d'expansion qui pousse le tableau).
+- Drag & drop conservé, avec zone de drop qui s'agrandit visuellement.
+
+### 6.4 TexteApercu
+- Police de lecture (serif) dans les deux aperçus.
+- Toolbar flottante (Nouveau tag / Nouvelle valeur) avec **fond glass**
+  (blanc 80% + blur 8px) — les actions contextuelles ne recouvrent jamais le
+  texte entièrement.
+- Surbrillances en voile : tag actif = fond sceau-100 + bordure gauche 2px
+  sceau ; valeur ciblée = fond sceau-100 + contour ; autre tag = fond
+  signal-succes 10%. Jamais de surbrillance opaque sur le texte.
+
+### 6.5 Modales
+- Trois rayons de profondeur (voir 2.4), ombre élevée, `max-width: 520px`.
+- **Action destructive explicite : taper confirme.** Pour "vider un tag",
+  l'utilisateur tape le tag à vider (`[EMAIL]`) ou le nombre de valeurs.
+  Un seul clic sur "Vider" ne suffit plus — c'est le geste qui impose le
+  temps de la réflexion, en cohérence avec "l'utilisateur est seul garant".
+- Focus trap + retour focus à l'élément déclencheur.
+
+### 6.6 Stepper & états
+- Composant `Stepper` (3 jalons) avec état complet/actif/futur.
+- Bandeau de succès : petit "cachet" vert avec ✓ imprimé + animation de
+  tampon ; disparaît à 5 s ou au clic.
+- Bandeau d'erreur : fond encre-50, bordure signal-erreur, icône, libellé en
+  clair (jamais de code technique).
+
+### 6.7 Badge GitHub / confiance
+- Le badge actuel devient une **carte de confiance** dans le footer ou le
+  header : "Open source — MIT — zéro collecte de données", avec 3 pastilles
+  (Vercel, GitHub, Licence MIT). Trois signaux de transparence, pas un seul.
+
+---
+
+## 7. Icônes
+
+- Jeu d'icônes **ligne 1.5px** (Lucide) — cohérent, pas d'emojis dans l'UI
+  (les emojis actuels 🔒🔓📦✕🗑 sont remplacés par des pictos dessinés) :
+  - Anonymiser = **masque** ; Restaurer = **masque relevé / clé** ;
+  - Télécharger = flèche dans un socle ; Sceller = cachet ;
+  - Confiance = bouclier avec ✓.
+- Les icônes sont des métaphores du masque, pas des illustrations.
+
+---
+
+## 8. Motion
+
+| Usage | Animation | Durée / courbe |
+|---|---|---|
+| Apparition de tag / valeur | fondu + 4px vers le bas | 120ms, sortie douce |
+| Surbrillance croisée | fondu de fond | 120ms |
+| Conflit détecté | micro-tremblement (1 oscillation) | 200ms |
+| Validation / sceau | cachet ✓ qui s'imprime (scale .8→1 + fondu) | 200ms |
+| Drag over zone | bordure pointillée→continue + fond | 200ms |
+| Changement d'étape | glissement horizontal 8px + fondu | 200ms, `--courbe` |
+
+**Règle :** chaque animation a un sens (état, confirmation, attention).
+Pas d'animation décorative ; `prefers-reduced-motion` désactive tout sauf les
+fondu d'état.
+
+---
+
+## 9. Accessibilité (non négociable)
+
+- Contraste AA minimum ; le signal d'état n'est **jamais** la couleur seule
+  (pastille + texte/icône).
+- Focus visible partout, focus trap dans les modales, retour focus.
+- Le texte pseudo/lisible est navigable au clavier ; les tags sont des
+  `button` (Enter/Space).
+- Zone de drop : `role="button"`, drag & drop **et** sélecteur natif.
+- Les emojis disparaissent de l'UI → les `title`/`aria-label` portent le sens.
+- Taille cible tactile ≥ 40px sur mobile, ≥ 24px desktop pour les mini-boutons.
+
+---
+
+## 10. i18n — la langue fait partie du design
+
+- Les textes courts ("Lancer l'analyse", "Sceller et télécharger") sont conçus
+  **pour les deux langues dès l'écriture** (limite de caractères par jalon).
+- Les messages de sécurité (warning nom de fichier) utilisent un vocabulaire
+  cohérent : "voile", "sceller", "clef" — le lexique du masque est traduit,
+  pas transposé.
+- Le stepper, les tooltips, les `aria-label` sont localisés comme le corps de
+  l'UI.
+
+---
+
+## 11. Marque et confiance
+
+- **Couleur comportementale** : l'interface ne devient "verte" que quand les
+  données sont sûres (aucun nom suspect, aucun conflit) — le vert est une
+  récompense, pas un décor.
+- **Transparence radicale** : un petit espace "Comment ça marche" (3 lignes :
+  tout est local, aucune donnée sortante, pas de compte) accessible depuis le
+  footer — le design system prévoit l'emplacement, le texte est à écrire.
+- **Erreurs bienveillantes** : chaque erreur explique *pourquoi* et *quoi faire*
+  ("Ce fichier contient un nom suspect dans son titre. Renommez-le puis
+  redéposez").
+- Le badge open source est un engagement visuel : toujours présent, jamais
+  relégué dans un coin oublié.
+
+---
+
+## 12. Migration depuis l'existant (progressive, sans refonte)
+
+L'ordre recommandé, chaque étape livrée et testée :
+
+1. **Tokens** : introduire les nouvelles variables en alias des existantes,
+   zéro changement visuel. (1 commit)
+2. **Typographie de lecture** : passer les deux aperçus en serif — l'effet est
+   immédiat et transformateur. (1 commit + tests snapshot)
+3. **Boutons** : extraire le composant `Bouton` (4 variantes) et remplacer les
+   usages dupliqués. (1 commit)
+4. **Stepper** : ajouter le jalon discret "Déposer → Vérifier → Sceller"
+   au-dessus de la zone de travail. (1 commit)
+5. **FileDropZone** : carte de prévisualisation + évaluation du nom de fichier. (1 commit)
+6. **Pastilles de statut** dans le tableau (remplace la couleur de texte seule). (1 commit)
+7. **Modales** : focus trap + action destructive à saisie du tag. (1 commit)
+8. **Icônes Lucide** en remplacement des emojis. (1-2 commits)
+9. **Carte de confiance** (badge GitHub enrichi). (1 commit)
+10. Nettoyage des alias de tokens et suppression des styles morts. (1 commit)
+
+Chaque étape : `pnpm test` + `pnpm typecheck` + commit `feat:`/`refactor:`/`style:`
+en français. La couverture reste ≥ 90 % — le design ne se paie pas sur les tests.
+
+---
+
+## 13. Vérification du design system
+
+- **Tests** : chaque nouveau composant (Bouton, Stepper, Modal, pastilles) a
+  son fichier de test ; les tests d'accessibilité (rôles, aria) font partie
+  des critères d'acceptation.
+- **Typecheck** strict avant chaque commit.
+- **Audit manuel** avant release : parcours complet déposer → vérifier →
+  sceller → restaurer, en FR et EN, clavier seul + souris, avec
+  `prefers-reduced-motion` activé.
+- **Zéro donnée sortante** : le design system n'introduit ni police distante
+  (Google Fonts = requête externe !), ni CDN, ni tracker. Les polices serif
+  idéales doivent être soit embarquées dans le bundle, soit listées en
+  `font-display: swap` avec fallback local. **Contrainte CSP : `connect-src 'none'` —
+  toute police doit être self-hosted.**
+
+> *Le masque protège ce qui compte. Le design system est le masque de Maskita :
+> il protège la confiance que l'utilisateur place dans l'outil.*
