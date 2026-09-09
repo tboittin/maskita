@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import type { TagEntry, Conflit } from '../hooks/useRevue';
 import { useLangue } from '../i18n/context';
+import { PastilleStatut, type ToneStatut } from '@khaleeno/maskita-design-system';
 
 interface PseudoTableauProps {
   tags: TagEntry[];
@@ -22,6 +23,13 @@ function couleurTag(entry: TagEntry): string {
   if (entry.valeurs.length === 0) return 'var(--couleur-texte-secondaire)';
   if (entry.estNouveau) return 'var(--couleur-succes)';
   return 'var(--couleur-texte)';
+}
+
+function statutDe(entry: TagEntry, conflitsParTag: Record<string, string[]>): ToneStatut {
+  if (conflitsParTag[entry.tag]?.length > 0) return 'conflit';
+  if (entry.valeurs.length === 0) return 'vide';
+  if (entry.estNouveau) return 'nouveau';
+  return 'existant';
 }
 
 export function PseudoTableau({
@@ -104,7 +112,9 @@ export function PseudoTableau({
               }}
             >
               <td style={{ padding: 'var(--espacement-sm)', color: couleurTag(entry) }}>
-                {editionTag === entry.tag ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <PastilleStatut statut={statutDe(entry, conflitsParTag)} />
+                  {editionTag === entry.tag ? (
                   <input
                     value={nouveauNom}
                     onChange={e => setNouveauNom(e.target.value)}
@@ -135,6 +145,7 @@ export function PseudoTableau({
                     {entry.tag}
                   </span>
                 )}
+                </div>
                 {conflitsParTag[entry.tag]?.map((msg, i) => (
                   <div key={i} style={{ color: 'var(--couleur-erreur)', fontSize: '0.75rem', marginTop: '2px' }}>
                     ⚠ {msg}

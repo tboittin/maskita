@@ -1,9 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { PseudoTableau } from './PseudoTableau';
 import { TexteApercu } from './TexteApercu';
-import { PopupConfirmation } from './PopupConfirmation';
 import { useRevue } from '../hooks/useRevue';
 import { useLangue } from '../i18n/context';
+import {
+  Bouton,
+  Modal,
+} from '@khaleeno/maskita-design-system';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRevueProps {
@@ -352,119 +355,102 @@ export function EcranRevue({
           <CheckboxInput checked={syncScroll} onChange={setSyncScroll} label={t('revue.checkbox.sync')} />
           <CheckboxInput checked={recentrer} onChange={setRecentrer} label={t('revue.checkbox.recentrer')} />
         </div>
-        <button onClick={handleClicValider} style={{
-          padding: 'var(--espacement-sm) var(--espacement-lg)',
-          background: 'var(--couleur-primaire)', color: 'white',
-          border: 'none', borderRadius: 'var(--rayon-bordure)',
-          cursor: 'pointer', fontWeight: 600, fontSize: '1rem',
-        }}>
+        <Bouton variante="primaire" taille="lg" onClick={handleClicValider}>
           {t('revue.bouton.valider')}
-        </button>
+        </Bouton>
       </div>
 
       {/* Picker tag pour Nouvelle valeur / Déplacer */}
       {pickerPayload && (
-        <div
-          style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
-          onClick={handlePickerAnnuler}
+        <Modal
+          ouvert={!!pickerPayload}
+          titre={pickerTitre}
+          onFermer={handlePickerAnnuler}
+          pied={
+            <Bouton variante="secondaire" onClick={handlePickerAnnuler}>
+              {t('revue.picker.annuler')}
+            </Bouton>
+          }
         >
-          <div onClick={(e) => e.stopPropagation()} style={{
-            background: 'white', borderRadius: 'var(--rayon-bordure)',
-            padding: 'var(--espacement-lg)', maxWidth: '400px', width: '90%',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte)' }}>
-              {pickerTitre}
-            </h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-md)' }}>
-              {t('revue.picker.valeur', pickerPayload.valeur)}
-            </p>
-            <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)' }}>
-              {tagsExistants
-                .filter(t => t !== pickerPayload.tagSource)
-                .map((tag) => (
-                  <button key={tag} onClick={() => handlePickerSelect(tag)}
-                    style={{
-                      padding: 'var(--espacement-sm) var(--espacement-md)',
-                      background: 'var(--couleur-surface)', border: '1px solid var(--couleur-bordure)',
-                      borderRadius: 'var(--rayon-bordure)', cursor: 'pointer', textAlign: 'left',
-                      fontSize: '0.875rem', fontFamily: 'var(--police-mono)', color: 'var(--couleur-texte)',
-                    }}
-                  >{tag}</button>
-                ))}
-              {tagsExistants.filter(t => t !== pickerPayload.tagSource).length === 0 && (
-                <p style={{ color: 'var(--couleur-texte-secondaire)', fontStyle: 'italic', fontSize: '0.875rem' }}>
-                  {t('revue.picker.aucun')}
-                </p>
-              )}
-            </div>
-            <div style={{ marginTop: 'var(--espacement-md)', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={handlePickerAnnuler} style={{
-                padding: 'var(--espacement-sm) var(--espacement-md)',
-                background: 'none', border: '1px solid var(--couleur-bordure)',
-                borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
-                color: 'var(--couleur-texte-secondaire)', fontSize: '0.875rem',
-              }}>{t('revue.picker.annuler')}</button>
-            </div>
+          <p className="mb-3 text-sm text-brume-500">
+            {t('revue.picker.valeur', pickerPayload.valeur)}
+          </p>
+          <div className="flex max-h-64 flex-col gap-1.5 overflow-y-auto">
+            {tagsExistants
+              .filter(t => t !== pickerPayload.tagSource) // ne pas proposer le tag source
+              .map((tag) => (
+                <Bouton
+                  key={tag}
+                  variante="secondaire"
+                  onClick={() => handlePickerSelect(tag)}
+                  className="justify-start font-donnees text-[13px]"
+                >
+                  {tag}
+                </Bouton>
+              ))}
+            {tagsExistants.filter(t => t !== pickerPayload.tagSource).length === 0 && (
+              <p className="text-sm italic text-brume-500">
+                {t('revue.picker.aucun')}
+              </p>
+            )}
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Popup confirmation suppression */}
       {supprimerTag && tagSupprime && (
-        <div
-          style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
-          onClick={handleAnnulerSuppression}
+        <Modal
+          ouvert={!!supprimerTag}
+          titre={t('revue.supprimer.titre')}
+          onFermer={handleAnnulerSuppression}
+          pied={
+            <>
+              <Bouton variante="secondaire" onClick={handleAnnulerSuppression}>
+                {t('revue.supprimer.annuler')}
+              </Bouton>
+              <Bouton variante="danger" onClick={handleConfirmerSuppression}>
+                {t('revue.supprimer.confirmer')}
+              </Bouton>
+            </>
+          }
         >
-          <div onClick={(e) => e.stopPropagation()} style={{
-            background: 'white', borderRadius: 'var(--rayon-bordure)',
-            padding: 'var(--espacement-lg)', maxWidth: '480px', width: '90%',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte)' }}>
-              {t('revue.supprimer.titre')}
-            </h3>
-            <p style={{ fontSize: '0.9375rem', color: 'var(--couleur-texte-secondaire)', lineHeight: 1.6, marginBottom: 'var(--espacement-md)' }}>
-              {t('revue.supprimer.message', supprimerTag)}
-            </p>
-            {tagSupprime.valeurs.length > 0 && (
-              <div style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-md)' }}>
-                <p style={{ marginBottom: 'var(--espacement-xs)' }}>{t('revue.supprimer.valeurs')}</p>
-                <ul style={{ margin: 0, paddingLeft: 'var(--espacement-md)' }}>
-                  {tagSupprime.valeurs.map(v => <li key={v}>{v}</li>)}
-                </ul>
-              </div>
-            )}
-            <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginBottom: 'var(--espacement-lg)', fontStyle: 'italic' }}>
-              {t('revue.supprimer.note')}
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--espacement-sm)' }}>
-              <button onClick={handleAnnulerSuppression} style={{
-                padding: 'var(--espacement-sm) var(--espacement-md)',
-                background: 'none', border: '1px solid var(--couleur-bordure)',
-                borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
-                color: 'var(--couleur-texte-secondaire)', fontSize: '0.875rem',
-              }}>{t('revue.supprimer.annuler')}</button>
-              <button onClick={handleConfirmerSuppression} style={{
-                padding: 'var(--espacement-sm) var(--espacement-md)',
-                background: 'var(--couleur-erreur)', color: 'white',
-                border: 'none', borderRadius: 'var(--rayon-bordure)',
-                cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
-              }}>{t('revue.supprimer.confirmer')}</button>
+          <p className="text-sm leading-relaxed text-brume-500">
+            {t('revue.supprimer.message', supprimerTag)}
+          </p>
+          {tagSupprime.valeurs.length > 0 && (
+            <div className="mt-3 text-sm text-brume-500">
+              <p className="mb-1">{t('revue.supprimer.valeurs')}</p>
+              <ul className="ml-4 list-disc">
+                {tagSupprime.valeurs.map(v => <li key={v}>{v}</li>)}
+              </ul>
             </div>
-          </div>
-        </div>
+          )}
+          <p className="mt-3 text-xs italic text-brume-500">
+            {t('revue.supprimer.note')}
+          </p>
+        </Modal>
       )}
 
       {popupOuverte && (
-        <PopupConfirmation
+        <Modal
+          ouvert={popupOuverte}
           titre={t('revue.modifs.titre')}
-          message={t('revue.modifs.message')}
-          boutonConfirmer={t('revue.modifs.confirmer')}
-          boutonAnnuler={t('revue.modifs.relancer')}
-          onConfirmer={handleContinuer}
-          onAnnuler={handleRelancer}
-        />
+          onFermer={handleRelancer}
+          pied={
+            <>
+              <Bouton variante="secondaire" onClick={handleRelancer}>
+                {t('revue.modifs.relancer')}
+              </Bouton>
+              <Bouton variante="primaire" onClick={handleContinuer}>
+                {t('revue.modifs.confirmer')}
+              </Bouton>
+            </>
+          }
+        >
+          <p className="text-sm leading-relaxed text-brume-500">
+            {t('revue.modifs.message')}
+          </p>
+        </Modal>
       )}
     </div>
   );
