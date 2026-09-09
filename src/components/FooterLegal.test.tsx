@@ -42,8 +42,9 @@ describe('FooterLegal', () => {
     fireEvent.click(screen.getByText('Mentions légales'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    // Cliquer sur l'overlay (le role="dialog" lui-même) le ferme
-    fireEvent.click(screen.getByRole('dialog'));
+    // Cliquer sur l'overlay (fond sombre derrière la modale) le ferme
+    const overlay = screen.getByRole('dialog').previousElementSibling as HTMLElement;
+    fireEvent.click(overlay);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

@@ -9,12 +9,13 @@ import { type Mapping } from './utils/mapping';
 import { buildDocument } from './utils/buildDocument';
 import { declencherTelechargement } from './utils/telechargement';
 import { FooterLegal } from './components/FooterLegal';
-import { PopupConfirmation } from './components/PopupConfirmation';
 import { nomContientValeursMapping } from './utils/mapping';
 import { I18nProvider, useLangue } from './i18n/context';
 import {
   Bouton,
+  Jalons,
   MessageSucces,
+  Modal,
   Panneau,
   VoileIcon,
   CleIcon,
@@ -245,6 +246,24 @@ function AppInterieur() {
           ))}
         </nav>
 
+        {/* Fil d'étapes */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Jalons
+            etapes={[
+              { id: 'deposer', libelle: t('app.jalon.deposer') },
+              { id: 'verifier', libelle: t('app.jalon.verifier') },
+              { id: 'recuperer', libelle: t('app.jalon.recuperer') },
+            ]}
+            active={onglet === 'anonymiser' ? (etape === 'upload' ? 'deposer' : 'verifier') : 'recuperer'}
+            onSelect={(id) => {
+              if (id === 'deposer') {
+                setOnglet('anonymiser');
+                handleRetour();
+              }
+            }}
+          />
+        </div>
+
         {messageSucces && (
           <div role="status" style={{ display: 'flex', justifyContent: 'center' }}>
             <MessageSucces onFermer={() => setMessageSucces(null)}>{messageSucces}</MessageSucces>
@@ -311,18 +330,32 @@ function AppInterieur() {
       <FooterLegal />
 
       {warningNom && (
-        <PopupConfirmation
+        <Modal
+          ouvert={!!warningNom}
           titre={t('app.warning.titre')}
-          message={t('app.warning.message', warningNom.valeursSuspectes.join(', '), warningNom.nomFichier)}
-          boutonConfirmer={t('app.warning.confirmer')}
-          boutonAnnuler={t('app.warning.annuler')}
-          onConfirmer={() => {
-            const w = warningNom;
-            setWarningNom(null);
-            executerTelechargement(w.mappingFinal, w.textePseudonymise);
-          }}
-          onAnnuler={annulerWarningNom}
-        />
+          onFermer={annulerWarningNom}
+          pied={
+            <>
+              <Bouton variante="secondaire" onClick={annulerWarningNom}>
+                {t('app.warning.annuler')}
+              </Bouton>
+              <Bouton
+                variante="danger"
+                onClick={() => {
+                  const w = warningNom;
+                  setWarningNom(null);
+                  executerTelechargement(w.mappingFinal, w.textePseudonymise);
+                }}
+              >
+                {t('app.warning.confirmer')}
+              </Bouton>
+            </>
+          }
+        >
+          <p className="text-sm leading-relaxed text-brume-500" style={{ whiteSpace: 'pre-wrap' }}>
+            {t('app.warning.message', warningNom.valeursSuspectes.join(', '), warningNom.nomFichier)}
+          </p>
+        </Modal>
       )}
     </>
   );

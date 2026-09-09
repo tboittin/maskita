@@ -1,27 +1,7 @@
 import { useState } from 'react';
 import legal from '../legal.json';
 import { useLangue } from '../i18n/context';
-
-const styleOverlay: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.4)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-};
-
-const stylePopup: React.CSSProperties = {
-  background: 'white',
-  borderRadius: 'var(--rayon-bordure)',
-  padding: 'var(--espacement-lg)',
-  maxWidth: '600px',
-  width: '90%',
-  maxHeight: '70vh',
-  overflowY: 'auto',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-};
+import { Bouton, BouclierIcon, Modal } from '@khaleeno/maskita-design-system';
 
 const styleFooter: React.CSSProperties = {
   borderTop: '1px solid var(--couleur-bordure)',
@@ -50,109 +30,81 @@ export function FooterLegal() {
         </button>
       </footer>
 
-      {ouvert && (
+      <Modal
+        ouvert={ouvert}
+        titre={t('footer.titre')}
+        onFermer={() => setOuvert(false)}
+        pied={
+          <Bouton variante="secondaire" onClick={() => setOuvert(false)}>
+            {t('footer.fermer')}
+          </Bouton>
+        }
+      >
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('footer.titre')}
-          style={styleOverlay}
-          onClick={() => setOuvert(false)}
+          style={{
+            fontSize: '0.875rem',
+            color: 'var(--couleur-texte-secondaire)',
+            lineHeight: 1.7,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--espacement-md)',
+          }}
         >
-          <div style={stylePopup} onClick={(e) => e.stopPropagation()}>
-            <h3
-              style={{
-                fontSize: '1.125rem',
-                fontWeight: 600,
-                marginBottom: 'var(--espacement-md)',
-                color: 'var(--couleur-texte)',
-              }}
-            >
-              {t('footer.titre')}
-            </h3>
+          <section>
+            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+              {t('footer.editeur')}
+            </h4>
+            <p>{legal.editorName}</p>
+            <p>{legal.adress}</p>
+            <p>{legal.email}</p>
+          </section>
 
-            <div
-              style={{
-                fontSize: '0.875rem',
-                color: 'var(--couleur-texte-secondaire)',
-                lineHeight: 1.7,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--espacement-md)',
-              }}
-            >
-              <section>
-                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  {t('footer.editeur')}
-                </h4>
-                <p>{legal.editorName}</p>
-                <p>{legal.adress}</p>
-                <p>{legal.email}</p>
-              </section>
+          <section>
+            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+              {t('footer.hebergement')}
+            </h4>
+            <p>{legal.provider}</p>
+          </section>
 
-              <section>
-                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  {t('footer.hebergement')}
-                </h4>
-                <p>{legal.provider}</p>
-              </section>
+          <section>
+            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+              {t('footer.donnees')}
+            </h4>
+            <p>{legal.privacy}</p>
+          </section>
 
-              <section>
-                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  {t('footer.donnees')}
-                </h4>
-                <p>{legal.privacy}</p>
-              </section>
+          <section>
+            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+              {t('footer.propriete')}
+            </h4>
+            <p>{legal.intellectualProperty}</p>
+          </section>
 
-              <section>
-                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  {t('footer.propriete')}
-                </h4>
-                <p>{legal.intellectualProperty}</p>
-              </section>
+          <section>
+            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+              {t('footer.github')}
+            </h4>
+            <p>
+              <a
+                href={legal.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--couleur-primaire)', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <BouclierIcon className="size-4" />
+                {t('footer.githubText')}
+              </a>
+            </p>
+          </section>
 
-              <section>
-                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  {t('footer.github')}
-                </h4>
-                <p>
-                  <a
-                    href={legal.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: 'var(--couleur-primaire)', textDecoration: 'underline' }}
-                  >
-                    {t('footer.githubText')}
-                  </a>
-                </p>
-              </section>
-
-              <section>
-                <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-                  {t('footer.responsabilite')}
-                </h4>
-                <p>{legal.liability}</p>
-              </section>
-            </div>
-
-            <button
-              onClick={() => setOuvert(false)}
-              style={{
-                marginTop: 'var(--espacement-lg)',
-                padding: 'var(--espacement-sm) var(--espacement-md)',
-                background: 'var(--couleur-primaire)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 'var(--rayon-bordure)',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-              }}
-            >
-              {t('footer.fermer')}
-            </button>
-          </div>
+          <section>
+            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+              {t('footer.responsabilite')}
+            </h4>
+            <p>{legal.liability}</p>
+          </section>
         </div>
-      )}
+      </Modal>
     </>
   );
 }
