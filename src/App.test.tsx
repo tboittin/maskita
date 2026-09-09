@@ -27,6 +27,11 @@ function creerCle(mapping: Record<string, string[]>, nom = 'key.json'): File {
   return new File([JSON.stringify(mapping)], nom, { type: 'application/json' });
 }
 
+/** Les inputs file du DS n'ont plus data-testid — on les trouve par type. */
+function inputsFichier(): HTMLInputElement[] {
+  return Array.from(document.querySelectorAll<HTMLInputElement>('input[type="file"]'));
+}
+
 describe('App', () => {
   beforeEach(() => {
     localStorage.setItem('maskita-langue', 'fr');
@@ -46,7 +51,7 @@ describe('App', () => {
 
   it('affiche la zone de dépôt au démarrage', () => {
     render(<App />);
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
     expect(inputs.length).toBeGreaterThanOrEqual(2);
     // Le premier input accepte .docx, .txt, .md
     expect(inputs[0]).toHaveAttribute('accept', '.docx,.txt,.md');
@@ -72,7 +77,7 @@ describe('App', () => {
 
     render(<App />);
 
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
     const inputDocx = inputs[0] as HTMLInputElement;
     fireEvent.change(inputDocx, { target: { files: [creerFichier()] } });
 
@@ -96,7 +101,7 @@ describe('App', () => {
     render(<App />);
 
     // Charger une clé existante (deuxième input)
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
     const inputCle = inputs[1] as HTMLInputElement;
     fireEvent.change(inputCle, {
       target: { files: [creerCle({ '[EMAIL]': ['test@exemple.fr'] })] },
@@ -120,7 +125,7 @@ describe('App', () => {
   it('affiche une erreur si fichier invalide', async () => {
     render(<App />);
 
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
     const inputDocx = inputs[0] as HTMLInputElement;
     fireEvent.change(inputDocx, { target: { files: [new File(['hi'], 'photo.jpg', { type: 'image/jpeg' })] } });
 
@@ -139,7 +144,7 @@ describe('App', () => {
 
     render(<App />);
 
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
     fireEvent.change(inputs[0], { target: { files: [creerFichier('mon-rapport.docx')] } });
 
     await waitFor(() => {
@@ -176,7 +181,7 @@ describe('App', () => {
 
     render(<App />);
 
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
     fireEvent.change(inputs[0], { target: { files: [creerFichier('mon-rapport.docx')] } });
 
     await waitFor(() => {

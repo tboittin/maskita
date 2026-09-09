@@ -1,5 +1,9 @@
-import { useCallback, useRef, useState, type DragEvent, type ChangeEvent } from 'react';
+import { useCallback } from 'react';
 import { useLangue } from '../i18n/context';
+import {
+  FileDropZone as FileDropZoneDS,
+  type FileDropZoneProps as FileDropZoneDSProps,
+} from '@khaleeno/maskita-design-system';
 
 interface FileDropZoneProps {
   onFichierChoisi: (fichier: File) => void;
@@ -10,6 +14,11 @@ interface FileDropZoneProps {
   libelle?: string;
 }
 
+/**
+ * FileDropZone — wrapper local par-dessus le design system.
+ * Transmet le File brut via onFichierFile (pipeline mammoth) et localise
+ * les libellés avec le contexte i18n.
+ */
 export function FileDropZone({
   onFichierChoisi,
   chargement = false,
@@ -19,122 +28,25 @@ export function FileDropZone({
   libelle = accept ?? '.docx',
 }: FileDropZoneProps) {
   const { t } = useLangue();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
 
-  const handleFichier = useCallback(
+  const handleFile = useCallback(
     (fichier: File) => {
       onFichierChoisi(fichier);
     },
     [onFichierChoisi],
   );
 
-  const handleDragOver = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(true);
-  }, []);
+  const dsProps: FileDropZoneDSProps = {
+    accept,
+    libelle,
+    chargement,
+    erreur,
+    fichierCourant,
+    onFichierFile: handleFile,
+    libelleDeposer: t('dropzone.deposer', libelle),
+    sousTitre: t('dropzone.ouCliquer'),
+    libelleChangement: t('dropzone.changer'),
+  };
 
-  const handleDragLeave = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragOver(false);
-
-      const fichiers = e.dataTransfer.files;
-      if (fichiers.length > 0) {
-        handleFichier(fichiers[0]);
-      }
-    },
-    [handleFichier],
-  );
-
-  const handleInputChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const fichiers = e.target.files;
-      if (fichiers && fichiers.length > 0) {
-        handleFichier(fichiers[0]);
-      }
-      // Réinitialiser pour permettre de re-sélectionner le même fichier
-      e.target.value = '';
-    },
-    [handleFichier],
-  );
-
-  return (
-    <label
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      aria-label={t('dropzone.ariaLabel', libelle)}
-      style={{
-        display: 'block',
-        border: `2px dashed ${dragOver ? 'var(--couleur-primaire)' : erreur ? 'var(--couleur-erreur)' : 'var(--couleur-bordure)'}`,
-        borderRadius: 'var(--rayon-bordure)',
-        padding: 'var(--espacement-xl)',
-        textAlign: 'center',
-        cursor: 'pointer',
-        backgroundColor: dragOver ? 'rgb(79, 70, 229, 0.05)' : 'var(--couleur-surface)',
-        transition: 'all 0.2s ease',
-      }}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        onChange={handleInputChange}
-        style={{ display: 'none' }}
-        data-testid="input-fichier"
-      />
-
-      {chargement ? (
-        <div>
-          <p style={{ fontWeight: 600, color: 'var(--couleur-primaire)' }}>
-            {t('dropzone.chargement')}
-          </p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            {t('dropzone.patienter')}
-          </p>
-        </div>
-      ) : fichierCourant ? (
-        <div>
-          <p style={{ fontWeight: 600, color: 'var(--couleur-texte)' }}>
-            {fichierCourant}
-          </p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            {t('dropzone.changer')}
-          </p>
-        </div>
-      ) : (
-        <div>
-          <p style={{ fontWeight: 600, color: 'var(--couleur-texte)' }}>
-            {t('dropzone.deposer', libelle)}
-          </p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-            {t('dropzone.ouCliquer')}
-          </p>
-        </div>
-      )}
-
-      {erreur && (
-        <p
-          style={{
-            marginTop: 'var(--espacement-md)',
-            color: 'var(--couleur-erreur)',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-          }}
-          role="alert"
-        >
-          {erreur}
-        </p>
-      )}
-    </label>
-  );
+  return <FileDropZoneDS {...dsProps} />;
 }

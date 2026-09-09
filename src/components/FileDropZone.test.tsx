@@ -9,12 +9,18 @@ function creerFichierMock(nom = 'rapport.docx'): File {
   });
 }
 
+function inputFichier(): HTMLInputElement {
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  if (!input) throw new Error('input[type=file] introuvable');
+  return input;
+}
+
 describe('FileDropZone', () => {
-  it('affiche le message par défaut', () => {
+  it('affiche le libellé par défaut', () => {
     const onFichierChoisi = vi.fn();
     renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
-    expect(screen.getByText(/glisser-déposer.*\.docx/i)).toBeInTheDocument();
+    expect(screen.getByText(/Glisser-déposer un fichier .docx ici/)).toBeInTheDocument();
   });
 
   it('affiche le nom du fichier courant', () => {
@@ -39,14 +45,14 @@ describe('FileDropZone', () => {
     const onFichierChoisi = vi.fn();
     renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} chargement />);
 
-    expect(screen.getByText(/extraction en cours/i)).toBeInTheDocument();
+    expect(screen.getByText(/Extraction en cours/)).toBeInTheDocument();
   });
 
   it('appelle onFichierChoisi quand on sélectionne un fichier', () => {
     const onFichierChoisi = vi.fn();
     renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
-    const input = screen.getByTestId('input-fichier') as HTMLInputElement;
+    const input = inputFichier();
     const fichier = creerFichierMock();
 
     fireEvent.change(input, { target: { files: [fichier] } });
@@ -57,27 +63,21 @@ describe('FileDropZone', () => {
 
   it('change de style au drag over', () => {
     const onFichierChoisi = vi.fn();
-    const { container } = renderAvecI18n(
-      <FileDropZone onFichierChoisi={onFichierChoisi} />,
-    );
+    const { container } = renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
-    const zone = container.firstElementChild!;
+    const zone = container.querySelector('label')!;
     fireEvent.dragOver(zone);
 
-    const style = zone.getAttribute('style');
-    // La bordure doit utiliser la variable primaire en drag over
-    expect(style).toContain('var(--couleur-primaire)');
-    // Le fond doit passer en rgba primaire
-    expect(style).toContain('rgba(79, 70, 229');
+    const className = zone.getAttribute('class') ?? '';
+    // Le DS passe sur la teinte action au survol
+    expect(className).toContain('action');
   });
 
   it('appelle onFichierChoisi au drop', () => {
     const onFichierChoisi = vi.fn();
-    const { container } = renderAvecI18n(
-      <FileDropZone onFichierChoisi={onFichierChoisi} />,
-    );
+    const { container } = renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
-    const zone = container.firstElementChild!;
+    const zone = container.querySelector('label')!;
     const fichier = creerFichierMock();
 
     fireEvent.drop(zone, { dataTransfer: { files: [fichier] } });
@@ -89,9 +89,8 @@ describe('FileDropZone', () => {
     const onFichierChoisi = vi.fn();
     renderAvecI18n(<FileDropZone onFichierChoisi={onFichierChoisi} />);
 
-    const input = screen.getByTestId('input-fichier') as HTMLInputElement;
-
+    const input = inputFichier();
     expect(input.type).toBe('file');
-    expect(input.accept).toBe('.docx');
+    expect(input.accept).toContain('.docx');
   });
 });

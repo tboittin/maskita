@@ -1,11 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { PseudoTableau } from './PseudoTableau';
 import { TexteApercu } from './TexteApercu';
 import { useRevue } from '../hooks/useRevue';
 import { useLangue } from '../i18n/context';
 import {
   Bouton,
   Modal,
+  PseudoTableau,
+  type LignePseudo,
+  type ToneStatut,
 } from '@khaleeno/maskita-design-system';
 import type { Mapping } from '../utils/mapping';
 
@@ -29,6 +31,9 @@ export function EcranRevue({
   const [selection, setSelection] = useState<{ valeur: string; source: 'pseudo' | 'lisible' } | null>(null);
   const [pickerPayload, setPickerPayload] = useState<{ valeur: string; tagSource?: string } | null>(null);
   const [supprimerTag, setSupprimerTag] = useState<string | null>(null);
+  const [showAjoutManuel, setShowAjoutManuel] = useState(false);
+  const [typeAjout, setTypeAjout] = useState('');
+  const [valeurAjout, setValeurAjout] = useState('');
 
   const refPseudonymise = useRef<HTMLDivElement>(null);
   const refLisible = useRef<HTMLDivElement>(null);
@@ -242,6 +247,28 @@ export function EcranRevue({
     ? { tag: revue.tagSurbrillance!, valeur: revue.valeurSurbrillance }
     : null;
 
+  // Construire les lignes pour le PseudoTableau DS
+  const conflitsParTag = revue.conflits.reduce<Record<string, string[]>>((acc, c) => {
+    if (!acc[c.tag]) acc[c.tag] = [];
+    acc[c.tag].push(c.message);
+    return acc;
+  }, {});
+
+  const lignes: LignePseudo[] = revue.tags.map(entry => {
+    const conflits = conflitsParTag[entry.tag] ?? [];
+    let statut: ToneStatut = 'existant';
+    if (conflits.length > 0) statut = 'conflit';
+    else if (entry.valeurs.length === 0) statut = 'vide';
+    else if (entry.estNouveau) statut = 'nouveau';
+    return {
+      tag: entry.tag,
+      statut,
+      valeurs: entry.valeurs,
+      conflitMessage: conflits.length > 0 ? conflits[conflits.length - 1] : undefined,
+      isActive: entry.tag === revue.tagSurbrillance,
+    };
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espacement-md)' }}>
@@ -258,20 +285,75 @@ export function EcranRevue({
           }}
         >
           <PseudoTableau
-            tags={revue.tags}
-            conflits={revue.conflits}
-            tagSurbrillance={revue.tagSurbrillance}
-            valeurSurbrillance={revue.valeurSurbrillance}
-            onTagClick={handleTagClick}
-            onValeurClick={handleValeurClick}
+            lignes={lignes}
+            activeTag={revue.tagSurbrillance ?? ''}
+            onSelect={handleTagClick}
+            onAjouterPseudo={() => setShowAjoutManuel(true)}
             onDeplacerValeur={revue.deplacerValeur}
             onReordonnerValeurs={revue.reordonnerValeurs}
             onRenommer={revue.renommerTag}
-            onSupprimer={handleSupprimer}
-            onAjouterValeur={revue.ajouterValeur}
+            onValeurClick={handleValeurClick}
             onRetirerValeur={revue.retirerValeur}
-            onAjouterTag={revue.ajouterTag}
+            onViderTag={handleSupprimer}
+            onAjouterValeur={revue.ajouterValeur}
+            onConflitVoir={(tag) => {
+              revue.mettreSurbrillance(tag);
+              defilerTexteVers(tag);
+              defilerTableauVers(tag);
+            }}
+            libelleTitre={t('tableau.titre', revue.tags.length)}
+            libelleAjouter={t('tableau.bouton.ajouterPseudo')}
+            libelleAucun={t('tableau.aucun')}
+            libelleVoir={t('tableau.voir')}
+            libelleAjouterValeur={t('tableau.tooltip.ajouterValeur')}
+            libelleRetirerValeur={(v) => t('tableau.retirerValeur', v)}
+            libelleViderTag={t('tableau.tooltip.supprimer')}
+            libelleValeursVides={t('tableau.vide')}
+            placeholderNouvelleValeur={t('tableau.placeholder.nouvelleValeur')}
           />
+          {/* Formulaire d'ajout manuel d'un pseudo */}
+          {showAjoutManuel && (
+            <Modal
+              ouvert={showAjoutManuel}
+              titre={t('tableau.ajoutManuel.titre')}
+              onFermer={() => setShowAjoutManuel(false)}
+              pied={
+                <>
+                  <Bouton variante="secondaire" onClick={() => setShowAjoutManuel(false)}>
+                    {t('tableau.bouton.annuler')}
+                  </Bouton>
+                  <Bouton
+                    variante="primaire"
+                    onClick={() => {
+                      if (typeAjout.trim() && valeurAjout.trim()) {
+                        revue.ajouterTag(typeAjout.trim(), valeurAjout.trim());
+                        setTypeAjout('');
+                        setValeurAjout('');
+                        setShowAjoutManuel(false);
+                      }
+                    }}
+                  >
+                    {t('tableau.bouton.ajouter')}
+                  </Bouton>
+                </>
+              }
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
+                <input
+                  value={typeAjout}
+                  onChange={e => setTypeAjout(e.target.value.toUpperCase())}
+                  placeholder={t('tableau.placeholder.type')}
+                  style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+                />
+                <input
+                  value={valeurAjout}
+                  onChange={e => setValeurAjout(e.target.value)}
+                  placeholder={t('tableau.placeholder.valeur')}
+                  style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+                />
+              </div>
+            </Modal>
+          )}
         </div>
 
         {/* Volet droit : aperçus texte */}

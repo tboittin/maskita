@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@khaleeno/maskita-design-system':
-        specifier: ^1.0.0
-        version: 1.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^1.2.0
+        version: 1.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@rollup/rollup-linux-x64-gnu':
         specifier: ^4.62.5
         version: 4.62.5
@@ -386,8 +386,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@khaleeno/maskita-design-system@1.0.0':
-    resolution: {integrity: sha512-XodhoGdfXe5WaLm0+kA1st/hzPSZHR/Gk0kj4NK3Hp2vk1vnipAPBj/ECgtwYx7D6klbhyKIOXfFTkXKPqgPAw==}
+  '@khaleeno/maskita-design-system@1.2.0':
+    resolution: {integrity: sha512-3R7f/1gHsKcq58kA14OtjANgpeN+Ut04TnImPr6Rg7PEBxaSS51I2LkWz/gX6xK06mcn3fQPZLpPP78rDXjFeA==}
     peerDependencies:
       react: ^18.0.0
       react-dom: ^18.0.0
@@ -1759,7 +1759,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@khaleeno/maskita-design-system@1.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@khaleeno/maskita-design-system@1.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@fontsource/inter': 5.3.0
       '@fontsource/jetbrains-mono': 5.3.0

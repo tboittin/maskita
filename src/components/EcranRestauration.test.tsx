@@ -17,6 +17,11 @@ vi.mock('../utils/buildDocument', () => ({
 
 const extractRawTextMock = vi.mocked(mammoth.extractRawText);
 
+/** Les inputs file du DS n'ont plus data-testid — on les trouve par type. */
+function inputsFichier(): HTMLInputElement[] {
+  return Array.from(document.querySelectorAll<HTMLInputElement>('input[type="file"]'));
+}
+
 describe('EcranRestauration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,7 +43,7 @@ describe('EcranRestauration', () => {
 
     renderAvecI18n(<EcranRestauration />);
 
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
 
     // Charger le .docx
     fireEvent.change(inputs[0], {
@@ -75,7 +80,7 @@ describe('EcranRestauration', () => {
 
     renderAvecI18n(<EcranRestauration />);
 
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
 
     fireEvent.change(inputs[0], {
       target: {
@@ -112,7 +117,7 @@ describe('EcranRestauration', () => {
 
     renderAvecI18n(<EcranRestauration />);
 
-    const inputs = screen.getAllByTestId('input-fichier');
+    const inputs = inputsFichier();
 
     fireEvent.change(inputs[0], {
       target: {
