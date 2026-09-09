@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- La brochette (marque Maskita) : un fil qui enfile des morceaux de données, du plus gros au plus fin -->
+  <path d="M2.5 21.5 21.5 2.5" />
+  <circle cx="6.68" cy="17.32" r="3.1" />
+  <circle cx="12.38" cy="11.62" r="2.5" />
+  <circle cx="18.08" cy="5.92" r="1.9" />
+</svg>

@@ -13,6 +13,7 @@ import { nomContientValeursMapping } from './utils/mapping';
 import { I18nProvider, useLangue } from './i18n/context';
 import {
   Bouton,
+  BrochetteIcon,
   Jalons,
   MessageSucces,
   Modal,
@@ -162,9 +163,15 @@ function AppInterieur() {
               {langue === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR'}
             </button>
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--couleur-texte)' }}>
-            {t('app.titre')}
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--espacement-sm)' }}>
+            <BrochetteIcon
+              className="size-8"
+              style={{ color: 'var(--couleur-primaire)' }}
+            />
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--couleur-texte)' }}>
+              {t('app.titre')}
+            </h1>
+          </div>
           <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
             {t('app.sousTitre')}
           </p>
