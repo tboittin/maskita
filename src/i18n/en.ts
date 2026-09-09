@@ -4,8 +4,8 @@ export const en: Dictionnaire = {
   /* App */
   'app.titre': 'Maskita',
   'app.sousTitre': 'Document pseudonymisation — 100% in the browser.',
-  'app.onglet.anonymiser': '🔒 Anonymise',
-  'app.onglet.restaurer': '🔓 Restore',
+  'app.onglet.anonymiser': 'Anonymise',
+  'app.onglet.restaurer': 'Restore',
   'app.section.rapport': 'Report (.docx, .txt, .md)',
   'app.section.cle': 'Existing .key.json key',
   'app.optionnel': '(optional)',

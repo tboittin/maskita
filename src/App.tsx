@@ -12,6 +12,13 @@ import { FooterLegal } from './components/FooterLegal';
 import { PopupConfirmation } from './components/PopupConfirmation';
 import { nomContientValeursMapping } from './utils/mapping';
 import { I18nProvider, useLangue } from './i18n/context';
+import {
+  Bouton,
+  MessageSucces,
+  Panneau,
+  VoileIcon,
+  CleIcon,
+} from '@khaleeno/maskita-design-system';
 
 type Onglet = 'anonymiser' | 'restaurer';
 type Etape = 'upload' | 'revue';
@@ -228,74 +235,52 @@ function AppInterieur() {
                 flexShrink: 0,
               }}
             >
-              {t(`app.onglet.${o}`)}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {o === 'anonymiser'
+                  ? <VoileIcon className="size-4" />
+                  : <CleIcon className="size-4" />}
+                {t(`app.onglet.${o}`)}
+              </span>
             </button>
           ))}
         </nav>
 
         {messageSucces && (
-          <div
-            role="status"
-            style={{
-              padding: 'var(--espacement-sm) var(--espacement-md)',
-              background: '#f0fdf4',
-              border: '1px solid var(--couleur-succes)',
-              borderRadius: 'var(--rayon-bordure)',
-              color: '#166534',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              textAlign: 'center',
-            }}
-          >
-            {messageSucces}
+          <div role="status" style={{ display: 'flex', justifyContent: 'center' }}>
+            <MessageSucces onFermer={() => setMessageSucces(null)}>{messageSucces}</MessageSucces>
           </div>
         )}
 
         {onglet === 'anonymiser' && etape === 'upload' && (
           <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
-            <div>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)' }}>
-                {t('app.section.rapport')}
-              </h3>
-              <FileDropZone
-                onFichierChoisi={handleFichierChoisi}
-                chargement={chargement}
-                erreur={erreur}
-                fichierCourant={fichier?.name ?? null}
-                accept=".docx,.txt,.md"
-              />
-            </div>
+            <Panneau title={t('app.section.rapport')}>
+              <div style={{ padding: 'var(--espacement-md)' }}>
+                <FileDropZone
+                  onFichierChoisi={handleFichierChoisi}
+                  chargement={chargement}
+                  erreur={erreur}
+                  fichierCourant={fichier?.name ?? null}
+                  accept=".docx,.txt,.md"
+                />
+              </div>
+            </Panneau>
 
-            <div>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--espacement-sm)', color: 'var(--couleur-texte-secondaire)' }}>
-                {t('app.section.cle')} <span style={{ fontWeight: 400 }}>({t('app.optionnel')})</span>
-              </h3>
-              <FileDropZone
-                onFichierChoisi={handleCleChoisie}
-                erreur={erreurCle}
-                fichierCourant={nomFichierCle}
-                accept=".json"
-                libelle=".key.json"
-              />
-            </div>
+            <Panneau title={`${t('app.section.cle')} (${t('app.optionnel')})`}>
+              <div style={{ padding: 'var(--espacement-md)' }}>
+                <FileDropZone
+                  onFichierChoisi={handleCleChoisie}
+                  erreur={erreurCle}
+                  fichierCourant={nomFichierCle}
+                  accept=".json"
+                  libelle=".key.json"
+                />
+              </div>
+            </Panneau>
             {analysePrete && (
               <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <button
-                  onClick={handleLancerAnalyse}
-                  style={{
-                    padding: 'var(--espacement-sm) var(--espacement-lg)',
-                    background: 'var(--couleur-primaire)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 'var(--rayon-bordure)',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '1rem',
-                    marginTop: 'var(--espacement-sm)',
-                  }}
-                >
+                <Bouton variante="primaire" taille="lg" onClick={handleLancerAnalyse}>
                   {t('app.bouton.analyser')}
-                </button>
+                </Bouton>
               </div>
             )}
           </section>
@@ -309,20 +294,9 @@ function AppInterieur() {
               onValider={handleValider}
             />
             <div style={{ marginTop: 'var(--espacement-md)', textAlign: 'center' }}>
-              <button
-                onClick={handleRetour}
-                style={{
-                  padding: 'var(--espacement-sm) var(--espacement-md)',
-                  background: 'none',
-                  border: '1px solid var(--couleur-bordure)',
-                  borderRadius: 'var(--rayon-bordure)',
-                  cursor: 'pointer',
-                  color: 'var(--couleur-texte-secondaire)',
-                  fontSize: '0.875rem',
-                }}
-              >
+              <Bouton variante="secondaire" onClick={handleRetour}>
                 {t('app.bouton.recommencer')}
-              </button>
+              </Bouton>
             </div>
           </section>
         )}

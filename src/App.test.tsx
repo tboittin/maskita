@@ -198,13 +198,13 @@ describe('App', () => {
 
   it('affiche les onglets de navigation', () => {
     render(<App />);
-    expect(screen.getByText('🔒 Anonymiser')).toBeInTheDocument();
-    expect(screen.getByText('🔓 Restaurer')).toBeInTheDocument();
+    expect(screen.getByText('Anonymiser')).toBeInTheDocument();
+    expect(screen.getByText('Restaurer')).toBeInTheDocument();
   });
 
   it('affiche le contenu Restaurer en cliquant sur l\'onglet', () => {
     render(<App />);
-    fireEvent.click(screen.getByText('🔓 Restaurer'));
+    fireEvent.click(screen.getByText('Restaurer'));
     expect(screen.getByText(/Rapport modifié/)).toBeInTheDocument();
     expect(screen.getByText(/Clé .key.json correspondante/)).toBeInTheDocument();
   });
@@ -213,11 +213,11 @@ describe('App', () => {
     render(<App />);
 
     // Passer en Restaurer
-    fireEvent.click(screen.getByText('🔓 Restaurer'));
+    fireEvent.click(screen.getByText('Restaurer'));
     expect(screen.getByText(/Rapport modifié/)).toBeInTheDocument();
 
     // Revenir en Anonymiser
-    fireEvent.click(screen.getByText('🔒 Anonymiser'));
+    fireEvent.click(screen.getByText('Anonymiser'));
     expect(screen.getByText(/Rapport.*\.docx/)).toBeInTheDocument();
   });
 });
