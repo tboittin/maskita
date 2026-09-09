@@ -17,8 +17,6 @@ import {
   MessageSucces,
   Modal,
   Panneau,
-  VoileIcon,
-  CleIcon,
 } from '@khaleeno/maskita-design-system';
 
 type Onglet = 'anonymiser' | 'restaurer';
@@ -236,12 +234,7 @@ function AppInterieur() {
                 flexShrink: 0,
               }}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                {o === 'anonymiser'
-                  ? <VoileIcon className="size-4" />
-                  : <CleIcon className="size-4" />}
-                {t(`app.onglet.${o}`)}
-              </span>
+              {t(`app.onglet.${o}`)}
             </button>
           ))}
         </nav>
