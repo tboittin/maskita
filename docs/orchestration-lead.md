@@ -96,16 +96,27 @@ herdr agent wait fix-b01b07 --until done --timeout 300000
 herdr agent read fix-b01b07 --source recent-unwrapped --lines 100
 ```
 
-### Étape 6 : Merge
+### Étape 6 : Pull Request
+
+Pour chaque worktree terminé par un sous-agent, créer une PR :
 
 ```bash
-git merge <branche> --no-edit
-# Résoudre conflits si nécessaire
-pnpm test -- --run && pnpm tsc --noEmit
-git push
+gh pr create --base main --head fix/ma-branche \
+  --title "US-X : Description" \
+  --body "## Modifications\n- ...\n\n## Vérifications\n- ✅ N tests passent\n- ✅ TypeScript OK"
 ```
 
-Pour les branches touchant le matching/restauration : préparer le merge mais soumettre à validation humaine.
+**Ne pas merger.** L'utilisateur approuve et merge sur GitHub.
+
+### Étape 7 : Nettoyage post-merge
+
+```bash
+git checkout main && git pull
+git branch -d fix/ma-branche
+git push origin --delete fix/ma-branche
+rm -rf ../maskita-ma-branche
+git worktree prune
+```
 
 ## Suivi des agents
 
