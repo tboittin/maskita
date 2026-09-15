@@ -132,17 +132,28 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
   }, []);
 
   const renommerTag = useCallback((ancien: string, nouveau: string) => {
+    // B01 — Ajouter les crochets [] si l'utilisateur les a omis
+    let tagNettoye = nouveau.trim();
+    if (!tagNettoye.startsWith('[')) tagNettoye = '[' + tagNettoye;
+    if (!tagNettoye.endsWith(']')) tagNettoye = tagNettoye + ']';
+
+    // B03 — Forcer la majuscule sur le contenu entre crochets
+    tagNettoye = tagNettoye.replace(/^\[(.+)\]$/, (_, contenu) => {
+      return '[' + contenu.toUpperCase() + ']';
+    });
+
     setMapping(prev => {
       const { [ancien]: valeurs, ...reste } = prev;
-      return { ...reste, [nouveau]: valeurs };
+      return { ...reste, [tagNettoye]: valeurs };
     });
   }, []);
 
   const supprimerTag = useCallback((tag: string) => {
-    setMapping(prev => ({
-      ...prev,
-      [tag]: [],
-    }));
+    // B02 — Supprimer complètement l'entrée du mapping (pas seulement vider)
+    setMapping(prev => {
+      const { [tag]: _, ...reste } = prev;
+      return reste;
+    });
   }, []);
 
   const ajouterTag = useCallback((type: string, valeur: string) => {
@@ -168,7 +179,23 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
   }, [valeurSurbrillance]);
 
   const mappingModifie = useMemo(
-    () => JSON.stringify(mapping) !== JSON.stringify(mappingInitial),
+    () => {
+      // B07 — Ignorer l'ordre des valeurs dans la comparaison
+      // (réordonner les valeurs d'un tag ne compte pas comme une modification)
+      const keysA = Object.keys(mapping).sort();
+      const keysB = Object.keys(mappingInitial).sort();
+      if (keysA.length !== keysB.length) return true;
+      for (let i = 0; i < keysA.length; i++) {
+        if (keysA[i] !== keysB[i]) return true;
+        const valsA = [...mapping[keysA[i]]].sort();
+        const valsB = [...mappingInitial[keysB[i]]].sort();
+        if (valsA.length !== valsB.length) return true;
+        for (let j = 0; j < valsA.length; j++) {
+          if (valsA[j] !== valsB[j]) return true;
+        }
+      }
+      return false;
+    },
     [mapping, mappingInitial],
   );
 
