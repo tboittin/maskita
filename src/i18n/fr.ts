@@ -22,12 +22,12 @@ export const fr = {
   /* EcranRevue */
   'revue.titre.pseudo': 'Texte pseudonymisé',
   'revue.titre.lisible': 'Texte lisible',
-  'revue.bouton.nouveauTag': 'Nouveau tag',
+  'revue.bouton.nouveauTag': 'Nouveau pseudo',
   'revue.bouton.nouvelleValeur': 'Nouvelle valeur',
-  'revue.picker.titre.deplacer': (v: string) => `Déplacer « ${v} » vers quel tag ?`,
-  'revue.picker.titre.ajouter': 'Ajouter à quel tag ?',
+  'revue.picker.titre.deplacer': (v: string) => `Déplacer « ${v} » vers quel pseudo ?`,
+  'revue.picker.titre.ajouter': 'Ajouter à quel pseudo ?',
   'revue.picker.valeur': (v: string) => `Valeur : ${v}`,
-  'revue.picker.aucun': 'Aucun autre tag disponible.',
+  'revue.picker.aucun': 'Aucun autre pseudo disponible.',
   'revue.picker.annuler': 'Annuler',
   'revue.bouton.deplacer': (v: string) => `📦 Déplacer « ${v} »`,
   'revue.checkbox.sync': 'Scroll synchronisé',
@@ -35,11 +35,11 @@ export const fr = {
   'revue.bouton.valider': 'Valider et télécharger',
 
   /* Popup suppression dans EcranRevue */
-  'revue.supprimer.titre': 'Supprimer le tag ?',
+  'revue.supprimer.titre': 'Supprimer le pseudo ?',
   'revue.supprimer.message': (tag: string) =>
     `Êtes-vous sûr de vouloir supprimer le tag ${tag} ?`,
   'revue.supprimer.valeurs': 'Valeurs qui seront supprimées :',
-  'revue.supprimer.note': 'Le tag et ses valeurs seront définitivement supprimés.',
+  'revue.supprimer.note': 'Le pseudo et ses valeurs seront définitivement supprimés.',
   'revue.supprimer.annuler': 'Annuler',
   'revue.supprimer.confirmer': 'Supprimer',
 
@@ -51,7 +51,7 @@ export const fr = {
 
   /* PseudoTableau */
   'tableau.titre': (n: number) => `Pseudos (${n})`,
-  'tableau.enTete.tag': 'Tag',
+  'tableau.enTete.tag': 'Pseudo',
   'tableau.enTete.valeurs': 'Valeurs',
   'tableau.vide': 'vide',
   'tableau.aucun': 'Aucun pseudonyme détecté.',
@@ -79,7 +79,7 @@ export const fr = {
   'dropzone.ariaLabel': (lib: string) => `Zone de dépôt de fichier ${lib}`,
 
   /* EcranRestauration */
-  'restauration.titre.rapport': 'Rapport modifié (avec des tags)',
+  'restauration.titre.rapport': 'Rapport modifié (avec des pseudos)',
   'restauration.titre.cle': 'Clé .key.json correspondante',
   'restauration.obligatoire': '(obligatoire)',
   'restauration.apercu': 'Aperçu du texte restauré',

@@ -173,7 +173,7 @@ describe('App i18n', () => {
     fireEvent.click(screen.getByTitle('Switch to English'));
     fireEvent.click(screen.getByText('Restore'));
 
-    expect(screen.getByText('Modified report (with tags)')).toBeInTheDocument();
+    expect(screen.getByText('Modified report (with pseudos)')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Anonymise'));
     expect(screen.getByText('Report (.docx, .txt, .md)')).toBeInTheDocument();
