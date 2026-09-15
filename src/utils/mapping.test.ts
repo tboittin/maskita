@@ -128,4 +128,28 @@ describe('nomContientValeursMapping', () => {
       'sophie@test.fr',
     ]);
   });
+
+  it("détecte un tag (clé du mapping) dans le nom du fichier", () => {
+    const mapping = { '[PERSONNE]': ['Sophie Lambert'] };
+    expect(nomContientValeursMapping('Rapport [PERSONNE]', mapping)).toEqual([
+      '[PERSONNE]',
+    ]);
+  });
+
+  it('détecte à la fois valeurs et tags dans le nom', () => {
+    const mapping = { '[PERSONNE]': ['Sophie Lambert', 'Jean Dupont'] };
+    const resultat = nomContientValeursMapping(
+      'Sophie Lambert et [PERSONNE] rapport',
+      mapping,
+    );
+    expect(resultat).toContain('Sophie Lambert');
+    expect(resultat).toContain('[PERSONNE]');
+  });
+
+  it('est insensible à la casse pour les tags', () => {
+    const mapping = { '[PERSONNE]': ['Sophie Lambert'] };
+    expect(nomContientValeursMapping('rapport [personne]', mapping)).toEqual([
+      '[PERSONNE]',
+    ]);
+  });
 });
