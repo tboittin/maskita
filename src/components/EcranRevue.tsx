@@ -34,6 +34,7 @@ export function EcranRevue({
   const [showAjoutManuel, setShowAjoutManuel] = useState(false);
   const [typeAjout, setTypeAjout] = useState('');
   const [valeurAjout, setValeurAjout] = useState('');
+  const [showCustomType, setShowCustomType] = useState(false);
 
   const refPseudonymise = useRef<HTMLDivElement>(null);
   const refLisible = useRef<HTMLDivElement>(null);
@@ -319,7 +320,7 @@ export function EcranRevue({
               onFermer={() => setShowAjoutManuel(false)}
               pied={
                 <>
-                  <Bouton variante="secondaire" onClick={() => setShowAjoutManuel(false)}>
+                  <Bouton variante="secondaire" onClick={() => { setShowCustomType(false); setShowAjoutManuel(false); }}>
                     {t('tableau.bouton.annuler')}
                   </Bouton>
                   <Bouton
@@ -329,6 +330,7 @@ export function EcranRevue({
                         revue.ajouterTag(typeAjout.trim(), valeurAjout.trim());
                         setTypeAjout('');
                         setValeurAjout('');
+                        setShowCustomType(false);
                         setShowAjoutManuel(false);
                       }
                     }}
@@ -339,12 +341,38 @@ export function EcranRevue({
               }
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
-                <input
-                  value={typeAjout}
-                  onChange={e => setTypeAjout(e.target.value.toUpperCase())}
-                  placeholder={t('tableau.placeholder.type')}
+                <select
+                  value={showCustomType ? '__custom__' : typeAjout}
+                  onChange={e => {
+                    if (e.target.value === '__custom__') {
+                      setShowCustomType(true);
+                      setTypeAjout('');
+                    } else {
+                      setShowCustomType(false);
+                      setTypeAjout(e.target.value);
+                    }
+                  }}
                   style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
-                />
+                >
+                  <option value="" disabled>{t('tableau.ajoutManuel.type.label')}</option>
+                  <option value="PERSONNE">PERSONNE</option>
+                  <option value="DATE">DATE</option>
+                  <option value="LIEU">LIEU</option>
+                  <option value="ADRESSE">ADRESSE</option>
+                  <option value="PROFESSION">PROFESSION</option>
+                  <option value="ETABLISSEMENT">ETABLISSEMENT</option>
+                  <option value="TELEPHONE">TELEPHONE</option>
+                  <option value="EMAIL">EMAIL</option>
+                  <option value="__custom__">{t('tableau.ajoutManuel.type.custom')}</option>
+                </select>
+                {showCustomType && (
+                  <input
+                    value={typeAjout}
+                    onChange={e => setTypeAjout(e.target.value.toUpperCase())}
+                    placeholder={t('tableau.placeholder.type')}
+                    style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+                  />
+                )}
                 <input
                   value={valeurAjout}
                   onChange={e => setValeurAjout(e.target.value)}

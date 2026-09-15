@@ -59,6 +59,8 @@ export const en: Dictionnaire = {
   'tableau.aucun': 'No pseudo detected.',
   'tableau.voir': 'view',
   'tableau.ajoutManuel.titre': 'Add a pseudo',
+  'tableau.ajoutManuel.type.label': 'Pseudo type…',
+  'tableau.ajoutManuel.type.custom': 'Other…',
   'tableau.tooltip.ajouterValeur': 'Add a value',
   'tableau.tooltip.retirer': 'Remove',
   'tableau.retirerValeur': (v: string) => `Remove ${v}`,
