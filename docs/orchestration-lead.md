@@ -37,6 +37,15 @@ Le script exécute automatiquement : création des worktrees → lancement des a
 
 Alternative manuelle : suivre les étapes ci-dessous.
 
+### Étape 0 : Nettoyage préalable
+
+Avant de commencer une nouvelle orchestration, nettoyer les panes des sessions précédentes :
+```bash
+herdr pane list              # repérer les panes inactifs
+herdr pane close w1:pX ...   # fermer les panes inutiles
+git worktree prune           # nettoyer les worktrees supprimés
+```
+
 ### Étape 1 : Commit & Push
 
 ```bash
