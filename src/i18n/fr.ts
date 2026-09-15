@@ -15,7 +15,7 @@ export const fr = {
   'app.succes': 'Fichiers téléchargés avec succès ✓',
   'app.warning.titre': 'Nom de fichier sensible',
   'app.warning.message': (vals: string, nom: string) =>
-    `Le nom du fichier source contient des données potentiellement identifiantes : ${vals}.\n\nFichier concerné : ${nom}\n\nConseil : renommez le fichier source avant de le traiter pour éviter toute fuite via le nom du fichier téléchargé.\n\nVoulez-vous télécharger quand même ?`,
+    `Le nom du fichier contient des données sensibles (valeurs ou tags) : ${vals}.\n\nFichier concerné : ${nom}\n\nRisque : le nom du fichier téléchargé pourrait fuiter des informations personnelles.\n\nConseil : renommez le fichier source avant de le traiter.\n\nVoulez-vous télécharger quand même ?`,
   'app.warning.confirmer': 'Télécharger quand même',
   'app.warning.annuler': 'Annuler',
 

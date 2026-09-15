@@ -17,7 +17,7 @@ export const en: Dictionnaire = {
   'app.succes': 'Files downloaded successfully ✓',
   'app.warning.titre': 'Sensitive file name',
   'app.warning.message': (vals: string, nom: string) =>
-    `The source file name contains potentially identifying data: ${vals}.\n\nFile concerned: ${nom}\n\nTip: rename the source file before processing to avoid leakage through the downloaded file name.\n\nDownload anyway?`,
+    `The file name contains sensitive data (values or tags): ${vals}.\n\nFile concerned: ${nom}\n\nRisk: the downloaded file name could leak personal information.\n\nTip: rename the source file before processing.\n\nDownload anyway?`,
   'app.warning.confirmer': 'Download anyway',
   'app.warning.annuler': 'Cancel',
 
