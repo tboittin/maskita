@@ -37,13 +37,13 @@ export const en: Dictionnaire = {
   'revue.bouton.valider': 'Validate and download',
 
   /* Popup suppression dans EcranRevue */
-  'revue.supprimer.titre': 'Clear this tag?',
+  'revue.supprimer.titre': 'Delete this tag?',
   'revue.supprimer.message': (tag: string) =>
-    `Are you sure you want to clear the values of ${tag}?`,
+    `Are you sure you want to delete the tag ${tag}?`,
   'revue.supprimer.valeurs': 'Values that will be removed:',
-  'revue.supprimer.note': 'The tag will remain visible but empty. You can add values later.',
+  'revue.supprimer.note': 'The tag and its values will be permanently deleted.',
   'revue.supprimer.annuler': 'Cancel',
-  'revue.supprimer.confirmer': 'Clear',
+  'revue.supprimer.confirmer': 'Delete',
 
   /* Popup modifications dans EcranRevue */
   'revue.modifs.titre': 'Changes detected',

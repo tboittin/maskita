@@ -35,13 +35,13 @@ export const fr = {
   'revue.bouton.valider': 'Valider et télécharger',
 
   /* Popup suppression dans EcranRevue */
-  'revue.supprimer.titre': 'Vider le tag ?',
+  'revue.supprimer.titre': 'Supprimer le tag ?',
   'revue.supprimer.message': (tag: string) =>
-    `Êtes-vous sûr de vouloir vider les valeurs de ${tag} ?`,
+    `Êtes-vous sûr de vouloir supprimer le tag ${tag} ?`,
   'revue.supprimer.valeurs': 'Valeurs qui seront supprimées :',
-  'revue.supprimer.note': 'Le tag restera visible mais vide. Vous pourrez y ajouter des valeurs plus tard.',
+  'revue.supprimer.note': 'Le tag et ses valeurs seront définitivement supprimés.',
   'revue.supprimer.annuler': 'Annuler',
-  'revue.supprimer.confirmer': 'Vider',
+  'revue.supprimer.confirmer': 'Supprimer',
 
   /* Popup modifications dans EcranRevue */
   'revue.modifs.titre': 'Modifications détectées',
