@@ -37,10 +37,15 @@ export function appliquerMapping(texte: string, mapping: Mapping): string {
   let resultat = texte;
 
   for (const [tag, valeurs] of Object.entries(mapping)) {
-    for (const valeur of valeurs) {
+    // Trier par longueur décroissante : les plus longues d'abord
+    // pour éviter les remplacements partiels (B08)
+    const valeursTriees = [...valeurs].sort((a, b) => b.length - a.length);
+
+    for (const valeur of valeursTriees) {
       // Échapper les caractères regex dans la valeur
       const echapee = valeur.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(echapee, 'gi');
+      // Word boundaries (\b) pour que 'Tom' ne soit pas remplacé dans 'Tommy'
+      const regex = new RegExp(`\\b${echapee}\\b`, 'gi');
       resultat = resultat.replace(regex, tag);
     }
   }
