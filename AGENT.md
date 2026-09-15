@@ -61,7 +61,9 @@ Voir `Spec.md` pour l'architecture complète, `Readme.md` pour la présentation.
 Quand cet agent tourne dans un pane herdr (`HERDR_ENV=1` présent), il peut
 agir comme **agent lead** et déléguer des sous-tâches à des agents lancés
 dans des panes voisins, via le CLI `herdr`.
-La description de sa tâche se situe dans docs/orchestration-lead.md.
+La description de sa tâche se situe dans `docs/orchestration-lead.md`.
+La skill `herdr-orchestration` contient le guide opérationnel complet.
+Le script `~/.hermes/scripts/orchestrateur.py` automatise le pipeline.
 
 ### Ce qui ne change pas
 - Les règles 1 à 6 ci-dessus s'appliquent aussi aux sous-agents.
@@ -82,10 +84,36 @@ en **lecture seule** :
 | traducteur | hermes | après une modif FR de README/PROGRESS/SPEC, répercute dans le .en.md | docs seulement |
 | impl | hermes | implémente une partie du plan déjà validé | oui |
 
-### Mécanique
+### Mécanique améliorée (pattern parallèle)
+
+Au lieu d'utiliser `--wait` sur chaque prompt (séquentiel), utiliser le
+**pattern parallèle** :
+
 1. Présenter le plan, obtenir ton "oui".
-2. `herdr pane split --current --direction right --no-focus`
-3. `herdr agent start <nom> --kind <kind> --pane <pane_id>`
-4. `herdr agent prompt <nom> "<tâche précise et bornée>" --wait --timeout <ms>`
-5. `herdr agent read <nom> --source recent-unwrapped --lines 150`, puis
-   synthèse par le lead avant toute action.
+2. Créer les worktrees + grille visuelle (voir `docs/orchestration-lead.md`)
+3. Lancer tous les agents : `herdr agent start <nom> --kind hermes --pane <id>`
+4. Envoyer toutes les missions **sans `--wait`** :
+   ```bash
+   herdr agent prompt agent-a "mission A"
+   herdr agent prompt agent-b "mission B"
+   ```
+5. Attendre chaque résultat à tour de rôle :
+   ```bash
+   herdr agent wait agent-a --until done --timeout 300000
+   herdr agent read agent-a --source recent-unwrapped --lines 100
+   herdr agent wait agent-b --until done --timeout 300000
+   herdr agent read agent-b --source recent-unwrapped --lines 100
+   ```
+6. Synthèse par le lead, merge, push.
+
+Ou utiliser le script d'orchestration automatisé :
+```bash
+python3 ~/.hermes/scripts/orchestrateur.py all plan.json
+```
+
+### Règles herdr
+- **Toujours dans la même vue** : construire une grille de panes, ne pas
+  changer de workspace.
+- **`herdr agent start`** pour lancer Hermes, PAS `herdr pane run hermes`.
+- **`herdr agent prompt`** pour envoyer une mission, PAS `herdr pane send-text`.
+- **`herdr agent wait --until done`** pour attendre la fin, PAS de polling manuel.
