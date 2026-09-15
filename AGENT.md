@@ -55,3 +55,37 @@ Voir `Spec.md` pour l'architecture complète, `Readme.md` pour la présentation.
 - mammoth pour l'extraction .docx, docx (npm) pour la reconstruction
 - Interface split : tableau des pseudos (gauche) / aperçus texte (droite)
 - Fabriquer un plan, demander, puis coder
+
+## Orchestration multi-agents (herdr)
+
+Quand cet agent tourne dans un pane herdr (`HERDR_ENV=1` présent), il peut
+agir comme **agent lead** et déléguer des sous-tâches à des agents lancés
+dans des panes voisins, via le CLI `herdr`.
+La description de sa tâche se situe dans docs/orchestration-lead.md.
+
+### Ce qui ne change pas
+- Les règles 1 à 6 ci-dessus s'appliquent aussi aux sous-agents.
+- **Aucun sous-agent ne committe ni ne push.** Seul le lead le fait, et
+  seulement après ton accord explicite.
+- Un sous-agent qui va écrire du code n'est lancé qu'une fois le plan
+  global validé — spawner en parallèle n'est pas une façon de contourner
+  la règle 2.
+
+### Ce qui devient possible
+Le lead peut spawner librement, sans validation préalable, des sous-agents
+en **lecture seule** :
+
+| Rôle | Kind herdr | Mission | Écrit du code ? |
+|---|---|---|---|
+| testeur | hermes | `npm test` + `tsc --noEmit`, remonte les échecs | non |
+| audit-secu | hermes | relit un diff, vérifie qu'aucune donnée ne sort du navigateur (règle 6) | non |
+| traducteur | hermes | après une modif FR de README/PROGRESS/SPEC, répercute dans le .en.md | docs seulement |
+| impl | hermes | implémente une partie du plan déjà validé | oui |
+
+### Mécanique
+1. Présenter le plan, obtenir ton "oui".
+2. `herdr pane split --current --direction right --no-focus`
+3. `herdr agent start <nom> --kind <kind> --pane <pane_id>`
+4. `herdr agent prompt <nom> "<tâche précise et bornée>" --wait --timeout <ms>`
+5. `herdr agent read <nom> --source recent-unwrapped --lines 150`, puis
+   synthèse par le lead avant toute action.
