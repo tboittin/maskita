@@ -24,12 +24,12 @@ export const en: Dictionnaire = {
   /* EcranRevue */
   'revue.titre.pseudo': 'Pseudonymised text',
   'revue.titre.lisible': 'Readable text',
-  'revue.bouton.nouveauTag': 'New tag',
+  'revue.bouton.nouveauTag': 'New pseudo',
   'revue.bouton.nouvelleValeur': 'New value',
-  'revue.picker.titre.deplacer': (v: string) => `Move « ${v} » to which tag?`,
-  'revue.picker.titre.ajouter': 'Add to which tag?',
+  'revue.picker.titre.deplacer': (v: string) => `Move « ${v} » to which pseudo?`,
+  'revue.picker.titre.ajouter': 'Add to which pseudo?',
   'revue.picker.valeur': (v: string) => `Value: ${v}`,
-  'revue.picker.aucun': 'No other tag available.',
+  'revue.picker.aucun': 'No other pseudo available.',
   'revue.picker.annuler': 'Cancel',
   'revue.bouton.deplacer': (v: string) => `📦 Move « ${v} »`,
   'revue.checkbox.sync': 'Sync scroll',
@@ -37,11 +37,11 @@ export const en: Dictionnaire = {
   'revue.bouton.valider': 'Validate and download',
 
   /* Popup suppression dans EcranRevue */
-  'revue.supprimer.titre': 'Clear this tag?',
+  'revue.supprimer.titre': 'Clear this pseudo?',
   'revue.supprimer.message': (tag: string) =>
     `Are you sure you want to clear the values of ${tag}?`,
   'revue.supprimer.valeurs': 'Values that will be removed:',
-  'revue.supprimer.note': 'The tag will remain visible but empty. You can add values later.',
+  'revue.supprimer.note': 'The pseudo will remain visible but empty. You can add values later.',
   'revue.supprimer.annuler': 'Cancel',
   'revue.supprimer.confirmer': 'Clear',
 
@@ -53,7 +53,7 @@ export const en: Dictionnaire = {
 
   /* PseudoTableau */
   'tableau.titre': (n: number) => `Pseudos (${n})`,
-  'tableau.enTete.tag': 'Tag',
+  'tableau.enTete.tag': 'Pseudo',
   'tableau.enTete.valeurs': 'Values',
   'tableau.vide': 'empty',
   'tableau.aucun': 'No pseudo detected.',
@@ -79,7 +79,7 @@ export const en: Dictionnaire = {
   'dropzone.ariaLabel': (lib: string) => `File drop zone for ${lib}`,
 
   /* EcranRestauration */
-  'restauration.titre.rapport': 'Modified report (with tags)',
+  'restauration.titre.rapport': 'Modified report (with pseudos)',
   'restauration.titre.cle': 'Corresponding .key.json key',
   'restauration.obligatoire': '(required)',
   'restauration.apercu': 'Restored text preview',
