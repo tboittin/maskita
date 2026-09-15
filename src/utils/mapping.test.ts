@@ -68,6 +68,20 @@ describe('appliquerMapping', () => {
     expect(resultat).toContain('[EMAIL]');
     expect((resultat.match(/test@exemple\.fr/g) || []).length).toBe(0);
   });
+
+  // B08 — Reproduction du bug de chevauchement
+  it('gère les valeurs qui se chevauchent sans résidu (B08)', () => {
+    const mapping = {
+      '[ADOLESCENT]': ['Tom M', 'Tom', 'Tommy'],
+    };
+
+    const texte = 'Tom M a discuté avec Tommy et Tom';
+    const resultat = appliquerMapping(texte, mapping);
+
+    // Aucune occurrence ne doit produire de résidu comme '[ADOLESCENT]my'
+    expect(resultat).not.toMatch(/\[ADOLESCENT\]\w/);
+    expect(resultat).toBe('[ADOLESCENT] a discuté avec [ADOLESCENT] et [ADOLESCENT]');
+  });
 });
 
 describe('restaurerTexte', () => {
