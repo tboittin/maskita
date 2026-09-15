@@ -48,9 +48,9 @@ describe('EcranRevue', () => {
     // Ajouter une valeur pour modifier le mapping
     fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
     // La popup d'ajout apparaît — on remplit le champ type puis valeur
-    const inputType = screen.getByPlaceholderText('Type (ex: PERSONNE)');
+    const selectType = screen.getByRole('combobox');
     const inputValeur = screen.getByPlaceholderText('Valeur');
-    fireEvent.change(inputType, { target: { value: 'EMAIL' } });
+    fireEvent.change(selectType, { target: { value: 'EMAIL' } });
     fireEvent.change(inputValeur, { target: { value: 'test@exemple.fr' } });
     fireEvent.click(screen.getByText('Ajouter'));
 
@@ -68,9 +68,9 @@ describe('EcranRevue', () => {
 
     // Ajouter une valeur pour modifier le mapping
     fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
-    const inputType = screen.getByPlaceholderText('Type (ex: PERSONNE)');
+    const selectType = screen.getByRole('combobox');
     const inputValeur = screen.getByPlaceholderText('Valeur');
-    fireEvent.change(inputType, { target: { value: 'EMAIL' } });
+    fireEvent.change(selectType, { target: { value: 'EMAIL' } });
     fireEvent.change(inputValeur, { target: { value: 'test@exemple.fr' } });
     fireEvent.click(screen.getByText('Ajouter'));
 
@@ -87,9 +87,9 @@ describe('EcranRevue', () => {
 
     // Ajouter une valeur pour modifier le mapping
     fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
-    const inputType = screen.getByPlaceholderText('Type (ex: PERSONNE)');
+    const selectType = screen.getByRole('combobox');
     const inputValeur = screen.getByPlaceholderText('Valeur');
-    fireEvent.change(inputType, { target: { value: 'EMAIL' } });
+    fireEvent.change(selectType, { target: { value: 'EMAIL' } });
     fireEvent.change(inputValeur, { target: { value: 'test@exemple.fr' } });
     fireEvent.click(screen.getByText('Ajouter'));
 

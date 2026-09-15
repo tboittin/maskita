@@ -57,6 +57,8 @@ export const fr = {
   'tableau.aucun': 'Aucun pseudonyme détecté.',
   'tableau.voir': 'voir',
   'tableau.ajoutManuel.titre': 'Ajouter un pseudo',
+  'tableau.ajoutManuel.type.label': 'Type de pseudo…',
+  'tableau.ajoutManuel.type.custom': 'Autre…',
   'tableau.tooltip.ajouterValeur': 'Ajouter une valeur',
   'tableau.tooltip.retirer': 'Retirer',
   'tableau.retirerValeur': (v: string) => `Retirer ${v}`,
