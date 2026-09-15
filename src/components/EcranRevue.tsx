@@ -24,7 +24,6 @@ export function EcranRevue({
 }: EcranRevueProps) {
   const { t } = useLangue();
   const revue = useRevue(texteOriginal, mappingInitial);
-  const [popupOuverte, setPopupOuverte] = useState(false);
   const [syncScroll, setSyncScroll] = useState(true);
   const [recentrer, setRecentrer] = useState(true);
 
@@ -175,21 +174,7 @@ export function EcranRevue({
   }, []);
 
   const handleClicValider = () => {
-    if (revue.mappingModifie) {
-      setPopupOuverte(true);
-    } else {
-      onValider(revue.mappingFinal, revue.textePseudonymise);
-    }
-  };
-
-  const handleContinuer = () => {
-    setPopupOuverte(false);
     onValider(revue.mappingFinal, revue.textePseudonymise);
-  };
-
-  const handleRelancer = () => {
-    setPopupOuverte(false);
-    revue.reinitialiserMapping();
   };
 
   const handleTagClick = useCallback((tag: string) => {
@@ -541,27 +526,6 @@ export function EcranRevue({
         </Modal>
       )}
 
-      {popupOuverte && (
-        <Modal
-          ouvert={popupOuverte}
-          titre={t('revue.modifs.titre')}
-          onFermer={handleRelancer}
-          pied={
-            <>
-              <Bouton variante="secondaire" onClick={handleRelancer}>
-                {t('revue.modifs.relancer')}
-              </Bouton>
-              <Bouton variante="primaire" onClick={handleContinuer}>
-                {t('revue.modifs.confirmer')}
-              </Bouton>
-            </>
-          }
-        >
-          <p className="text-sm leading-relaxed text-brume-500">
-            {t('revue.modifs.message')}
-          </p>
-        </Modal>
-      )}
     </div>
   );
 }

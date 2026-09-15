@@ -30,7 +30,6 @@ interface UseRevueReturn {
   mettreSurbrillanceValeur: (tag: string, valeur: string) => void;
   mappingFinal: Mapping;
   mappingModifie: boolean;
-  reinitialiserMapping: () => void;
 }
 
 export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRevueReturn {
@@ -199,10 +198,6 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     [mapping, mappingInitial],
   );
 
-  const reinitialiserMapping = useCallback(() => {
-    setMapping({ ...mappingInitial });
-  }, [mappingInitial]);
-
   return {
     tags,
     textePseudonymise,
@@ -220,6 +215,5 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     mettreSurbrillanceValeur,
     mappingFinal: mapping,
     mappingModifie,
-    reinitialiserMapping,
   };
 }
