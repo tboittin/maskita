@@ -1,0 +1,2 @@
+/* Déclaré en premier → priorité la plus basse parmi les layers */
+@layer app;
