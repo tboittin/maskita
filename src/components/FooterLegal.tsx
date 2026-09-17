@@ -16,18 +16,9 @@ export function FooterLegal() {
   return (
     <>
       <footer style={styleFooter}>
-        <button
-          onClick={() => setOuvert(true)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--couleur-texte-secondaire)',
-            fontSize: '0.8125rem',
-            cursor: 'pointer',
-          }}
-        >
+        <Bouton variante="ghost" taille="sm" onClick={() => setOuvert(true)}>
           {t('footer.mentions')}
-        </button>
+        </Bouton>
       </footer>
 
       <Modal

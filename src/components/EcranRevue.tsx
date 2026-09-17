@@ -404,8 +404,12 @@ export function EcranRevue({
                 display: 'flex', gap: 'var(--espacement-xs)',
                 padding: 'var(--espacement-sm)', zIndex: 10,
               }}>
-                <BoutonAction label={t('revue.bouton.nouveauTag')} onClick={handleNouveauTag} />
-                <BoutonAction label={t('revue.bouton.nouvelleValeur')} onClick={handleNouvelleValeur} />
+                <Bouton variante="primaire" taille="sm" onClick={handleNouveauTag} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
+                  {t('revue.bouton.nouveauTag')}
+                </Bouton>
+                <Bouton variante="primaire" taille="sm" onClick={handleNouvelleValeur} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
+                  {t('revue.bouton.nouvelleValeur')}
+                </Bouton>
               </div>
             )}
           </div>
@@ -428,8 +432,12 @@ export function EcranRevue({
                 display: 'flex', gap: 'var(--espacement-xs)',
                 padding: 'var(--espacement-sm)', zIndex: 10,
               }}>
-                <BoutonAction label={t('revue.bouton.nouveauTag')} onClick={handleNouveauTag} />
-                <BoutonAction label={t('revue.bouton.nouvelleValeur')} onClick={handleNouvelleValeur} />
+                <Bouton variante="primaire" taille="sm" onClick={handleNouveauTag} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
+                  {t('revue.bouton.nouveauTag')}
+                </Bouton>
+                <Bouton variante="primaire" taille="sm" onClick={handleNouvelleValeur} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
+                  {t('revue.bouton.nouvelleValeur')}
+                </Bouton>
               </div>
             )}
           </div>
@@ -439,23 +447,9 @@ export function EcranRevue({
       {/* Bouton déplacer si une valeur est sélectionnée dans la table */}
       {valeurSelectionnee && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-8px' }}>
-          <button
-            onClick={() => handleDeplacerValeur(valeurSelectionnee.valeur, valeurSelectionnee.tag)}
-            style={{
-              padding: '4px 12px',
-              background: 'none',
-              border: '1px solid var(--couleur-bordure)',
-              borderRadius: 'var(--rayon-bordure)',
-              cursor: 'pointer',
-              color: 'var(--couleur-texte-secondaire)',
-              fontSize: '0.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
+          <Bouton variante="ghost" taille="sm" onClick={() => handleDeplacerValeur(valeurSelectionnee.valeur, valeurSelectionnee.tag)}>
             {t('revue.bouton.deplacer', valeurSelectionnee.valeur)}
-          </button>
+          </Bouton>
         </div>
       )}
 
@@ -578,16 +572,5 @@ function CheckboxInput({ checked, onChange, label }: {
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ cursor: 'pointer' }} />
       {label}
     </label>
-  );
-}
-
-function BoutonAction({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button onClick={(e) => { e.stopPropagation(); onClick(); }} style={{
-      padding: '4px 10px', background: 'var(--couleur-primaire)', color: 'white',
-      border: 'none', borderRadius: 'var(--rayon-bordure)', cursor: 'pointer',
-      fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-    }}>{label}</button>
   );
 }
