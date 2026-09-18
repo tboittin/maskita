@@ -43,12 +43,6 @@ export const fr = {
   'revue.supprimer.annuler': 'Annuler',
   'revue.supprimer.confirmer': 'Supprimer',
 
-  /* Popup modifications dans EcranRevue */
-  'revue.modifs.titre': 'Modifications détectées',
-  'revue.modifs.message': "Vous avez modifié le mapping. Voulez-vous relancer l'analyse depuis le rapport d'origine, ou continuer avec les données actuelles ?",
-  'revue.modifs.confirmer': 'Continuer',
-  'revue.modifs.relancer': "Relancer l'analyse",
-
   /* PseudoTableau */
   'tableau.titre': (n: number) => `Pseudos (${n})`,
   'tableau.enTete.tag': 'Pseudo',

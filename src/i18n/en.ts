@@ -45,12 +45,6 @@ export const en: Dictionnaire = {
   'revue.supprimer.annuler': 'Cancel',
   'revue.supprimer.confirmer': 'Delete',
 
-  /* Popup modifications dans EcranRevue */
-  'revue.modifs.titre': 'Changes detected',
-  'revue.modifs.message': 'You have modified the mapping. Do you want to re-run analysis from the original report, or continue with current data?',
-  'revue.modifs.confirmer': 'Continue',
-  'revue.modifs.relancer': 'Re-run analysis',
-
   /* PseudoTableau */
   'tableau.titre': (n: number) => `Pseudos (${n})`,
   'tableau.enTete.tag': 'Pseudo',
