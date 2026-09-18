@@ -41,7 +41,7 @@ describe('EcranRevue', () => {
     );
   });
 
-  it('appelle onValider directement même si mapping modifié (popup supprimée)', () => {
+  it('appelle onValider avec le mapping modifié au clic sur Valider', () => {
     const onValider = vi.fn();
     renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={{}} onValider={onValider} />);
 
@@ -53,7 +53,7 @@ describe('EcranRevue', () => {
     fireEvent.change(inputValeur, { target: { value: 'test@exemple.fr' } });
     fireEvent.click(screen.getByText('Ajouter'));
 
-    // Le mapping est modifié → clic Valider appelle directement onValider (plus de popup)
+    // Le mapping est modifié → clic Valider appelle onValider avec les bonnes données
     fireEvent.click(screen.getByText('Valider et télécharger'));
 
     expect(onValider).toHaveBeenCalledTimes(1);
@@ -61,6 +61,9 @@ describe('EcranRevue', () => {
       expect.objectContaining({ '[EMAIL]': ['test@exemple.fr'] }),
       expect.stringContaining('[EMAIL]'),
     );
+
+    // Aucune modale de confirmation ne s'affiche
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('affiche le bouton + Ajouter un pseudo', () => {
