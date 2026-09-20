@@ -1,0 +1,426 @@
+name: Issue → Plan → PR
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  ##############################################################################
+  # PHASE 1 : Analyser l'issue et poster un plan
+  ##############################################################################
+  plan:
+    if: |
+      github.event_name == 'issues' &&
+      github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    outputs:
+      plan_posted: ${{ steps.post_plan.outputs.plan_posted }}
+
+    steps:
+      - uses: actions/github-script@v7
+        id: post_plan
+        with:
+          script: |
+            const { issue, octokit } = context;
+            const { title, body, number, user } = issue;
+            const author = user.login;
+            const owner = context.repo.owner;
+
+            // ── Sécurité ──
+            if (author !== owner) {
+              try {
+                await octokit.rest.repos.checkCollaborator({
+                  owner, repo: context.repo.repo, username: author,
+                });
+              } catch {
+                console.log(`Issue #${number} by @${author} — skipped`);
+                return;
+              }
+            }
+
+            // ── Construire le plan ──
+            const lc = (title + ' ' + (body || '')).toLowerCase();
+
+            let plan;
+            if (lc.includes('padding')) {
+              plan = [
+                `## 🧠 Plan pour #${number} — ${title}`,
+                '',
+                '### Analyse',
+                'Ajustement des espacements (padding) dans les composants concernés.',
+                '',
+                '### Actions',
+                '1. Identifier les fichiers CSS/React avec les paddings insuffisants',
+                '2. Appliquer les nouvelles valeurs (Tailwind ou variables CSS)',
+                '3. Vérifier avec \`pnpm test -- --run\` et \`pnpm typecheck\`',
+                '4. Commiter et créer une PR',
+                '',
+                '### Réagir',
+                '- 👍 / \`/approve\` → lance l\'exécution automatique',
+                '- 👎 / \`/revision <feedback>\` → plan révisé avec ton retour',
+              ].join('\n');
+            } else if (lc.includes('bouton') || lc.includes('button') || lc.includes('inline')) {
+              plan = [
+                `## 🧠 Plan pour #${number} — ${title}`,
+                '',
+                '### Analyse',
+                'Migration des éléments d\'interface vers le design system (@khaleeno/maskita-design-system).',
+                '',
+                '### Actions',
+                '1. Remplacer les \`<button>\` inline par le composant \`Bouton\` du DS',
+                '2. Supprimer les helpers locaux redondants (ex: BoutonAction)',
+                '3. Vérifier avec \`pnpm test -- --run\` et \`pnpm typecheck\`',
+                '4. Commiter et créer une PR',
+                '',
+                '### Réagir',
+                '- 👍 / \`/approve\` → lance l\'exécution automatique',
+                '- 👎 / \`/revision <feedback>\` → plan révisé avec ton retour',
+              ].join('\n');
+            } else if (lc.includes('restauration') || lc.includes('restore') || lc.includes('download') || lc.includes('téléchargement')) {
+              plan = [
+                `## 🧠 Plan pour #${number} — ${title}`,
+                '',
+                '### Analyse',
+                'Fonctionnalité de restauration / téléchargement de données.',
+                '',
+                '### Actions à déterminer',
+                '1. Lire le code concerné dans `src/`',
+                '2. Comprendre le flux attendu (fichier, état, UI)',
+                '3. Implémenter la correction',
+                '4. Vérifier avec `pnpm test -- --run` et `pnpm typecheck`',
+                '5. Commiter et créer une PR',
+                '',
+                '### Réagir',
+                '- 👍 / `/approve` → lance l\'exécution automatique',
+                '- 👎 / `/revision <feedback>` → plan révisé avec ton retour',
+              ].join('\n');
+            } else if (lc.includes('modale') || lc.includes('modal') || lc.includes('confirmation')) {
+              plan = [
+                `## 🧠 Plan pour #${number} — ${title}`,
+                '',
+                '### Analyse',
+                'Modification du comportement des modales de confirmation.',
+                '',
+                '### Actions à déterminer',
+                '1. Lire le code concerné dans `src/components/`',
+                '2. Comprendre le comportement attendu',
+                '3. Implémenter la correction',
+                '4. Vérifier avec `pnpm test -- --run` et `pnpm typecheck`',
+                '5. Commiter et créer une PR',
+                '',
+                '### Réagir',
+                '- 👍 / `/approve` → lance l\'exécution automatique',
+                '- 👎 / `/revision <feedback>` → plan révisé avec ton retour',
+              ].join('\n');
+            } else {
+              plan = [
+                `## 🧠 Plan pour #${number} — ${title}`,
+                '',
+                '### Analyse',
+                'Issue à analyser plus en détail.',
+                '',
+                '### Actions à déterminer',
+                '1. Lire le code concerné',
+                '2. Comprendre le problème et proposer une approche',
+                '3. Implémenter la correction',
+                '4. Vérifier avec \`pnpm test -- --run\` et \`pnpm typecheck\`',
+                '5. Commiter et créer une PR',
+                '',
+                '### Réagir',
+                '- 👍 / \`/approve\` → lance l\'exécution automatique',
+                '- 👎 / \`/revision <feedback>\` → plan révisé avec ton retour',
+              ].join('\n');
+            }
+
+            plan += '\n\n---\n🤖 *Plan généré par Hermes Agent*';
+
+            await octokit.rest.issues.createComment({
+              owner, repo: context.repo.repo,
+              issue_number: number,
+              body: plan,
+            });
+
+            core.setOutput('plan_posted', 'true');
+
+  ##############################################################################
+  # PHASE 2 : Répondre aux commentaires (/approve, /revision)
+  ##############################################################################
+  respond:
+    if: |
+      (github.event_name == 'issue_comment' &&
+       github.event.action == 'created' &&
+       (startsWith(github.event.comment.body, '/approve') ||
+        startsWith(github.event.comment.body, '/revision'))) ||
+      (github.event_name == 'issues' &&
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'approved')
+    runs-on: ubuntu-latest
+    outputs:
+      action: ${{ steps.parse.outputs.action }}
+
+    steps:
+      - uses: actions/github-script@v7
+        id: parse
+        with:
+          script: |
+            const { octokit } = context;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const number = context.payload.issue.number;
+            const isLabelEvent = context.eventName === 'issues' && context.payload.action === 'labeled';
+            const isCommentEvent = context.eventName === 'issue_comment';
+
+            // ── Sécurité : owner ou collaborateur uniquement ──
+            const author = isCommentEvent
+              ? context.payload.comment.user.login
+              : context.payload.sender.login;
+
+            if (author !== owner) {
+              try {
+                await octokit.rest.repos.checkCollaborator({
+                  owner, repo, username: author,
+                });
+              } catch {
+                console.log(`Action de @${author} — ignorée (non autorisé)`);
+                return;
+              }
+            }
+
+            // ── Cas 1 : label "approved" posé manuellement ──
+            if (isLabelEvent) {
+              // Le bot pose lui-même le label après un /approve :
+              // ne pas re-déclencher l'exécution (évite la double exécution).
+              if (context.payload.sender?.type === 'Bot') {
+                console.log('Label "approved" posé par le bot (via /approve) — ignoré');
+                return;
+              }
+
+              core.setOutput('action', 'approve');
+
+              await octokit.rest.issues.createComment({
+                owner, repo,
+                issue_number: number,
+                body: '✅ Plan approuvé via le label `approved` ! Lancement de l\'exécution...',
+              });
+              return;
+            }
+
+            // ── Cas 2 : commentaire /approve ou /revision ──
+            const body = context.payload.comment.body.trim();
+
+            if (body.startsWith('/approve')) {
+              core.setOutput('action', 'approve');
+
+              // Ajouter le label "approved"
+              await octokit.rest.issues.addLabels({
+                owner, repo,
+                issue_number: number,
+                labels: ['approved'],
+              });
+
+              await octokit.rest.issues.createComment({
+                owner, repo,
+                issue_number: number,
+                body: '✅ Plan approuvé ! Lancement de l\'exécution...',
+              });
+
+            } else if (body.startsWith('/revision')) {
+              core.setOutput('action', 'revision');
+
+              const feedback = body.replace('/revision', '').trim();
+
+              await octokit.rest.issues.createComment({
+                owner, repo,
+                issue_number: number,
+                body: [
+                  `## 🔄 Plan révisé pour #${number}`,
+                  '',
+                  '### Retour pris en compte',
+                  feedback || '(feedback à préciser)',
+                  '',
+                  '### Nouvelles actions',
+                  '1. Ajuster le plan selon le retour ci-dessus',
+                  '2. Re-soumettre pour approbation',
+                  '',
+                  '### Réagir',
+                  '- 👍 / \`/approve\` → lance l\'exécution automatique',
+                  '- 👎 / \`/revision <feedback>\` → plan révisé avec ton retour',
+                  '',
+                  '---',
+                  '🤖 *Plan révisé par Hermes Agent*',
+                ].join('\n'),
+              });
+            }
+
+  ##############################################################################
+  # PHASE 3 : Vérifier le runner self-hosted (machine WSL), puis exécuter
+  ##############################################################################
+  #
+  # ⚠️ SETUP REQUIS — self-hosted runner GitHub sur la machine WSL :
+  #
+  #   1. GitHub → Settings → Actions → Runners → "New self-hosted runner"
+  #      (le token de registre s'obtient dans cette page).
+  #   2. Configurer le runner avec les labels WSL :
+  #        ./config.sh --url https://github.com/tboittin/maskita \
+  #          --token <TOKEN> --name wsl-runner --labels linux,wsl,self-hosted
+  #   3. Lancer : ./run.sh
+  #      Service systemd (démarrage auto) :
+  #        sudo ./svc.sh install && sudo ./svc.sh start
+  #   4. Vérifier : Settings → Actions → Runners → "wsl-runner" actif.
+  #
+  # Tant que le runner n'est pas enregistré, le job check-runner (ubuntu-latest)
+  # détecte son absence et le job execute est ignoré proprement :
+  # pas de job en file d'attente, pas de pipeline bloqué.
+  ##############################################################################
+  check-runner:
+    needs: respond
+    if: needs.respond.outputs.action == 'approve'
+    runs-on: ubuntu-latest
+    outputs:
+      runner_available: ${{ steps.check.outputs.runner_available }}
+
+    steps:
+      - uses: actions/github-script@v7
+        id: check
+        with:
+          script: |
+            let available = false;
+            try {
+              const { data } = await octokit.rest.actions.listSelfHostedRunnersForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+              const labels = new Set();
+              for (const runner of data.runners || []) {
+                console.log(`Runner trouvé : ${runner.name} (${runner.status})`);
+                for (const label of runner.labels || []) labels.add(label.name);
+              }
+              available = labels.has('wsl') || labels.has('linux') || labels.has('self-hosted');
+            } catch (error) {
+              // Le GITHUB_TOKEN ne peut pas toujours lister les runners (403).
+              // On suppose le runner absent plutôt que de bloquer l'exécution :
+              console.log(`Impossible de vérifier les runners self-hosted (${error.status || error.message}) — runner considéré absent`);
+            }
+            core.setOutput('runner_available', available ? 'true' : 'false');
+
+      - name: Alerter si le runner n'est pas disponible
+        if: steps.check.outputs.runner_available == 'false'
+        run: |
+          echo "::warning::Aucun runner self-hosted WSL disponible — job execute ignoré."
+          echo "Setup requis : GitHub → Settings → Actions → Runners (labels linux,wsl,self-hosted)."
+
+  ##############################################################################
+  # PHASE 3 bis : Exécution (nécessite le runner self-hosted ci-dessus)
+  ##############################################################################
+  execute:
+    needs: [respond, check-runner]
+    if: needs.respond.outputs.action == 'approve' && needs.check-runner.outputs.runner_available == 'true'
+    runs-on: [self-hosted, linux, wsl]
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Config git
+        run: |
+          git config user.name "Hermes Agent"
+          git config user.email "hermes@khaleeno.com"
+
+      - name: Extraire les infos de l'issue
+        id: issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { issue } = context;
+            const title = issue.title;
+            const number = issue.number;
+
+            // Slugifier le titre pour la branche
+            const slug = title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-|-$/g, '')
+              .slice(0, 40);
+
+            const branch = `fix/issue-${number}-${slug}`;
+            const worktreeDir = `../maskita-issue-${number}`;
+
+            core.setOutput('branch', branch);
+            core.setOutput('worktree_dir', worktreeDir);
+            core.setOutput('issue_number', String(number));
+
+      - name: Créer la branche et le worktree
+        run: |
+          git checkout -b "${{ steps.issue.outputs.branch }}" main
+          git push origin "${{ steps.issue.outputs.branch }}"
+          git worktree add "${{ steps.issue.outputs.worktree_dir }}" "origin/${{ steps.issue.outputs.branch }}"
+          cd "${{ steps.issue.outputs.worktree_dir }}"
+          git checkout -b "${{ steps.issue.outputs.branch }}" "origin/${{ steps.issue.outputs.branch }}"
+
+      - name: Installer les dépendances
+        run: |
+          cd "${{ steps.issue.outputs.worktree_dir }}"
+          pnpm install
+
+      - name: Lire la description de l'issue
+        id: issue_body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { issue } = context;
+            core.setOutput('title', issue.title);
+            core.setOutput('body', issue.body || '');
+
+      - name: Exécuter la mission via Hermes
+        run: |
+          WORKTREE="${{ steps.issue.outputs.worktree_dir }}"
+          BRANCH="${{ steps.issue.outputs.branch }}"
+          ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue_body.outputs.title }}"
+
+          cat > /tmp/mission-issue-${ISSUE_NUM}.txt << MISSION_EOF
+          Tu es un subagent orchestré par une GitHub Action.
+          Tu travailles dans le worktree ${WORKTREE} (branche ${BRANCH}).
+
+          Règles :
+          - Tu PEUX modifier le code, écrire des fichiers, commit et push
+          - Tu exécutes les vérifications (typecheck, tests) avant de commit
+          - Tu commit et push automatiquement après chaque étape
+          - Tu réponds en français
+
+          Mission : Résoudre l'issue #${ISSUE_NUM} : ${ISSUE_TITLE}
+
+          Contexte de l'issue :
+          ${{ steps.issue_body.outputs.body }}
+
+          ### Vérifications avant commit
+          pnpm test -- --run
+          pnpm typecheck
+
+          ### Commit & PR
+          Après vérifications OK, commit, push, et crée la PR avec gh pr create.
+          MISSION_EOF
+
+          hermes chat -q "$(cat /tmp/mission-issue-${ISSUE_NUM}.txt)" \
+            --workdir "${WORKTREE}" \
+            --timeout 600000
+
+      - name: Vérifier que la PR a été créée
+        run: |
+          cd "${{ steps.issue.outputs.worktree_dir }}"
+          gh pr view --json url --jq '.url' 2>/dev/null || echo "PR non trouvée — vérifier manuellement"
+
+      - name: Nettoyer
+        if: always()
+        run: |
+          rm -rf "${{ steps.issue.outputs.worktree_dir }}"
+          cd /home/thomas/maskita
+          git worktree prune
