@@ -37,6 +37,19 @@ Voir `Spec.md` pour l'architecture complète, `Readme.md` pour la présentation.
 - **Commits** : messages en français, préfixés par type (`feat:`, `fix:`, `docs:`)
 - **Composants** : React fonctionnel, hooks, pas de classes
 
+## ⛔ Règle absolue — branche main (lead agent)
+
+**Le lead agent ne travaille QUE sur `main`.** Jamais de modification, commit
+ou push sur une autre branche : sa vision du projet doit toujours être celle
+de `main`, car il pilote tous les subagents.
+
+- Vérifier `git branch --show-current` avant toute action git.
+- Si le repo n'est pas sur `main` : `git checkout main` immédiatement
+  (stash du travail non commité si nécessaire), puis alerter l'utilisateur.
+- Toute implémentation se fait par un subagent dans un worktree (branche
+  dédiée) + PR validée. Le lead n'écrit jamais de code applicatif, ni sur
+  main ni ailleurs — uniquement documentation/planification/workflows.
+
 ## Qualité
 
 - couverture de test maximale. Chaque composant, fonction utilitaire doit avoir des tests unitaires associés

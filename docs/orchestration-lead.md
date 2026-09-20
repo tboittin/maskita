@@ -4,6 +4,37 @@ Ce document définit le rôle et le fonctionnement de l'agent lead sur le projet
 
 ---
 
+## ⛔ RÈGLE ABSOLUE : le lead ne travaille QUE sur main
+
+**L'agent lead ne fait JAMAIS de modification sur une branche autre que `main`.** Sa vision du projet doit toujours être celle de `main` — il pilote tous les autres agents, une divergence de branche peut tout casser.
+
+Règles opérationnelles :
+
+1. **Avant toute action git** (commit, push, checkout, worktree), vérifier la branche courante :
+   ```bash
+   git branch --show-current
+   ```
+2. **Si le repo n'est pas sur `main`** : se repositionner immédiatement (`git checkout main`), préserver le travail éventuel (stash/tag si nécessaire), et **alerter l'utilisateur** de l'anomalie.
+3. **Jamais de code directement** sur main non plus : le lead orchestre, l'implémentation se fait par des subagents dans des worktrees (branches dédiées).
+4. **Les seules écritures autorisées au lead sur main** : la documentation (docs/, AGENT.md, workflows .github/) et les fichiers de planification — jamais le code applicatif.
+
+### Processus de correction si la situation se reproduit
+
+1. **Détection** : vérification `git branch --show-current` au début de chaque session et avant chaque commit.
+2. **Correction immédiate** :
+   ```bash
+   git checkout main && git pull origin main
+   ```
+   Si des changements non commités existent sur la mauvaise branche, les sauvegarder :
+   ```bash
+   git stash push -m "WIP sur branche erronée <branche> — à réintégrer via subagent"
+   git checkout main
+   ```
+3. **Réintégration** : tout travail devant aboutir sur main passe par un subagent en worktree (branche dédiée) + PR validée par l'utilisateur.
+4. **Remontée d'alerte** : signaler à l'utilisateur qu'une anomalie de branche a été détectée et corrigée, avec le détail de ce qui a été préservé.
+
+---
+
 ## Rôle
 
 L'agent lead orchestre, il n'exécute pas directement le code : il analyse le backlog, détermine lui-même quelles US peuvent être traitées en série et lesquelles peuvent être parallélisées, répartit le travail entre agents helpers dans des worktrees et panes Herdr séparés, suit leur état, et propose les merges — sans jamais les effectuer sans validation humaine sur les zones sensibles.
@@ -36,6 +67,15 @@ Pour l'utiliser :
 Le script exécute automatiquement : création des worktrees → lancement des agents → envoi des missions → attente des résultats → lecture → bilan.
 
 Alternative manuelle : suivre les étapes ci-dessous.
+
+### Étape 0 : Nettoyage préalable
+
+Avant de commencer une nouvelle orchestration, nettoyer les panes des sessions précédentes :
+```bash
+herdr pane list              # repérer les panes inactifs
+herdr pane close w1:pX ...   # fermer les panes inutiles
+git worktree prune           # nettoyer les worktrees supprimés
+```
 
 ### Étape 1 : Commit & Push
 
@@ -87,16 +127,27 @@ herdr agent wait fix-b01b07 --until done --timeout 300000
 herdr agent read fix-b01b07 --source recent-unwrapped --lines 100
 ```
 
-### Étape 6 : Merge
+### Étape 6 : Pull Request
+
+Pour chaque worktree terminé par un sous-agent, créer une PR :
 
 ```bash
-git merge <branche> --no-edit
-# Résoudre conflits si nécessaire
-pnpm test -- --run && pnpm tsc --noEmit
-git push
+gh pr create --base main --head fix/ma-branche \
+  --title "US-X : Description" \
+  --body "## Modifications\n- ...\n\n## Vérifications\n- ✅ N tests passent\n- ✅ TypeScript OK"
 ```
 
-Pour les branches touchant le matching/restauration : préparer le merge mais soumettre à validation humaine.
+**Ne pas merger.** L'utilisateur approuve et merge sur GitHub.
+
+### Étape 7 : Nettoyage post-merge
+
+```bash
+git checkout main && git pull
+git branch -d fix/ma-branche
+git push origin --delete fix/ma-branche
+rm -rf ../maskita-ma-branche
+git worktree prune
+```
 
 ## Suivi des agents
 
