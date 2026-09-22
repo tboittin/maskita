@@ -109,22 +109,35 @@ herdr pane run w1:p9 "cd /home/thomas/maskita-b08"
 herdr agent start fix-b08 --kind hermes --pane w1:p9 --timeout 60000
 ```
 
-### Étape 5 : Pattern parallèle (clé)
+### Étape 5 : Pattern parallèle (clé) — version async (recommandée)
 
-**Ne PAS utiliser `--wait` sur `herdr agent prompt` pour le parallélisme.**
+**Ne PAS utiliser `herdr agent wait --until done`.** Ce pattern bloque le lead et gaspille des tokens.
 
-Au lieu de ça :
+#### Nouveau pattern : wakeup par le subagent
+
+1. Envoyer la mission au subagent
+2. La mission inclut en dernière étape :
+   ```bash
+   herdr agent prompt wM:p1 "✅ <nom-agent> terminé — résultat"
+   ```
+3. Le lead ne bloque pas — il retourne à l'utilisateur
+4. Quand le subagent finit, son message `herdr agent prompt` arrive comme un message utilisateur dans la session du lead
+
+#### Exemple
+
 ```bash
-# 5a. Envoyer toutes les missions (retour immédiat)
+# Envoyer la mission (retour immédiat)
+herdr agent prompt fix-b08 "mission avec instruction de réveil incluse"
+
+# ✅ Le lead reste disponible — le réveil arrivera automatiquement
+```
+
+#### Ancien pattern (déprécié)
+```bash
+# ❌ Ne PAS faire — blocking wait coûteux
 herdr agent prompt fix-b08 "mission"
-herdr agent prompt fix-b01b07 "mission"
-
-# 5b. Attendre chaque résultat à tour de rôle
-herdr agent wait fix-b08 --until done --timeout 300000
+herdr agent wait fix-b08 --until done --timeout 300000  # ← bloque le lead
 herdr agent read fix-b08 --source recent-unwrapped --lines 100
-
-herdr agent wait fix-b01b07 --until done --timeout 300000
-herdr agent read fix-b01b07 --source recent-unwrapped --lines 100
 ```
 
 ### Étape 6 : Pull Request
