@@ -203,7 +203,7 @@ describe('App', () => {
 
   it('affiche les onglets de navigation', () => {
     render(<App />);
-    expect(screen.getByText('Anonymiser')).toBeInTheDocument();
+    expect(screen.getByText('Anonymisation')).toBeInTheDocument();
     expect(screen.getByText('Restaurer')).toBeInTheDocument();
   });
 
@@ -221,8 +221,8 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Restaurer'));
     expect(screen.getByText(/Rapport modifié/)).toBeInTheDocument();
 
-    // Revenir en Anonymiser
-    fireEvent.click(screen.getByText('Anonymiser'));
+    // Revenir en Anonymisation
+    fireEvent.click(screen.getByText('Anonymisation'));
     expect(screen.getByText(/Rapport.*\.docx/)).toBeInTheDocument();
   });
 });

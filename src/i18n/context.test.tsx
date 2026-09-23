@@ -137,7 +137,7 @@ describe('App i18n', () => {
 
   it('affiche les textes en français', () => {
     render(<App />);
-    expect(screen.getByText('Anonymiser')).toBeInTheDocument();
+    expect(screen.getByText('Anonymisation')).toBeInTheDocument();
     expect(screen.getByText('Restaurer')).toBeInTheDocument();
     expect(
       screen.getByText(/Pseudonymisation.*100% dans le navigateur/i),

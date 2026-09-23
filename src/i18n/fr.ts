@@ -2,7 +2,7 @@ export const fr = {
   /* App */
   'app.titre': 'Maskita',
   'app.sousTitre': 'Pseudonymisation de documents — 100% dans le navigateur.',
-  'app.onglet.anonymiser': 'Anonymiser',
+  'app.onglet.anonymiser': 'Anonymisation',
   'app.onglet.restaurer': 'Restaurer',
   'app.section.rapport': 'Rapport (.docx, .txt, .md)',
   'app.section.cle': 'Clé .key.json existante',
