@@ -391,11 +391,11 @@ jobs:
             core.setOutput('issue_number', String(number));
       - name: Creer la branche et le worktree
         run: |
-          git checkout -b "${{ steps.issue.outputs.branch }}" main
+          git checkout -B "${{ steps.issue.outputs.branch }}" main
           git push origin "${{ steps.issue.outputs.branch }}"
           git worktree add "${{ steps.issue.outputs.worktree_dir }}" "origin/${{ steps.issue.outputs.branch }}"
           cd "${{ steps.issue.outputs.worktree_dir }}"
-          git checkout -b "${{ steps.issue.outputs.branch }}" "origin/${{ steps.issue.outputs.branch }}"
+          git checkout -B "${{ steps.issue.outputs.branch }}" "origin/${{ steps.issue.outputs.branch }}"
       - name: Installer les dependances
         run: |
           cd "${{ steps.issue.outputs.worktree_dir }}"
