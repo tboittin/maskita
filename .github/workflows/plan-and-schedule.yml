@@ -406,9 +406,9 @@ jobs:
         run: |
           cd "${{ steps.issue.outputs.worktree_dir }}"
           ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
-          cat > /tmp/mission-${ISSUE_NUM}.txt << 'MISSION_EOF'
+          cat > /tmp/mission-${ISSUE_NUM}.txt << MISSION_EOF
           Tu es un subagent orchestre par une GitHub Action.
-          Tu travailles dans le worktree $(pwd) (branche $BRANCH).
+          Tu travailles dans le worktree ${{ steps.issue.outputs.worktree_dir }} (branche ${{ steps.issue.outputs.branch }}).
           Regles :
           - Tu PEUX modifier le code, ecrire des fichiers, commit et push
           - Tu executes les verifications (typecheck, tests) avant de commit
