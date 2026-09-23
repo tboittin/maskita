@@ -402,10 +402,22 @@ jobs:
         run: |
           cd "${{ steps.issue.outputs.worktree_dir }}"
           pnpm install
+      - name: Recuperer le contexte de l'issue
+        id: issue_context
+        run: |
+          ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
+          echo "TITLE<<EOFTITLE" >> $GITHUB_OUTPUT
+          gh issue view $ISSUE_NUM --json title --jq '.title' >> $GITHUB_OUTPUT
+          echo "EOFTITLE" >> $GITHUB_OUTPUT
+          echo "BODY<<EOFBODY" >> $GITHUB_OUTPUT
+          gh issue view $ISSUE_NUM --json body --jq '.body' >> $GITHUB_OUTPUT
+          echo "EOFBODY" >> $GITHUB_OUTPUT
       - name: Executer la mission via Hermes
         run: |
           cd "${{ steps.issue.outputs.worktree_dir }}"
           ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue_context.outputs.TITLE }}"
+          ISSUE_BODY="${{ steps.issue_context.outputs.BODY }}"
           cat > /tmp/mission-${ISSUE_NUM}.txt << MISSION_EOF
           Tu es un subagent orchestre par une GitHub Action.
           Tu travailles dans le worktree ${{ steps.issue.outputs.worktree_dir }} (branche ${{ steps.issue.outputs.branch }}).
@@ -414,7 +426,11 @@ jobs:
           - Tu executes les verifications (typecheck, tests) avant de commit
           - Tu commit et push automatiquement apres chaque etape
           - Tu reponds en francais
-          Mission : Resoudre l'issue.
+          Mission : Resoudre l'issue #${ISSUE_NUM}.
+
+          Titre : ${ISSUE_TITLE}
+          Description :
+          ${ISSUE_BODY}
           ### Verifications avant commit
           pnpm test -- --run
           pnpm typecheck
