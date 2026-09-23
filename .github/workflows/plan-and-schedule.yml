@@ -358,18 +358,111 @@ jobs:
             }
 
   ##############################################################################
-  # PHASE 3 : Lancer les subagents pour les US Ready
-  # (nécessite le self-hosted runner WSL)
   ##############################################################################
-  launch:
+  # PHASE 3 : Verifier le runner self-hosted (machine WSL)
+  ##############################################################################
+  check-runner:
     needs: schedule
-    if: |
-      always() &&
-      needs.schedule.result == 'success'
-    runs-on: [self-hosted, linux, wsl]
+    if: needs.schedule.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      runner_available: ${{ steps.check.outputs.runner_available }}
     steps:
-      - name: Vérifier les US Ready dans le Project
+      - uses: actions/github-script@v7
+        id: check
+        with:
+          script: |
+            let available = false;
+            try {
+              const { data } = await octokit.rest.actions.listSelfHostedRunnersForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+              for (const runner of data.runners || []) {
+                for (const label of runner.labels || []) {
+                  if (label.name === 'self-hosted' || label.name === 'wsl') {
+                    available = true;
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(`Impossible de verifier les runners (${error.status || error.message})`);
+            }
+            core.setOutput('runner_available', available ? 'true' : 'false');
+      - name: Alerter si runner absent
+        if: steps.check.outputs.runner_available == 'false'
         run: |
-          echo "TODO: Récupérer les US en statut Ready depuis le Project"
-          echo "TODO: Pour chaque US Ready, lancer un subagent"
-          echo "Setup requis : self-hosted runner configuré (voir issue-to-pr.yml)"
+          echo "::warning::Aucun runner self-hosted WSL disponible - execution ignoree."
+
+  ##############################################################################
+  # PHASE 4 : Execution (sur le runner self-hosted WSL)
+  ##############################################################################
+  execute:
+    needs: [schedule, check-runner]
+    if: needs.check-runner.outputs.runner_available == 'true'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Config git
+        run: |
+          git config user.name "Hermes Agent"
+          git config user.email "hermes@khaleeno.com"
+      - name: Extraire les infos de l'issue
+        id: issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const payload = context.payload;
+            const issue = payload.issue;
+            const title = issue.title;
+            const number = issue.number;
+            const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+            const branch = `fix/issue-${number}-${slug}`;
+            const worktreeDir = `../maskita-issue-${number}`;
+            core.setOutput('branch', branch);
+            core.setOutput('worktree_dir', worktreeDir);
+            core.setOutput('issue_number', String(number));
+      - name: Creer la branche et le worktree
+        run: |
+          git checkout -b "${{ steps.issue.outputs.branch }}" main
+          git push origin "${{ steps.issue.outputs.branch }}"
+          git worktree add "${{ steps.issue.outputs.worktree_dir }}" "origin/${{ steps.issue.outputs.branch }}"
+          cd "${{ steps.issue.outputs.worktree_dir }}"
+          git checkout -b "${{ steps.issue.outputs.branch }}" "origin/${{ steps.issue.outputs.branch }}"
+      - name: Installer les dependances
+        run: |
+          cd "${{ steps.issue.outputs.worktree_dir }}"
+          pnpm install
+      - name: Executer la mission via Hermes
+        run: |
+          WORKTREE="${{ steps.issue.outputs.worktree_dir }}"
+          BRANCH="${{ steps.issue.outputs.branch }}"
+          ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
+          cat > /tmp/mission-${ISSUE_NUM}.txt << 'MISSION_EOF'
+          Tu es un subagent orchestre par une GitHub Action.
+          Tu travailles dans le worktree ${WORKTREE} (branche ${BRANCH}).
+          Regles :
+          - Tu PEUX modifier le code, ecrire des fichiers, commit et push
+          - Tu executes les verifications (typecheck, tests) avant de commit
+          - Tu commit et push automatiquement apres chaque etape
+          - Tu reponds en francais
+          Mission : Resoudre l'issue.
+          ### Verifications avant commit
+          pnpm test -- --run
+          pnpm typecheck
+          ### Commit & PR
+          Apres verifications OK, commit, push, et cree la PR avec gh pr create.
+          MISSION_EOF
+          hermes chat -q "$(cat /tmp/mission-${ISSUE_NUM}.txt)" --workdir "${WORKTREE}" --timeout 600000
+      - name: Verifier la PR
+        run: |
+          cd "${{ steps.issue.outputs.worktree_dir }}"
+          gh pr view --json url --jq '.url' 2>/dev/null || echo "PR non trouvee - verifier manuellement"
+      - name: Nettoyer
+        if: always()
+        run: |
+          rm -rf "${{ steps.issue.outputs.worktree_dir }}"
+          cd /home/thomas/maskita
+          git worktree prune
