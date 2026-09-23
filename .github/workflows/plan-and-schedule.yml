@@ -10,7 +10,6 @@ permissions:
   issues: write
   contents: write
   pull-requests: write
-  administration: read
   # project: write  # scope nécessaire pour les Projects v2
 
 jobs:
@@ -360,48 +359,13 @@ jobs:
 
   ##############################################################################
   ##############################################################################
-  # PHASE 3 : Verifier le runner self-hosted (machine WSL)
-  ##############################################################################
-  check-runner:
-    needs: schedule
-    if: needs.schedule.result == 'success'
-    runs-on: ubuntu-latest
-    outputs:
-      runner_available: ${{ steps.check.outputs.runner_available }}
-    steps:
-      - uses: actions/github-script@v7
-        id: check
-        with:
-          script: |
-            let available = false;
-            try {
-              const { data } = await octokit.rest.actions.listSelfHostedRunnersForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-              });
-              for (const runner of data.runners || []) {
-                for (const label of runner.labels || []) {
-                  if (label.name === 'self-hosted' || label.name === 'wsl') {
-                    available = true;
-                  }
-                }
-              }
-            } catch (error) {
-              console.log(`Impossible de verifier les runners (${error.status || error.message})`);
-            }
-            core.setOutput('runner_available', available ? 'true' : 'false');
-      - name: Alerter si runner absent
-        if: steps.check.outputs.runner_available == 'false'
-        run: |
-          echo "::warning::Aucun runner self-hosted WSL disponible - execution ignoree."
-
-  ##############################################################################
-  # PHASE 4 : Execution (sur le runner self-hosted WSL)
+  # PHASE 3 : Execution (sur le runner self-hosted WSL)
   ##############################################################################
   execute:
-    needs: [schedule, check-runner]
-    if: needs.check-runner.outputs.runner_available == 'true'
+    needs: schedule
+    if: always() && needs.schedule.result == 'success'
     runs-on: self-hosted
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
