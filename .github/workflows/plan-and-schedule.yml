@@ -197,8 +197,8 @@ jobs:
               // Utiliser le dernier plan posté → on recrée les US depuis la suggestion
               // Pour l'instant : créer une US unique correspondant à l'issue
               usList.push({
-                title: issue.title,
-                body: issue.body || '',
+                title: payload.issue.title,
+                body: payload.issue.body || '',
                 prereqs: [],
               });
             } else {
@@ -241,8 +241,8 @@ jobs:
             if (usList.length === 0) {
               // Fallback : créer une US unique
               usList.push({
-                title: issue.title,
-                body: issue.body || '',
+                title: payload.issue.title,
+                body: payload.issue.body || '',
                 prereqs: [],
               });
             }
