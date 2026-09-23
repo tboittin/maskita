@@ -10,6 +10,7 @@ permissions:
   issues: write
   contents: write
   pull-requests: write
+  administration: read
   # project: write  # scope nécessaire pour les Projects v2
 
 jobs:
