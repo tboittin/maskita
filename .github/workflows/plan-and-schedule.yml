@@ -26,7 +26,7 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
-            const { issue, octokit } = context;
+            const { issue } = context; // octokit injecté par github-script
             const { title, body, number, user } = issue;
             const author = user.login;
             const owner = context.repo.owner;
@@ -135,16 +135,16 @@ jobs:
     if: |
       github.event_name == 'issue_comment' &&
       github.event.action == 'created' &&
-      (startsWith(github.event.comment.body, '/approve') ||
-       startsWith(github.event.comment.body, '/revise') ||
-       github.event.comment.body.includes('## Découpage US'))
+      (contains(github.event.comment.body, '/approve') ||
+       contains(github.event.comment.body, '/revise') ||
+       contains(github.event.comment.body, '## Découpage US'))
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/github-script@v7
         with:
           script: |
-            const { comment, issue, octokit } = context;
+            const { comment, issue } = context; // octokit injecté
             const author = comment.user.login;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
@@ -164,7 +164,7 @@ jobs:
             }
 
             // ── Si /revise → poster un nouveau plan avec le feedback ──
-            if (body.startsWith('/revise')) {
+            if (body.includes('/revise')) {
               const feedback = body.replace('/revise', '').trim();
               await octokit.rest.issues.createComment({
                 owner, repo,
@@ -193,7 +193,7 @@ jobs:
             // 2. Déterminer les US à créer
             let usList = [];
 
-            if (body.startsWith('/approve')) {
+            if (body.includes('/revise')) {
               // Utiliser le dernier plan posté → on recrée les US depuis la suggestion
               // Pour l'instant : créer une US unique correspondant à l'issue
               usList.push({

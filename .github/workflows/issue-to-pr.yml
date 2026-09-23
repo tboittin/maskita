@@ -28,7 +28,7 @@ jobs:
         id: post_plan
         with:
           script: |
-            const { issue, octokit } = context;
+            const { issue } = context; // octokit est injecté par github-script
             const { title, body, number, user } = issue;
             const author = user.login;
             const owner = context.repo.owner;
@@ -156,8 +156,8 @@ jobs:
     if: |
       (github.event_name == 'issue_comment' &&
        github.event.action == 'created' &&
-       (startsWith(github.event.comment.body, '/approve') ||
-        startsWith(github.event.comment.body, '/revision'))) ||
+       (contains(github.event.comment.body, '/approve') ||
+        contains(github.event.comment.body, '/revision'))) ||
       (github.event_name == 'issues' &&
        github.event.action == 'labeled' &&
        github.event.label.name == 'approved')
@@ -170,7 +170,7 @@ jobs:
         id: parse
         with:
           script: |
-            const { octokit } = context;
+            // octokit est injecté par github-script — ne pas le re-déclarer
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const number = context.payload.issue.number;
@@ -215,7 +215,7 @@ jobs:
             // ── Cas 2 : commentaire /approve ou /revision ──
             const body = context.payload.comment.body.trim();
 
-            if (body.startsWith('/approve')) {
+            if (body.includes('/approve')) {
               core.setOutput('action', 'approve');
 
               // Ajouter le label "approved"
@@ -231,7 +231,7 @@ jobs:
                 body: '✅ Plan approuvé ! Lancement de l\'exécution...',
               });
 
-            } else if (body.startsWith('/revision')) {
+            } else if (body.includes('/revision')) {
               core.setOutput('action', 'revision');
 
               const feedback = body.replace('/revision', '').trim();
