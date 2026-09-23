@@ -392,7 +392,9 @@ jobs:
       - name: Creer la branche et le worktree
         run: |
           git checkout -B "${{ steps.issue.outputs.branch }}" main
-          git push origin "${{ steps.issue.outputs.branch }}"
+          git push -f origin "${{ steps.issue.outputs.branch }}"
+          git worktree remove "${{ steps.issue.outputs.worktree_dir }}" 2>/dev/null || true
+          git worktree prune
           git worktree add "${{ steps.issue.outputs.worktree_dir }}" "origin/${{ steps.issue.outputs.branch }}"
           cd "${{ steps.issue.outputs.worktree_dir }}"
           git checkout -B "${{ steps.issue.outputs.branch }}" "origin/${{ steps.issue.outputs.branch }}"
