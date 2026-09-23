@@ -133,7 +133,7 @@ Après cette phase : on peut restaurer un rapport modifié avec sa clé.
 | 7.2 | Upload de la clé `.key.json` | 🟢 | intégré dans le hook |
 | 7.3 | Pipeline de remplacement `[TAG]` → valeur d'origine | 🟢 | `restaurerTexte()` existant dans mapping.ts, déclenché automatiquement |
 | 7.4 | Téléchargement du rapport restauré | 🟢 | `buildDocx` + `declencherTelechargement` |
-| 7.5 | **Intégration :** écran Restaurer dans App.tsx | 🟢 | navigation par onglets Anonymiser / Restaurer |
+| 7.5 | **Intégration :** écran Restaurer dans App.tsx | 🟢 | navigation par onglets Pseudonymiser / Restaurer |
 | 7.6 | Tests : round-trip complet | 🟢 | 8 tests hook + 4 tests composant + 3 tests navigation = 15 nouveaux tests |
 
 **Testable :** 🟢 onglet Restaurer → upload .docx + clé → télécharger version restaurée
@@ -146,7 +146,7 @@ Après cette phase : l'interface est complète avec navigation, popups, états.
 
 | # | Tâche | Statut | Notes |
 |---|-------|--------|-------|
-| 8.1 | Navigation à onglets : Anonymiser / Restaurer | 🟢 | Fait en phase 7 |
+| 8.1 | Navigation à onglets : Pseudonymiser / Restaurer | 🟢 | Fait en phase 7 |
 | 8.2 | Popup de confirmation si mapping modifié | 🟢 | `PopupConfirmation` composant + intégration dans `EcranRevue` |
 | 8.3 | Messages d'erreur / état vide / chargement dans App.tsx | 🟢 | Message de succès vert après téléchargement, disparaît après 5s |
 | 8.4 | Tests : navigation, popup, états | 🟢 | 7 tests PopupConfirmation + 3 tests popup EcranRevue + 1 test succès App = 11 nouveaux tests |

@@ -254,7 +254,7 @@ Une **invitation accueillante**, pas un portique :
 ## 7. Icônes
 
 - Jeu d'icônes **ligne fine 1.5px** (Lucide), remplaçant les emojis actuels :
-  - Anonymiser = **voile/masque doux** ; Restaurer = **voile relevé / clé** ;
+  - Pseudonymiser = **voile/masque doux** ; Restaurer = **voile relevé / clé** ;
   - Télécharger = flèche posée ; Valider = ✓ léger ;
   - Confiance = bouclier discret avec ✓.
 - Les icônes sont des gestes, pas des illustrations. Toujours accompagnées
