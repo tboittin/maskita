@@ -404,12 +404,11 @@ jobs:
           pnpm install
       - name: Executer la mission via Hermes
         run: |
-          WORKTREE="${{ steps.issue.outputs.worktree_dir }}"
-          BRANCH="${{ steps.issue.outputs.branch }}"
+          cd "${{ steps.issue.outputs.worktree_dir }}"
           ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
           cat > /tmp/mission-${ISSUE_NUM}.txt << 'MISSION_EOF'
           Tu es un subagent orchestre par une GitHub Action.
-          Tu travailles dans le worktree ${WORKTREE} (branche ${BRANCH}).
+          Tu travailles dans le worktree $(pwd) (branche $BRANCH).
           Regles :
           - Tu PEUX modifier le code, ecrire des fichiers, commit et push
           - Tu executes les verifications (typecheck, tests) avant de commit
@@ -422,7 +421,7 @@ jobs:
           ### Commit & PR
           Apres verifications OK, commit, push, et cree la PR avec gh pr create.
           MISSION_EOF
-          hermes chat -q "$(cat /tmp/mission-${ISSUE_NUM}.txt)" --workdir "${WORKTREE}" --timeout 600000
+          hermes chat -q "$(cat /tmp/mission-${ISSUE_NUM}.txt)" 
       - name: Verifier la PR
         run: |
           cd "${{ steps.issue.outputs.worktree_dir }}"
