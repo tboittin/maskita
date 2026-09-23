@@ -45,7 +45,6 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ACTION: ${{ github.event.action }}
           ACTOR: ${{ github.actor }}
-          SENDER_TYPE: ${{ github.event.sender.type }}
           ISSUE_NUM: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           PR_NUM: ${{ github.event.pull_request.number }}
@@ -54,12 +53,7 @@ jobs:
           LABEL_NAME: ${{ github.event.label.name }}
           REVIEW_STATE: ${{ github.event.review.state }}
         run: |
-          # Ne pas reveiller pour les actions des bots
-          if [ "$SENDER_TYPE" = "Bot" ]; then
-            echo "Action bot ignoree (sender=$ACTOR)"
-            exit 0
-          fi
-          # Ne pas reveiller si le commentaire contient /no-wakeup
+          # Ignorer si le commentaire contient /no-wakeup
           if echo "$COMMENT_BODY" | grep -q '/no-wakeup'; then
             echo "Commentaire marque /no-wakeup — ignore"
             exit 0
