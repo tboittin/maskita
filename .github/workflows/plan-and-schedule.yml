@@ -26,8 +26,8 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
-            const { issue } = context; // octokit injecté par github-script
-            const { title, body, number, user } = issue;
+            const payload = context.payload;
+            const { title, body, number, user } = payload.issue;
             const author = user.login;
             const owner = context.repo.owner;
 
@@ -144,12 +144,12 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
-            const { comment, issue } = context; // octokit injecté
-            const author = comment.user.login;
+            const payload = context.payload;
+            const author = payload.comment.user.login;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const parentNumber = issue.number;
-            const body = comment.body.trim();
+            const parentNumber = payload.issue.number;
+            const body = payload.comment.body.trim();
 
             // ── Sécurité ──
             if (author !== owner) {
