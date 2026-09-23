@@ -133,7 +133,7 @@ After this phase: you can restore a modified report with its key.
 | 7.2 | Upload `.key.json` key | 🟢 | integrated in the hook |
 | 7.3 | `[TAG]` → original value replacement pipeline | 🟢 | `restaurerTexte()` exists in mapping.ts, triggered automatically |
 | 7.4 | Download restored report | 🟢 | `buildDocx` + `declencherTelechargement` |
-| 7.5 | **Integration:** Restore screen in App.tsx | 🟢 | tab navigation Anonymise / Restore |
+| 7.5 | **Integration:** Restore screen in App.tsx | 🟢 | tab navigation Pseudonymise / Restore |
 | 7.6 | Tests: complete round-trip | 🟢 | 8 hook tests + 4 component tests + 3 navigation tests = 15 new tests |
 
 **Testable:** 🟢 Restore tab → upload .docx + key → download restored version
@@ -146,7 +146,7 @@ After this phase: the interface is complete with navigation, popups, states.
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 8.1 | Tab navigation: Anonymise / Restore | 🟢 | Done in phase 7 |
+| 8.1 | Tab navigation: Pseudonymise / Restore | 🟢 | Done in phase 7 |
 | 8.2 | Confirmation popup if mapping modified | 🟢 | `PopupConfirmation` component + integration in `EcranRevue` |
 | 8.3 | Error / empty / loading states in App.tsx | 🟢 | Green success message after download, disappears after 5s |
 | 8.4 | Tests: navigation, popup, states | 🟢 | 7 PopupConfirmation tests + 3 EcranRevue popup tests + 1 App success test = 11 new tests |

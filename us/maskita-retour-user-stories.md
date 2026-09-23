@@ -18,7 +18,7 @@
 - **US-B05** — En tant qu'utilisateur, je veux que l'alerte qui identifie une information sensible dans le titre du fichier soit claire notamment pour la pseudonymisation.
 - **US-B06** — À l'inverse de l'US-B5, lorsqu'il y a un pseudo dans le titre je dois également être notifié lors de la restauration.
 - **US-B07** — En tant qu'utilisateur, je veux que le fait de réordonner les valeurs d'une clé ne déclenche pas un re-téléchargement automatique de la clé, afin de ne pas générer des exports redondants/non désirés.
-- **US-B08 (critique)** — En tant qu'utilisateur, je veux que la détection gère correctement les valeurs qui se chevauchent (ex. « Tom M », « Tom », « Tommy » pour un même pseudo), afin d'éviter des anonymisations partielles comme `[ADOLESCENT]my` au lieu de `[ADOLESCENT]`. Il faut ajouter une regex qui entoure la valeur à pseudonymiser par des espaces ou des ponctuations pour éviter les incohérences (ex: anonymiser le prénom "max" ne doit pas avoir d'influence sur le mot "maximum")
+- **US-B08 (critique)** — En tant qu'utilisateur, je veux que la détection gère correctement les valeurs qui se chevauchent (ex. « Tom M », « Tom », « Tommy » pour un même pseudo), afin d'éviter des pseudonymisations partielles comme `[ADOLESCENT]my` au lieu de `[ADOLESCENT]`. Il faut ajouter une regex qui entoure la valeur à pseudonymiser par des espaces ou des ponctuations pour éviter les incohérences (ex: pseudonymiser le prénom "max" ne doit pas avoir d'influence sur le mot "maximum")
 - **US-B09** — En tant qu'utilisateur, je veux que le bouton « relancer l'analyse depuis le rapport d'origine » ne supprime pas tout mon travail de mapping déjà réalisé, ou à défaut je veux un message d'avertissement explicite sur ce que cette action va effacer avant de valider.
 
 ## 💡 Améliorations / nouvelles fonctionnalités
@@ -28,6 +28,6 @@
 - **US-F3** — En tant qu'utilisateur, je veux que le bouton « voir » (affiché quand une valeur est utilisée dans un autre pseudo) m'amène directement et visuellement à cette valeur dans le texte dès le premier clic, afin de ne pas avoir à cliquer plusieurs fois sans effet visible.
 - **US-F4** — En tant qu'utilisateur, je veux pouvoir naviguer via une flèche entre chaque « itération »/modification du mapping, afin de suivre l'historique de mes changements.
 - **US-F5** — En tant qu'utilisateur, je veux un repère visuel (à l'écran, pas nécessairement à l'export) dans le texte pseudonymisé qui suit en direct les tags ajoutés, afin de compenser le décalage de texte que peut provoquer la longueur variable des pseudos.
-- **US-F6** — En tant qu'utilisateur, je veux pouvoir éditer manuellement les textes, une modification dans un aperçu sera répercutée dans le second et sera anonymisée à la volée si une valeur est identifiée.
-- **US-F7** — En tant qu'utilisateur, je veux que le téléchargement (anonymiser ou restaurer) ait lieu sur un nouvel écran à l'étape "Récupérer" au lieu d'être activé à l'étape "Vérifier".
+- **US-F6** — En tant qu'utilisateur, je veux pouvoir éditer manuellement les textes, une modification dans un aperçu sera répercutée dans le second et sera pseudonymisée à la volée si une valeur est identifiée.
+- **US-F7** — En tant qu'utilisateur, je veux que le téléchargement (pseudonymiser ou restaurer) ait lieu sur un nouvel écran à l'étape "Récupérer" au lieu d'être activé à l'étape "Vérifier".
 - **US-F8** — En tant qu'utilisateur, je veux que l'étape de restauration ait également une étape de vérification qui affiche le texte pseudonymisé et le texte restaurer.

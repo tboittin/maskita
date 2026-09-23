@@ -28,9 +28,9 @@ Ouvrir `http://localhost:5173`.
 
 ## Utilisation
 
-### 1. Anonymiser
+### 1. Pseudonymiser
 
-1. Cliquer sur l'onglet **Anonymiser**
+1. Cliquer sur l'onglet **Pseudonymiser**
 2. Sélectionner ou glisser un fichier `.docx`
 3. (Optionnel) fournir une clé `.key.json` si vous avez déjà un mapping existant
 4. Cliquer **Lancer l'analyse**
