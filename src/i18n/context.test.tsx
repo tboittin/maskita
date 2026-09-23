@@ -137,7 +137,7 @@ describe('App i18n', () => {
 
   it('affiche les textes en français', () => {
     render(<App />);
-    expect(screen.getByText('Anonymiser')).toBeInTheDocument();
+    expect(screen.getByText('Pseudonymiser')).toBeInTheDocument();
     expect(screen.getByText('Restaurer')).toBeInTheDocument();
     expect(
       screen.getByText(/Pseudonymisation.*100% dans le navigateur/i),
@@ -152,7 +152,7 @@ describe('App i18n', () => {
 
     fireEvent.click(bouton);
 
-    expect(screen.getByText('Anonymise')).toBeInTheDocument();
+    expect(screen.getByText('Pseudonymise')).toBeInTheDocument();
     expect(screen.getByText('Restore')).toBeInTheDocument();
     expect(
       screen.getByText(/pseudonymisation.*100% in the browser/i),
@@ -168,14 +168,14 @@ describe('App i18n', () => {
     expect(document.documentElement.lang).toBe('en');
   });
 
-  it('reste en anglais après un retour à l\'onglet Anonymiser', () => {
+  it('reste en anglais après un retour à l\'onglet Pseudonymiser', () => {
     render(<App />);
     fireEvent.click(screen.getByTitle('Switch to English'));
     fireEvent.click(screen.getByText('Restore'));
 
     expect(screen.getByText('Modified report (with pseudos)')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Anonymise'));
+    fireEvent.click(screen.getByText('Pseudonymise'));
     expect(screen.getByText('Report (.docx, .txt, .md)')).toBeInTheDocument();
   });
 });

@@ -203,7 +203,7 @@ describe('App', () => {
 
   it('affiche les onglets de navigation', () => {
     render(<App />);
-    expect(screen.getByText('Anonymiser')).toBeInTheDocument();
+    expect(screen.getByText('Pseudonymiser')).toBeInTheDocument();
     expect(screen.getByText('Restaurer')).toBeInTheDocument();
   });
 
@@ -214,15 +214,15 @@ describe('App', () => {
     expect(screen.getByText(/Clé .key.json correspondante/)).toBeInTheDocument();
   });
 
-  it('revient à l\'écran d\'upload Anonymiser en cliquant sur l\'onglet Anonymiser', () => {
+  it('revient à l\'écran d\'upload Pseudonymiser en cliquant sur l\'onglet Pseudonymiser', () => {
     render(<App />);
 
     // Passer en Restaurer
     fireEvent.click(screen.getByText('Restaurer'));
     expect(screen.getByText(/Rapport modifié/)).toBeInTheDocument();
 
-    // Revenir en Anonymiser
-    fireEvent.click(screen.getByText('Anonymiser'));
+    // Revenir en Pseudonymiser
+    fireEvent.click(screen.getByText('Pseudonymiser'));
     expect(screen.getByText(/Rapport.*\.docx/)).toBeInTheDocument();
   });
 });

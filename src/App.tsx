@@ -20,7 +20,7 @@ import {
   Panneau,
 } from '@khaleeno/maskita-design-system';
 
-type Onglet = 'anonymiser' | 'restaurer';
+type Onglet = 'pseudonymiser' | 'restaurer';
 type Etape = 'upload' | 'revue';
 
 interface WarningDownload {
@@ -32,7 +32,7 @@ interface WarningDownload {
 
 function AppInterieur() {
   const { t, langue, basculer } = useLangue();
-  const [onglet, setOnglet] = useState<Onglet>('anonymiser');
+  const [onglet, setOnglet] = useState<Onglet>('pseudonymiser');
   const [messageSucces, setMessageSucces] = useState<string | null>(null);
   const {
     fichier, extension, texte, chargement, erreur,
@@ -187,13 +187,13 @@ function AppInterieur() {
             whiteSpace: 'nowrap',
           }}
         >
-          {(['anonymiser', 'restaurer'] as const).map((o) => (
+          {(['pseudonymiser', 'restaurer'] as const).map((o) => (
             <button
               key={o}
               onClick={() => {
                 setOnglet(o);
                 setMessageSucces(null);
-                if (o !== 'anonymiser') {
+                if (o !== 'pseudonymiser') {
                   reinitialiser();
                   setMapping(null);
                   setEtape('upload');
@@ -226,10 +226,10 @@ function AppInterieur() {
               { id: 'verifier', libelle: t('app.jalon.verifier') },
               { id: 'recuperer', libelle: t('app.jalon.recuperer') },
             ]}
-            active={onglet === 'anonymiser' ? (etape === 'upload' ? 'deposer' : 'verifier') : 'recuperer'}
+            active={onglet === 'pseudonymiser' ? (etape === 'upload' ? 'deposer' : 'verifier') : 'recuperer'}
             onSelect={(id) => {
               if (id === 'deposer') {
-                setOnglet('anonymiser');
+                setOnglet('pseudonymiser');
                 handleRetour();
               }
             }}
@@ -242,7 +242,7 @@ function AppInterieur() {
           </div>
         )}
 
-        {onglet === 'anonymiser' && etape === 'upload' && (
+        {onglet === 'pseudonymiser' && etape === 'upload' && (
           <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
             <Panneau title={t('app.section.rapport')}>
               <div style={{ padding: 'var(--espacement-md)' }}>
@@ -277,7 +277,7 @@ function AppInterieur() {
           </section>
         )}
 
-        {onglet === 'anonymiser' && etape === 'revue' && mapping && texte && (
+        {onglet === 'pseudonymiser' && etape === 'revue' && mapping && texte && (
           <section>
             <EcranRevue
               texteOriginal={texte}
