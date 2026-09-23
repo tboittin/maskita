@@ -1,0 +1,375 @@
+name: Plan & Schedule — Issue → US → Project
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+  # project: write  # scope nécessaire pour les Projects v2
+
+jobs:
+  ##############################################################################
+  # PHASE 1 : Issue ouverte → poster un template de découpage
+  ##############################################################################
+  plan:
+    if: |
+      github.event_name == 'issues' &&
+      github.event.action == 'opened'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { issue, octokit } = context;
+            const { title, body, number, user } = issue;
+            const author = user.login;
+            const owner = context.repo.owner;
+
+            // ── Sécurité ──
+            if (author !== owner) {
+              try {
+                await octokit.rest.repos.checkCollaborator({
+                  owner, repo: context.repo.repo, username: author,
+                });
+              } catch {
+                console.log(`Issue #${number} by @${author} — skipped`);
+                return;
+              }
+            }
+
+            // ── Détection par mots-clés pour un premier découpage suggéré ──
+            const lc = (title + ' ' + (body || '')).toLowerCase();
+
+            let planSections = [];
+
+            if (lc.includes('renommage') || lc.includes('anonym') || lc.includes('terminologie')) {
+              planSections.push(
+                '### Suggestion de découpage',
+                '',
+                '| US | Description | Prérequis |',
+                '|----|-------------|-----------|',
+                '| US-R01 | Renommer Anonymiser → Pseudonymiser (i18n + code) | — |',
+                '| US-P01 | Renommer jalon Vérifier → Pseudonymisation | US-R01 |',
+                '| US-P04 | Renommer jalon Récupérer → Télécharger | US-R01 |',
+                '',
+                '**Séquencement conseillé :** US-R01 d\'abord (sans prérequis), puis US-P01 et US-P04 en parallèle.'
+              );
+            } else if (lc.includes('bouton') || lc.includes('button') || lc.includes('inline')) {
+              planSections.push(
+                '### Suggestion de découpage',
+                '',
+                'Cette issue semble être une US unique (migration de composants).',
+                '| US | Description | Prérequis |',
+                '|----|-------------|-----------|',
+                '| US unique | Migration des boutons inline vers le DS | — |'
+              );
+            } else if (lc.includes('restauration') || lc.includes('restore')) {
+              planSections.push(
+                '### Suggestion de découpage',
+                '',
+                '| US | Description | Prérequis |',
+                '|----|-------------|-----------|',
+                '| US-D01 | Clé obligatoire dans Déposer Restauration | — |',
+                '| US-V01 | Créer étape Restauration (3 vues) | US-D01 |',
+                '| US-V02 | Afficher résultat vérification Restauration | US-V01 |',
+                '| US-V03 | Modifier valeurs dans Restauration | US-V01 |',
+                '| US-T01 | Téléchargement Restauration (2 couples) | US-V01 |',
+                '| US-T02 | Champ nom éditable Restauration | US-T01 |',
+                '| US-T03 | Pas de warning Restauration | US-T01 |',
+                '',
+                '**Séquencement conseillé :** US-D01 → US-V01 (base) → US-V02+V03 (parallèle) + US-T01 (parallèle) → US-T02+T03 (parallèle)'
+              );
+            } else {
+              planSections.push(
+                '### Suggestion de découpage',
+                '',
+                'Je n\'ai pas pu déterminer automatiquement un découpage pertinent.',
+                'Tu peux définir le tien ci-dessous.'
+              );
+            }
+
+            // ── Template de réponse ──
+            const template = [
+              `## 🧠 Plan pour #${number} — ${title}`,
+              '',
+              '### Analyse',
+              body ? body.split('\n')[0].slice(0, 200) : '(pas de description)',
+              '',
+              ...planSections,
+              '',
+              '### Pour valider ce plan',
+              'Commente avec le découpage souhaité au format ci-dessous, ou `/approve` si la suggestion te convient.',
+              '',
+              '```',
+              '## Découpage US',
+              '- US-XX: Description courte | prérequis: US-YY (ou "aucun")',
+              '- US-YY: Description courte | prérequis: US-XX',
+              '```',
+              '',
+              'Ou simplement **/approve** pour accepter la suggestion ci-dessus.',
+              '',
+              '### Commandes disponibles',
+              '- `/approve` → valide le plan et crée les US dans le Project',
+              '- `/revise <feedback>` → plan révisé avec ton retour',
+              '',
+              '---',
+              '🤖 *Plan généré par Hermes Agent*',
+            ].join('\n');
+
+            await octokit.rest.issues.createComment({
+              owner, repo: context.repo.repo,
+              issue_number: number,
+              body: template,
+            });
+
+  ##############################################################################
+  # PHASE 2 : Réponse de l'utilisateur → créer les US dans le Project
+  ##############################################################################
+  schedule:
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      (startsWith(github.event.comment.body, '/approve') ||
+       startsWith(github.event.comment.body, '/revise') ||
+       github.event.comment.body.includes('## Découpage US'))
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { comment, issue, octokit } = context;
+            const author = comment.user.login;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const parentNumber = issue.number;
+            const body = comment.body.trim();
+
+            // ── Sécurité ──
+            if (author !== owner) {
+              try {
+                await octokit.rest.repos.checkCollaborator({
+                  owner, repo, username: author,
+                });
+              } catch {
+                console.log(`Comment by @${author} — skipped`);
+                return;
+              }
+            }
+
+            // ── Si /revise → poster un nouveau plan avec le feedback ──
+            if (body.startsWith('/revise')) {
+              const feedback = body.replace('/revise', '').trim();
+              await octokit.rest.issues.createComment({
+                owner, repo,
+                issue_number: parentNumber,
+                body: [
+                  `## 🔄 Plan révisé pour #${parentNumber}`,
+                  '',
+                  '### Retour pris en compte',
+                  feedback || '(feedback à préciser)',
+                  '',
+                  'Tu peux proposer un nouveau découpage avec le même format que précédemment.',
+                  '',
+                  '### Commandes disponibles',
+                  '- `/approve` → valide le plan et crée les US',
+                  '- `/revise <feedback>` → plan révisé',
+                ].join('\n'),
+              });
+              return;
+            }
+
+            // ── Si /approve ou découpage → créer les US ──
+            // 1. Récupérer le numéro du Project Maskita — Chantier
+            //    (par défaut project number 3 pour tboittin)
+            const PROJECT_NUMBER = 3;
+
+            // 2. Déterminer les US à créer
+            let usList = [];
+
+            if (body.startsWith('/approve')) {
+              // Utiliser le dernier plan posté → on recrée les US depuis la suggestion
+              // Pour l'instant : créer une US unique correspondant à l'issue
+              usList.push({
+                title: issue.title,
+                body: issue.body || '',
+                prereqs: [],
+              });
+            } else {
+              // Parser le découpage depuis le commentaire
+              // Format attendu :
+              // ## Découpage US
+              // - US-XX: Description | prérequis: US-YY
+              const lines = body.split('\n');
+              let inSection = false;
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('## Découpage US')) {
+                  inSection = true;
+                  continue;
+                }
+                if (inSection && trimmed.startsWith('- ')) {
+                  // Parser : "- US-XX: Description | prérequis: US-YY"
+                  const match = trimmed.match(/^-\s+(\S+):\s*(.+?)(?:\s*\|\s*prérequis:\s*(.+))?$/i);
+                  if (match) {
+                    const usTitle = `${match[1]}: ${match[2].trim()}`;
+                    const prereqStr = match[3] ? match[3].trim() : '';
+                    const prereqs = prereqStr && prereqStr !== 'aucun' && prereqStr !== 'aucune'
+                      ? prereqStr.split(',').map(s => s.trim()).filter(Boolean)
+                      : [];
+                    usList.push({ title: usTitle, body: match[2].trim(), prereqs });
+                  } else {
+                    // Fallback : juste prendre la ligne
+                    const clean = trimmed.replace(/^-\s*/, '');
+                    usList.push({ title: clean, body: clean, prereqs: [] });
+                  }
+                } else if (inSection && trimmed === '') {
+                  // Empty line inside section → continue
+                  continue;
+                } else if (inSection && !trimmed.startsWith('- ') && !trimmed.startsWith('#')) {
+                  inSection = false;
+                }
+              }
+            }
+
+            if (usList.length === 0) {
+              // Fallback : créer une US unique
+              usList.push({
+                title: issue.title,
+                body: issue.body || '',
+                prereqs: [],
+              });
+            }
+
+            // ── 3. Créer chaque US comme issue fille ──
+            const createdIssues = [];
+            for (const us of usList) {
+              const fullBody = [
+                us.body,
+                '',
+                '---',
+                `🧩 Issue parente : #${parentNumber}`,
+                us.prereqs.length > 0
+                  ? `⏳ Prérequis : ${us.prereqs.map(p => `\`${p}\``).join(', ')}`
+                  : '✅ Aucun prérequis',
+              ].join('\n');
+
+              try {
+                const { data: newIssue } = await octokit.rest.issues.create({
+                  owner, repo,
+                  title: us.title,
+                  body: fullBody,
+                  labels: ['enhancement'],
+                });
+                createdIssues.push({
+                  number: newIssue.number,
+                  title: us.title,
+                  prereqs: us.prereqs,
+                });
+                console.log(`✅ Issue #${newIssue.number} créée : ${us.title}`);
+              } catch (err) {
+                console.log(`❌ Erreur création issue "${us.title}": ${err.message}`);
+              }
+            }
+
+            if (createdIssues.length === 0) {
+              await octokit.rest.issues.createComment({
+                owner, repo,
+                issue_number: parentNumber,
+                body: '❌ Aucune US n\'a pu être créée. Vérifie le format du découpage.',
+              });
+              return;
+            }
+
+            // ── 4. Ajouter les issues au Project avec le bon statut ──
+            // Déterminer le statut initial : "Not Ready" si prérequis, "Ready" sinon
+            // Note : l'API Projects v2 nécessite le scope `project` sur le token.
+            // Les calls API sont tentés mais peuvent échouer si le scope manque.
+            let projectAddResults = [];
+            for (const ci of createdIssues) {
+              const isReady = ci.prereqs.length === 0;
+              const status = isReady ? 'Ready' : 'Not Ready';
+
+              try {
+                // Ajouter au Project
+                const addResult = await octokit.graphql(`
+                  mutation {
+                    addProjectV2ItemById(input: {
+                      projectId: "PVT_kwHOAzQyRs4BkUV1"
+                      contentId: "${ci.number}"
+                    }) {
+                      item {
+                        id
+                      }
+                    }
+                  }
+                `);
+                projectAddResults.push({ number: ci.number, status: 'added', itemId: addResult?.addProjectV2ItemById?.item?.id });
+                console.log(`✅ #${ci.number} ajoutée au Project (${status})`);
+              } catch (err) {
+                console.log(`⚠️ #${ci.number} — impossible d'ajouter au Project: ${err.message}`);
+                projectAddResults.push({ number: ci.number, status: 'project_error' });
+              }
+            }
+
+            // ── 5. Poster le récapitulatif ──
+            const recapLines = [
+              `## ✅ Plan validé — ${createdIssues.length} US créée(s)`,
+              '',
+              '| US | Statut | Prérequis |',
+              '|----|--------|-----------|',
+            ];
+            for (const ci of createdIssues) {
+              const status = ci.prereqs.length === 0 ? '✅ Ready' : '⏳ Not Ready';
+              const prereqs = ci.prereqs.length > 0 ? ci.prereqs.join(', ') : '—';
+              recapLines.push(`| [#${ci.number}](/${repo}/issues/${ci.number}) ${ci.title} | ${status} | ${prereqs} |`);
+            }
+            recapLines.push(
+              '',
+              '### Prochaines étapes',
+              '- Les US **Ready** seront automatiquement prises en charge par un subagent',
+              '- Les US **Not Ready** passeront en Ready quand leurs prérequis seront résolus',
+              '',
+              '---',
+              '🤖 *Scheduling effectué par Hermes Agent*',
+            );
+
+            await octokit.rest.issues.createComment({
+              owner, repo,
+              issue_number: parentNumber,
+              body: recapLines.join('\n'),
+            });
+
+            // ── 6. Ajouter le label "scheduled" à l'issue parente ──
+            try {
+              await octokit.rest.issues.addLabels({
+                owner, repo,
+                issue_number: parentNumber,
+                labels: ['scheduled'],
+              });
+            } catch (err) {
+              console.log(`⚠️ Impossible d'ajouter le label: ${err.message}`);
+            }
+
+  ##############################################################################
+  # PHASE 3 : Lancer les subagents pour les US Ready
+  # (nécessite le self-hosted runner WSL)
+  ##############################################################################
+  launch:
+    needs: schedule
+    if: |
+      always() &&
+      needs.schedule.result == 'success'
+    runs-on: [self-hosted, linux, wsl]
+    steps:
+      - name: Vérifier les US Ready dans le Project
+        run: |
+          echo "TODO: Récupérer les US en statut Ready depuis le Project"
+          echo "TODO: Pour chaque US Ready, lancer un subagent"
+          echo "Setup requis : self-hosted runner configuré (voir issue-to-pr.yml)"
