@@ -41,6 +41,7 @@ jobs:
 
       - name: Réveiller le lead agent
         shell: bash
+        if: github.actor != 'tboittin'
         env:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ACTION: ${{ github.event.action }}
