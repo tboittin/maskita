@@ -35,6 +35,7 @@ fixtures/
 
 # output des tests
 test-output.txt
+test-results/
 
 coverage/
 
