@@ -34,20 +34,6 @@ export function EcranRevue({
   const [typeAjout, setTypeAjout] = useState('');
   const [valeurAjout, setValeurAjout] = useState('');
   const [showCustomType, setShowCustomType] = useState(false);
-  const refAjoutType = useRef<HTMLSelectElement>(null);
-
-  // Focus automatique sur le premier champ de la modale d'ajout de pseudo
-  useEffect(() => {
-    if (showAjoutManuel) {
-      // Double rAF pour passer après le focus du dialog par Modal (requestAnimationFrame unique)
-      const raf = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          refAjoutType.current?.focus();
-        });
-      });
-      return () => cancelAnimationFrame(raf);
-    }
-  }, [showAjoutManuel]);
 
   const refPseudonymise = useRef<HTMLDivElement>(null);
   const refLisible = useRef<HTMLDivElement>(null);
@@ -341,7 +327,6 @@ export function EcranRevue({
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
                 <select
-                  ref={refAjoutType}
                   value={showCustomType ? '__custom__' : typeAjout}
                   onChange={e => {
                     if (e.target.value === '__custom__') {
