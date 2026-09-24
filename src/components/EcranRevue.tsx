@@ -50,6 +50,30 @@ export function EcranRevue({
     }
   }, [showAjoutManuel]);
 
+  // Focus/édition inline du nouveau tag créé via sélection de texte → "Nouveau tag"
+  const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusNouveauTag || !refTableau.current) return;
+    // Attendre le render du nouveau tag dans le tableau
+    const raf = requestAnimationFrame(() => {
+      const tableau = refTableau.current;
+      if (!tableau) return;
+      // Chercher le bouton du tag par son texte
+      const spans = tableau.querySelectorAll('span');
+      for (const span of spans) {
+        if (span.textContent?.trim() === focusNouveauTag) {
+          const btn = span.closest('button[type="button"]');
+          if (btn) {
+            btn.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+          }
+          break;
+        }
+      }
+      setFocusNouveauTag(null);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [focusNouveauTag]);
+
   const refPseudonymise = useRef<HTMLDivElement>(null);
   const refLisible = useRef<HTMLDivElement>(null);
   const refTableau = useRef<HTMLDivElement>(null);
@@ -136,11 +160,9 @@ export function EcranRevue({
     const v = selectionRef.current;
     if (!v) return;
     const matchTag = v.match(/^\[(\w+(?:_\d+)?)\]$/);
-    if (matchTag) {
-      revue.ajouterTag(matchTag[1], v);
-    } else {
-      revue.ajouterTag('NOUVELLE_VALEUR', v);
-    }
+    const tagName = matchTag ? matchTag[1] : 'NOUVELLE_VALEUR';
+    revue.ajouterTag(tagName, v);
+    setFocusNouveauTag(`[${tagName}]`);
     setSelection(null);
     selectionRef.current = '';
   }, [revue]);
