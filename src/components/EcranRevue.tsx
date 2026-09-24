@@ -34,6 +34,45 @@ export function EcranRevue({
   const [typeAjout, setTypeAjout] = useState('');
   const [valeurAjout, setValeurAjout] = useState('');
   const [showCustomType, setShowCustomType] = useState(false);
+  const refAjoutType = useRef<HTMLSelectElement>(null);
+
+  // Contournement en attendant le fix DS v1.2.4 : la Modal (v1.2.3) focus
+  // le bouton ✕ du header au lieu du premier champ. Double rAF pour passer
+  // après le focus du dialog par Modal (requestAnimationFrame unique).
+  useEffect(() => {
+    if (showAjoutManuel) {
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          refAjoutType.current?.focus();
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [showAjoutManuel]);
+
+  // Focus/édition inline du nouveau tag créé via sélection de texte → "Nouveau tag"
+  const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusNouveauTag || !refTableau.current) return;
+    // Attendre le render du nouveau tag dans le tableau
+    const raf = requestAnimationFrame(() => {
+      const tableau = refTableau.current;
+      if (!tableau) return;
+      // Chercher le bouton du tag par son texte
+      const spans = tableau.querySelectorAll('span');
+      for (const span of spans) {
+        if (span.textContent?.trim() === focusNouveauTag) {
+          const btn = span.closest('button[type="button"]');
+          if (btn) {
+            btn.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+          }
+          break;
+        }
+      }
+      setFocusNouveauTag(null);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [focusNouveauTag]);
 
   const refPseudonymise = useRef<HTMLDivElement>(null);
   const refLisible = useRef<HTMLDivElement>(null);
@@ -121,11 +160,9 @@ export function EcranRevue({
     const v = selectionRef.current;
     if (!v) return;
     const matchTag = v.match(/^\[(\w+(?:_\d+)?)\]$/);
-    if (matchTag) {
-      revue.ajouterTag(matchTag[1], v);
-    } else {
-      revue.ajouterTag('NOUVELLE_VALEUR', v);
-    }
+    const tagName = matchTag ? matchTag[1] : 'NOUVELLE_VALEUR';
+    revue.ajouterTag(tagName, v);
+    setFocusNouveauTag(`[${tagName}]`);
     setSelection(null);
     selectionRef.current = '';
   }, [revue]);
@@ -327,6 +364,7 @@ export function EcranRevue({
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
                 <select
+                  ref={refAjoutType}
                   value={showCustomType ? '__custom__' : typeAjout}
                   onChange={e => {
                     if (e.target.value === '__custom__') {
