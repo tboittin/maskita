@@ -25,14 +25,14 @@ describe('EcranRevue', () => {
 
   it('affiche le bouton Valider', () => {
     renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
-    expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+    expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
   });
 
   it('appelle onValider au clic sur le bouton (mapping inchangé)', () => {
     const onValider = vi.fn();
     renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={onValider} />);
 
-    fireEvent.click(screen.getByText('Valider et télécharger'));
+    fireEvent.click(screen.getByText('Valider et continuer'));
 
     expect(onValider).toHaveBeenCalledTimes(1);
     expect(onValider).toHaveBeenCalledWith(
@@ -54,7 +54,7 @@ describe('EcranRevue', () => {
     fireEvent.click(screen.getByText('Ajouter'));
 
     // Le mapping est modifié → clic Valider appelle onValider avec les bonnes données
-    fireEvent.click(screen.getByText('Valider et télécharger'));
+    fireEvent.click(screen.getByText('Valider et continuer'));
 
     expect(onValider).toHaveBeenCalledTimes(1);
     expect(onValider).toHaveBeenCalledWith(
@@ -98,9 +98,9 @@ describe('EcranRevue', () => {
       expect(screen.getByText('Pseudos (1)')).toBeInTheDocument();
     });
 
-    it('affiche le bouton Valider et télécharger', () => {
+    it('affiche le bouton Valider et continuer', () => {
       renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
-      expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
     });
   });
 });
