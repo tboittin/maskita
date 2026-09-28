@@ -159,7 +159,7 @@ export function useRevue(texteOriginal: string, mappingInitial: Mapping): UseRev
     setMapping(prev => {
       const tagsExistants = Object.keys(prev).filter(t => t.startsWith(`[${type}]`) || t.startsWith(`[${type}_`));
       const maxNum = tagsExistants.reduce((max, t) => {
-        const match = t.match(/_(\\d+)\\]$/);
+        const match = t.match(/[_[](\d+)\]$/);
         return match ? Math.max(max, parseInt(match[1])) : Math.max(max, 1);
       }, 0);
       const tag = maxNum === 0 ? `[${type}]` : `[${type}_${maxNum + 1}]`;
