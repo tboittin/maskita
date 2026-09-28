@@ -97,10 +97,32 @@ test.describe('Parcours complet Maskita', () => {
     await expect(page.getByText('LIEU').first()).toBeVisible();
     await expect(page.getByText('ETABLISSEMENT').first()).toBeVisible();
 
-    // 6. Vérifier le bouton "Validate and download"
-    await expect(page.getByRole('button', { name: /Validate and download/i })).toBeVisible();
+    // 6. Vérifier le bouton "Validate and continue" (navigation vers l'écran de téléchargement)
+    const boutonContinuer = page.getByRole('button', { name: /Validate and continue/i });
+    await expect(boutonContinuer).toBeVisible();
+    await boutonContinuer.click();
 
-    // 7. Revenir à l'étape d'upload
+    // 7. Vérifier l'écran de téléchargement
+    await expect(page.getByText(/Download files/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Pseudonymised document/i)).toBeVisible();
+    await expect(page.getByText(/\.key\.json key/i)).toBeVisible();
+
+    // Vérifier les noms de fichiers et les boutons de téléchargement
+    await expect(page.getByText('test-rapport-pseudonymise.docx')).toBeVisible();
+    await expect(page.getByText('test-rapport.key.json')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Download document/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Download key/i })).toBeVisible();
+
+    // 8. Revenir à l'écran de revue via "← Modify pseudos"
+    const boutonRetour = page.getByRole('button', { name: /Modify pseudos/i });
+    await expect(boutonRetour).toBeVisible();
+    await boutonRetour.click();
+
+    // Vérifier qu'on est bien revenu à l'écran de revue
+    await expect(page.getByText(/Pseudonymised text/)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Readable text/)).toBeVisible();
+
+    // 9. Revenir à l'étape d'upload
     const boutonRecommencer = page.getByRole('button', { name: /Start over/i });
     await expect(boutonRecommencer).toBeVisible();
     await boutonRecommencer.click();
