@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@khaleeno/maskita-design-system": "^1.2.2",
+    "@khaleeno/maskita-design-system": "^1.2.3",
     "@rollup/rollup-linux-x64-gnu": "^4.62.5",
     "docx": "^8.5.0",
     "mammoth": "^1.12.1",
