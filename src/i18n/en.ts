@@ -81,6 +81,10 @@ export const en: Dictionnaire = {
   'restauration.apercu': 'Restored text preview',
   'restauration.bouton.recommencer': 'Start over',
   'restauration.bouton.telecharger': 'Download restored report',
+  'restauration.bouton.lancer': 'Run restoration',
+
+  /* EcranRestaurationRevue */
+  'restaurationRevue.titre.restaure': 'Restored preview',
 
   /* FooterLegal */
   'footer.mentions': 'Legal notice',

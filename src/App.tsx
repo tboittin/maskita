@@ -11,6 +11,7 @@ import { declencherTelechargement } from './utils/telechargement';
 import { FooterLegal } from './components/FooterLegal';
 import { nomContientValeursMapping } from './utils/mapping';
 import { I18nProvider, useLangue } from './i18n/context';
+import { type EtapeRestauration } from './hooks/useRestauration';
 import {
   Bouton,
   BrochetteIcon,
@@ -41,6 +42,7 @@ function AppInterieur() {
   } = useFileUpload();
 
   const [etape, setEtape] = useState<Etape>('upload');
+  const [etapeRestauration, setEtapeRestauration] = useState<EtapeRestauration>('upload');
   const [mapping, setMapping] = useState<Mapping | null>(null);
   const [warningNom, setWarningNom] = useState<WarningDownload | null>(null);
   const [analysePrete, setAnalysePrete] = useState(false);
@@ -198,6 +200,8 @@ function AppInterieur() {
                   setMapping(null);
                   setEtape('upload');
                   setAnalysePrete(false);
+                } else {
+                  setEtapeRestauration('upload');
                 }
               }}
               style={{
@@ -226,7 +230,7 @@ function AppInterieur() {
               { id: 'verifier', libelle: t('app.jalon.verifier') },
               { id: 'recuperer', libelle: t('app.jalon.recuperer') },
             ]}
-            active={onglet === 'pseudonymiser' ? (etape === 'upload' ? 'deposer' : 'verifier') : 'recuperer'}
+            active={onglet === 'pseudonymiser' ? (etape === 'upload' ? 'deposer' : 'verifier') : (etapeRestauration === 'upload' ? 'deposer' : 'verifier')}
             onSelect={(id) => {
               if (id === 'deposer') {
                 setOnglet('pseudonymiser');
@@ -294,7 +298,7 @@ function AppInterieur() {
 
         {onglet === 'restaurer' && (
           <section>
-            <EcranRestauration />
+            <EcranRestauration onEtapeChange={setEtapeRestauration} />
           </section>
         )}
       </div>

@@ -79,6 +79,10 @@ export const fr = {
   'restauration.apercu': 'Aperçu du texte restauré',
   'restauration.bouton.recommencer': 'Recommencer',
   'restauration.bouton.telecharger': 'Télécharger le rapport restauré',
+  'restauration.bouton.lancer': 'Lancer la restauration',
+
+  /* EcranRestaurationRevue */
+  'restaurationRevue.titre.restaure': 'Aperçu restauré',
 
   /* FooterLegal */
   'footer.mentions': 'Mentions légales',
