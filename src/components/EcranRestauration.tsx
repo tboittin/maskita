@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FileDropZone } from './FileDropZone';
-import { useRestauration } from '../hooks/useRestauration';
+import { EcranRestaurationRevue } from './EcranRestaurationRevue';
+import { useRestauration, type EtapeRestauration } from '../hooks/useRestauration';
 import { buildDocument } from '../utils/buildDocument';
 import { declencherTelechargement } from '../utils/telechargement';
 import { nomContientValeursMapping } from '../utils/mapping';
@@ -9,13 +10,17 @@ import {
   Bouton,
   Modal,
   Panneau,
-  TelechargerIcon,
 } from '@khaleeno/maskita-design-system';
 import type { Mapping } from '../utils/mapping';
 
-export function EcranRestauration() {
+interface EcranRestaurationProps {
+  onEtapeChange?: (etape: EtapeRestauration) => void;
+}
+
+export function EcranRestauration({ onEtapeChange }: EcranRestaurationProps) {
   const { t } = useLangue();
   const {
+    texteAvecTags,
     texteRestauré,
     chargement,
     erreur,
@@ -23,10 +28,17 @@ export function EcranRestauration() {
     extension,
     mapping,
     nomFichierCle,
+    etape,
     handleDocxChoisi,
     handleCleChoisie,
+    handleLancerRestauration,
     reinitialiser,
   } = useRestauration();
+
+  // Synchroniser l'étape avec App.tsx pour les Jalons
+  useEffect(() => {
+    onEtapeChange?.(etape);
+  }, [etape, onEtapeChange]);
 
   const [warningNom, setWarningNom] = useState<{
     mappingFinal: Mapping;
@@ -37,7 +49,7 @@ export function EcranRestauration() {
   const executerTelechargement = useCallback(async () => {
     if (!texteRestauré || !fichierDocx) return;
     const ext = extension ?? 'docx';
-    const nomBase = fichierDocx.name.replace(/\.(docx|txt|md)$/i, '') + '-restauré';
+    const nomBase = fichierDocx.name.replace(/\\.(docx|txt|md)$/i, '') + '-restauré';
     const blob = await buildDocument(texteRestauré, ext);
     declencherTelechargement(blob, `${nomBase}.${ext}`);
   }, [texteRestauré, fichierDocx, extension]);
@@ -45,7 +57,7 @@ export function EcranRestauration() {
   const handleTelecharger = useCallback(async () => {
     if (!texteRestauré || !fichierDocx || !mapping) return;
     const ext = extension ?? 'docx';
-    const nomBase = fichierDocx.name.replace(/\.(docx|txt|md)$/i, '');
+    const nomBase = fichierDocx.name.replace(/\\.(docx|txt|md)$/i, '');
 
     const suspectes = nomContientValeursMapping(nomBase, mapping);
     if (suspectes.length > 0) {
@@ -62,60 +74,54 @@ export function EcranRestauration() {
 
   const estPret = texteRestauré !== null;
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
-      <Panneau title={t('restauration.titre.rapport')}>
-        <div style={{ padding: 'var(--espacement-md)' }}>
-          <FileDropZone
-            onFichierChoisi={handleDocxChoisi}
-            chargement={chargement}
-            erreur={erreur}
-            fichierCourant={fichierDocx?.name ?? null}
-            accept=".docx,.txt,.md"
-          />
-        </div>
-      </Panneau>
-
-      <Panneau title={`${t('restauration.titre.cle')} ${t('restauration.obligatoire')}`}>
-        <div style={{ padding: 'var(--espacement-md)' }}>
-          <FileDropZone
-            onFichierChoisi={handleCleChoisie}
-            fichierCourant={nomFichierCle}
-            accept=".json"
-            libelle=".key.json"
-          />
-        </div>
-      </Panneau>
-
-      {estPret && (
-        <Panneau title={t('restauration.apercu')}>
-          <div
-            style={{
-              fontSize: '0.875rem',
-              lineHeight: 1.7,
-              whiteSpace: 'pre-wrap',
-              maxHeight: '300px',
-              overflowY: 'auto',
-              padding: 'var(--espacement-md)',
-              color: 'var(--couleur-texte)',
-            }}
-            className="font-lecture"
-          >
-            {texteRestauré}
+  // Phase upload
+  if (etape === 'upload') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
+        <Panneau title={t('restauration.titre.rapport')}>
+          <div style={{ padding: 'var(--espacement-md)' }}>
+            <FileDropZone
+              onFichierChoisi={handleDocxChoisi}
+              chargement={chargement}
+              erreur={erreur}
+              fichierCourant={fichierDocx?.name ?? null}
+              accept=".docx,.txt,.md"
+            />
           </div>
         </Panneau>
-      )}
 
-      {estPret && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--espacement-sm)' }}>
-          <Bouton variante="secondaire" onClick={reinitialiser}>
-            {t('restauration.bouton.recommencer')}
-          </Bouton>
-          <Bouton variante="primaire" taille="lg" onClick={handleTelecharger} iconeDroite={<TelechargerIcon className="size-5" />}>
-            {t('restauration.bouton.telecharger')}
-          </Bouton>
-        </div>
-      )}
+        <Panneau title={`${t('restauration.titre.cle')} ${t('restauration.obligatoire')}`}>
+          <div style={{ padding: 'var(--espacement-md)' }}>
+            <FileDropZone
+              onFichierChoisi={handleCleChoisie}
+              fichierCourant={nomFichierCle}
+              accept=".json"
+              libelle=".key.json"
+            />
+          </div>
+        </Panneau>
+
+        {estPret && (
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Bouton variante="primaire" taille="lg" onClick={handleLancerRestauration}>
+              {t('restauration.bouton.lancer')}
+            </Bouton>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Phase revue
+  return (
+    <>
+      <EcranRestaurationRevue
+        texteAvecTags={texteAvecTags ?? ''}
+        texteRestauré={texteRestauré ?? ''}
+        mapping={mapping ?? {}}
+        onValider={handleTelecharger}
+        onRetour={reinitialiser}
+      />
 
       {warningNom && (
         <Modal
@@ -144,6 +150,6 @@ export function EcranRestauration() {
           </p>
         </Modal>
       )}
-    </div>
+    </>
   );
 }

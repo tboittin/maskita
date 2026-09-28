@@ -6,6 +6,8 @@ import type { ExtensionFichier } from '../utils/extraction';
 
 const TAILLE_MAX_OCTETS = 10 * 1024 * 1024; // 10 Mo
 
+export type EtapeRestauration = 'upload' | 'revue';
+
 interface UseRestaurationReturn {
   texteAvecTags: string | null;
   texteRestauré: string | null;
@@ -15,8 +17,10 @@ interface UseRestaurationReturn {
   erreur: string | null;
   fichierDocx: File | null;
   nomFichierCle: string | null;
+  etape: EtapeRestauration;
   handleDocxChoisi: (file: File) => Promise<void>;
   handleCleChoisie: (file: File) => Promise<void>;
+  handleLancerRestauration: () => void;
   reinitialiser: () => void;
 }
 
@@ -28,6 +32,7 @@ export function useRestauration(): UseRestaurationReturn {
   const [nomFichierCle, setNomFichierCle] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [etape, setEtape] = useState<EtapeRestauration>('upload');
 
   const texteRestauré = useMemo<string | null>(() => {
     if (texteAvecTags === null || mapping === null) return null;
@@ -90,6 +95,10 @@ export function useRestauration(): UseRestaurationReturn {
     }
   }, []);
 
+  const handleLancerRestauration = useCallback(() => {
+    setEtape('revue');
+  }, []);
+
   const reinitialiser = useCallback(() => {
     setFichierDocx(null);
     setTexteAvecTags(null);
@@ -98,6 +107,7 @@ export function useRestauration(): UseRestaurationReturn {
     setNomFichierCle(null);
     setChargement(false);
     setErreur(null);
+    setEtape('upload');
   }, []);
 
   return {
@@ -109,8 +119,10 @@ export function useRestauration(): UseRestaurationReturn {
     erreur,
     fichierDocx,
     nomFichierCle,
+    etape,
     handleDocxChoisi,
     handleCleChoisie,
+    handleLancerRestauration,
     reinitialiser,
   };
 }

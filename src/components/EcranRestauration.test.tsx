@@ -35,7 +35,7 @@ describe('EcranRestauration', () => {
     expect(screen.getByText(/Clé .key.json correspondante/)).toBeInTheDocument();
   });
 
-  it('affiche le texte restauré après chargement du .docx et de la clé', async () => {
+  it('affiche le bouton Lancer la restauration après chargement du .docx et de la clé', async () => {
     extractRawTextMock.mockResolvedValue({
       value: 'Rapport pour [PERSONNE]',
       messages: [],
@@ -68,11 +68,11 @@ describe('EcranRestauration', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Rapport pour Sophie Lambert')).toBeInTheDocument();
+      expect(screen.getByText('Lancer la restauration')).toBeInTheDocument();
     });
   });
 
-  it('affiche le bouton Télécharger quand le texte est restauré', async () => {
+  it('affiche la revue avec le texte restauré après avoir cliqué sur Lancer la restauration', async () => {
     extractRawTextMock.mockResolvedValue({
       value: 'Rapport pour [PERSONNE]',
       messages: [],
@@ -82,6 +82,7 @@ describe('EcranRestauration', () => {
 
     const inputs = inputsFichier();
 
+    // Charger le .docx
     fireEvent.change(inputs[0], {
       target: {
         files: [
@@ -92,6 +93,7 @@ describe('EcranRestauration', () => {
       },
     });
 
+    // Charger la clé
     fireEvent.change(inputs[1], {
       target: {
         files: [
@@ -102,12 +104,19 @@ describe('EcranRestauration', () => {
       },
     });
 
+    // Cliquer sur "Lancer la restauration"
     await waitFor(() => {
-      expect(screen.getByText('Télécharger le rapport restauré')).toBeInTheDocument();
+      expect(screen.getByText('Lancer la restauration')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Lancer la restauration'));
+
+    // Vérifier que la vue revue est affichée
+    await waitFor(() => {
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
     });
   });
 
-  it('déclenche le téléchargement au clic', async () => {
+  it('déclenche le téléchargement après validation dans la revue', async () => {
     const buildDocumentMock = vi.mocked(buildDocument);
 
     extractRawTextMock.mockResolvedValue({
@@ -139,11 +148,17 @@ describe('EcranRestauration', () => {
       },
     });
 
+    // Cliquer sur "Lancer la restauration"
     await waitFor(() => {
-      expect(screen.getByText('Télécharger le rapport restauré')).toBeInTheDocument();
+      expect(screen.getByText('Lancer la restauration')).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByText('Lancer la restauration'));
 
-    fireEvent.click(screen.getByText('Télécharger le rapport restauré'));
+    // Cliquer sur "Valider et continuer"
+    await waitFor(() => {
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Valider et continuer'));
 
     await waitFor(() => {
       expect(buildDocumentMock).toHaveBeenCalledTimes(1);
