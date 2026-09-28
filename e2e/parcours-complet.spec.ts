@@ -110,22 +110,62 @@ test.describe('Parcours complet Maskita', () => {
     await expect(page.getByRole('button', { name: /Drag & drop/ }).first()).toBeVisible();
   });
 
-  test('Parcours Restauration - affichage des éléments', async ({ page }) => {
+  test('Parcours Restauration complet avec étape Revue', async ({ page }) => {
     await page.goto('/');
 
     // 1. Cliquer sur l'onglet Restaurer
     await page.getByRole('button', { name: 'Restore' }).click();
 
-    // 2. Vérifier les titres de section
+    // 2. Vérifier les titres de section et le jalon actif "Drop"
     await expect(page.getByText(/Modified report/)).toBeVisible();
     await expect(page.getByRole('heading', { name: /key.*json/i })).toBeVisible();
-    await expect(page.getByText('(required)')).toBeVisible();
 
-    // 3. Vérifier que les zones de dépôt sont présentes
-    const dropZones = page.getByRole('button', { name: /Drag & drop/ });
-    await expect(dropZones.first()).toBeVisible();
+    // 3. Uploader le fichier .docx modifié (avec pseudos)
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: 'modifié.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: Buffer.from(fichierDocx),
+    });
 
-    // 4. Vérifier qu'il n'y a pas d'aperçu tant qu'on n'a pas uploadé
-    await expect(page.getByText(/restored text preview/i)).not.toBeVisible();
+    // 4. Uploader la clé .key.json
+    const cleJson = JSON.stringify({ '[PERSONNE]': ['Sophie Lambert'] });
+    await page.locator('input[type="file"]').nth(1).setInputFiles({
+      name: 'document.key.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(cleJson),
+    });
+
+    // 5. Vérifier que le bouton "Run restoration" apparaît
+    const boutonLancer = page.getByRole('button', { name: /Run restoration/i });
+    await expect(boutonLancer).toBeVisible({ timeout: 15000 });
+    await boutonLancer.click();
+
+    // 6. Vérifier l'écran de revue Restauration (EcranRestaurationRevue)
+    // 6a. La table de mapping doit être visible avec le tag PERSONNE
+    await expect(page.getByText(/Pseudos? \(1\)/)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('PERSONNE').first()).toBeVisible();
+
+    // 6b. L'aperçu pseudonymisé (texte avec tags) doit être visible
+    await expect(page.getByText('Pseudonymised text')).toBeVisible();
+    await expect(page.getByText('[PERSONNE]').first()).toBeVisible();
+
+    // 6c. L'aperçu restauré doit être visible avec la valeur restaurée
+    await expect(page.getByText('Restored preview')).toBeVisible();
+    await expect(page.getByText('Sophie Lambert').first()).toBeVisible();
+
+    // 7. Vérifier que le jalon est sur "Review"
+    await expect(page.getByText('Review').first()).toBeVisible();
+
+    // 8. Vérifier le bouton "Validate and download"
+    await expect(page.getByRole('button', { name: /Validate and download/i })).toBeVisible();
+
+    // 9. Revenir à l'étape d'upload
+    const boutonRecommencer = page.getByRole('button', { name: /Start over/i });
+    await expect(boutonRecommencer).toBeVisible();
+    await boutonRecommencer.click();
+
+    // Vérifier qu'on est bien revenu à l'étape d'upload
+    await expect(page.getByRole('button', { name: /Run restoration/i })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: /Drag & drop/ }).first()).toBeVisible();
   });
 });
