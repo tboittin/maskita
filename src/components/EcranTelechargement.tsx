@@ -36,31 +36,34 @@ export function EcranTelechargement({
     valeursSuspectes: string[];
   } | null>(null);
 
-  const nomDoc = `${nomFichierBase}-pseudonymise.${extension}`;
-  const nomCle = `${nomFichierBase}.key.json`;
+  const nomDocInitial = `${nomFichierBase}-pseudonymise.${extension}`;
+  const nomCleInitial = `${nomFichierBase}.key.json`;
+
+  const [nomDocEdite, setNomDocEdite] = useState(nomDocInitial);
+  const [nomCleEdite, setNomCleEdite] = useState(nomCleInitial);
 
   const handleTelechargerDocument = useCallback(async () => {
     const suspectes = nomContientValeursMapping(nomFichierBase, mappingFinal);
     if (suspectes.length > 0) {
       setWarningNom({
         mappingFinal,
-        nomFichier: nomDoc,
+        nomFichier: nomDocEdite,
         valeursSuspectes: suspectes,
       });
       return;
     }
 
     const blobDoc = await buildDocument(textePseudonymise, extension as 'docx' | 'txt' | 'md');
-    declencherTelechargement(blobDoc, nomDoc);
+    declencherTelechargement(blobDoc, nomDocEdite);
     setDocTelecharge(true);
-  }, [textePseudonymise, mappingFinal, nomFichierBase, nomDoc, extension]);
+  }, [textePseudonymise, mappingFinal, nomFichierBase, nomDocEdite, extension]);
 
   const handleTelechargerCle = useCallback(async () => {
     const contenuCle = genererCleJson(mappingFinal);
     const blobCle = new Blob([contenuCle], { type: 'application/json' });
-    declencherTelechargement(blobCle, nomCle);
+    declencherTelechargement(blobCle, nomCleEdite);
     setCleTelechargee(true);
-  }, [mappingFinal, nomCle]);
+  }, [mappingFinal, nomCleEdite]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
@@ -83,19 +86,24 @@ export function EcranTelechargement({
             gap: 'var(--espacement-md)',
           }}
         >
-          <span
+          <input
+            type="text"
+            value={nomDocEdite}
+            onChange={(e) => setNomDocEdite(e.target.value)}
+            disabled={docTelecharge}
+            aria-label={t('telechargement.document')}
             style={{
               flex: 1,
               fontSize: '0.875rem',
               color: 'var(--couleur-texte)',
               fontFamily: 'var(--police-donnees, monospace)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              background: 'transparent',
+              border: '1px solid var(--couleur-bord, #ccc)',
+              borderRadius: '4px',
+              padding: '4px 8px',
+              outline: 'none',
             }}
-          >
-            {nomDoc}
-          </span>
+          />
           <Bouton
             variante={docTelecharge ? 'secondaire' : 'primaire'}
             taille="md"
@@ -120,19 +128,24 @@ export function EcranTelechargement({
             gap: 'var(--espacement-md)',
           }}
         >
-          <span
+          <input
+            type="text"
+            value={nomCleEdite}
+            onChange={(e) => setNomCleEdite(e.target.value)}
+            disabled={cleTelechargee}
+            aria-label={t('telechargement.cle')}
             style={{
               flex: 1,
               fontSize: '0.875rem',
               color: 'var(--couleur-texte)',
               fontFamily: 'var(--police-donnees, monospace)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              background: 'transparent',
+              border: '1px solid var(--couleur-bord, #ccc)',
+              borderRadius: '4px',
+              padding: '4px 8px',
+              outline: 'none',
             }}
-          >
-            {nomCle}
-          </span>
+          />
           <Bouton
             variante={cleTelechargee ? 'secondaire' : 'primaire'}
             taille="md"

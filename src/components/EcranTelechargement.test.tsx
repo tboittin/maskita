@@ -53,12 +53,12 @@ describe('EcranTelechargement', () => {
     expect(screen.getByText('Téléchargez chaque fichier indépendamment.')).toBeInTheDocument();
   });
 
-  it('affiche les deux panneaux avec les noms de fichiers', () => {
+  it('affiche les deux panneaux avec les noms de fichiers dans les champs', () => {
     renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
     expect(screen.getByText('Document pseudonymisé')).toBeInTheDocument();
     expect(screen.getByText('Clé .key.json')).toBeInTheDocument();
-    expect(screen.getByText('mon-rapport-pseudonymise.docx')).toBeInTheDocument();
-    expect(screen.getByText('mon-rapport.key.json')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('mon-rapport-pseudonymise.docx')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('mon-rapport.key.json')).toBeInTheDocument();
   });
 
   it('affiche les deux boutons de téléchargement', () => {
@@ -286,8 +286,8 @@ describe('EcranTelechargement', () => {
           extension="txt"
         />,
       );
-      expect(screen.getByText('compte-rendu-pseudonymise.txt')).toBeInTheDocument();
-      expect(screen.getByText('compte-rendu.key.json')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('compte-rendu-pseudonymise.txt')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('compte-rendu.key.json')).toBeInTheDocument();
     });
 
     it('génère le bon nom pour les fichiers .md', () => {
@@ -298,8 +298,82 @@ describe('EcranTelechargement', () => {
           extension="md"
         />,
       );
-      expect(screen.getByText('notes-pseudonymise.md')).toBeInTheDocument();
-      expect(screen.getByText('notes.key.json')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('notes-pseudonymise.md')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('notes.key.json')).toBeInTheDocument();
+    });
+  });
+
+  describe('édition du nom de fichier', () => {
+    it('permet de modifier le nom du document dans le champ texte', () => {
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+      const inputDoc = screen.getByDisplayValue('mon-rapport-pseudonymise.docx');
+      fireEvent.change(inputDoc, { target: { value: 'mon-rapport-modifie.docx' } });
+      expect(inputDoc).toHaveValue('mon-rapport-modifie.docx');
+    });
+
+    it('permet de modifier le nom de la clé dans le champ texte', () => {
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+      const inputCle = screen.getByDisplayValue('mon-rapport.key.json');
+      fireEvent.change(inputCle, { target: { value: 'ma-cle-personnalisee.key.json' } });
+      expect(inputCle).toHaveValue('ma-cle-personnalisee.key.json');
+    });
+
+    it('télécharge le document avec le nom modifié', async () => {
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+
+      const inputDoc = screen.getByDisplayValue('mon-rapport-pseudonymise.docx');
+      fireEvent.change(inputDoc, { target: { value: 'rapport-final.docx' } });
+
+      fireEvent.click(screen.getByText('Télécharger le document'));
+
+      await waitFor(() => {
+        expect(declencherTelechargementMock).toHaveBeenCalledWith(
+          expect.any(Blob),
+          'rapport-final.docx',
+        );
+      });
+    });
+
+    it('télécharge la clé avec le nom modifié', async () => {
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+
+      const inputCle = screen.getByDisplayValue('mon-rapport.key.json');
+      fireEvent.change(inputCle, { target: { value: 'mes-cles.key.json' } });
+
+      fireEvent.click(screen.getByText('Télécharger la clé'));
+
+      await waitFor(() => {
+        expect(declencherTelechargementMock).toHaveBeenCalledWith(
+          expect.any(Blob),
+          'mes-cles.key.json',
+        );
+      });
+    });
+
+    it('désactive le champ document après téléchargement', async () => {
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+
+      const inputDoc = screen.getByDisplayValue('mon-rapport-pseudonymise.docx');
+      expect(inputDoc).not.toBeDisabled();
+
+      fireEvent.click(screen.getByText('Télécharger le document'));
+
+      await waitFor(() => {
+        expect(inputDoc).toBeDisabled();
+      });
+    });
+
+    it('désactive le champ clé après téléchargement', async () => {
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+
+      const inputCle = screen.getByDisplayValue('mon-rapport.key.json');
+      expect(inputCle).not.toBeDisabled();
+
+      fireEvent.click(screen.getByText('Télécharger la clé'));
+
+      await waitFor(() => {
+        expect(inputCle).toBeDisabled();
+      });
     });
   });
 });
