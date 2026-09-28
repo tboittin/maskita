@@ -133,4 +133,41 @@ describe('useRevue', () => {
       expect(result.current.mappingModifie).toBe(false);
     });
   });
+
+  it('déplace une valeur d\'un tag vers un autre', () => {
+    const mappingAvecDeuxTags = { '[EMAIL]': ['test@exemple.fr'], '[TEL]': ['0612345678'] };
+    const { result } = renderHook(() => useRevue(TEXTE, mappingAvecDeuxTags));
+    act(() => result.current.deplacerValeur('test@exemple.fr', '[EMAIL]', '[TEL]'));
+    expect(result.current.tags.find(t => t.tag === '[EMAIL]')?.valeurs).toEqual([]);
+    expect(result.current.tags.find(t => t.tag === '[TEL]')?.valeurs).toContain('test@exemple.fr');
+  });
+
+  it('ne fait rien si on déplace une valeur vers le même tag', () => {
+    const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
+    act(() => result.current.deplacerValeur('test@exemple.fr', '[EMAIL]', '[EMAIL]'));
+    expect(result.current.tags[0].valeurs).toHaveLength(1);
+  });
+
+  it('ajouterTag crée un suffixe _2 pour un type existant', () => {
+    const mappingAvecPERSONNE = { '[PERSONNE]': ['Jean Dupont'] };
+    const { result } = renderHook(() => useRevue(TEXTE, mappingAvecPERSONNE));
+    act(() => result.current.ajouterTag('PERSONNE', 'Sophie Lambert'));
+    expect(result.current.tags.find(t => t.tag === '[PERSONNE_2]')).toBeDefined();
+    expect(result.current.tags.find(t => t.tag === '[PERSONNE_2]')?.valeurs).toContain('Sophie Lambert');
+  });
+
+  it('mettreSurbrillanceValeur surbrille une valeur spécifique', () => {
+    const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
+    act(() => result.current.mettreSurbrillanceValeur('[EMAIL]', 'test@exemple.fr'));
+    expect(result.current.tagSurbrillance).toBe('[EMAIL]');
+    expect(result.current.valeurSurbrillance).toBe('test@exemple.fr');
+  });
+
+  it('mettreSurbrillanceValeur bascule si même valeur', () => {
+    const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
+    act(() => result.current.mettreSurbrillanceValeur('[EMAIL]', 'test@exemple.fr'));
+    expect(result.current.valeurSurbrillance).toBe('test@exemple.fr');
+    act(() => result.current.mettreSurbrillanceValeur('[EMAIL]', 'test@exemple.fr'));
+    expect(result.current.valeurSurbrillance).toBeNull();
+  });
 });
