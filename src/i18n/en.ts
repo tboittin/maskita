@@ -34,7 +34,7 @@ export const en: Dictionnaire = {
   'revue.bouton.deplacer': (v: string) => `📦 Move « ${v} »`,
   'revue.checkbox.sync': 'Sync scroll',
   'revue.checkbox.recentrer': 'Auto centre',
-  'revue.bouton.valider': 'Validate and download',
+  'revue.bouton.valider': 'Validate and continue',
 
   /* Popup suppression dans EcranRevue */
   'revue.supprimer.titre': 'Delete this pseudo?',
@@ -73,6 +73,17 @@ export const en: Dictionnaire = {
   'dropzone.deposer': (lib: string) => `Drag & drop a ${lib} file here`,
   'dropzone.ouCliquer': 'or click to browse',
   'dropzone.ariaLabel': (lib: string) => `File drop zone for ${lib}`,
+
+  /* EcranTelechargement */
+  'telechargement.titre': 'Download files',
+  'telechargement.sousTitre': 'Download each file independently.',
+  'telechargement.document': 'Pseudonymised document',
+  'telechargement.bouton.document': 'Download document',
+  'telechargement.cle': '.key.json key',
+  'telechargement.bouton.cle': 'Download key',
+  'telechargement.succes.document': 'Document downloaded ✓',
+  'telechargement.succes.cle': 'Key downloaded ✓',
+  'telechargement.bouton.retour': '← Modify pseudos',
 
   /* EcranRestauration */
   'restauration.titre.rapport': 'Modified report (with pseudos)',
