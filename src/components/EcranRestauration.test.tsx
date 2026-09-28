@@ -112,7 +112,7 @@ describe('EcranRestauration', () => {
 
     // Vérifier que la vue revue est affichée
     await waitFor(() => {
-      expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
     });
   });
 
@@ -154,11 +154,11 @@ describe('EcranRestauration', () => {
     });
     fireEvent.click(screen.getByText('Lancer la restauration'));
 
-    // Cliquer sur "Valider et télécharger"
+    // Cliquer sur "Valider et continuer"
     await waitFor(() => {
-      expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText('Valider et télécharger'));
+    fireEvent.click(screen.getByText('Valider et continuer'));
 
     await waitFor(() => {
       expect(buildDocumentMock).toHaveBeenCalledTimes(1);

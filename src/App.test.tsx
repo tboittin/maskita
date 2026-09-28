@@ -88,7 +88,7 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Lancer l\'analyse'));
 
     await waitFor(() => {
-      expect(screen.getByText(/Valider et télécharger/)).toBeInTheDocument();
+      expect(screen.getByText(/Valider et continuer/)).toBeInTheDocument();
     });
   });
 
@@ -118,7 +118,7 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Lancer l\'analyse'));
 
     await waitFor(() => {
-      expect(screen.getByText(/Valider et télécharger/)).toBeInTheDocument();
+      expect(screen.getByText(/Valider et continuer/)).toBeInTheDocument();
     });
   });
 
@@ -136,7 +136,7 @@ describe('App', () => {
     });
   });
 
-  it('déclenche les téléchargements au clic sur Valider', async () => {
+  it('affiche l\'écran de téléchargement après validation', async () => {
     extractRawTextMock.mockResolvedValue({
       value: 'Contact : test@exemple.fr',
       messages: [],
@@ -154,11 +154,48 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Lancer l\'analyse'));
 
     await waitFor(() => {
-      expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
     });
 
-    // Clic sur Valider
-    fireEvent.click(screen.getByText('Valider et télécharger'));
+    // Clic sur Valider et continuer → va à l'écran de téléchargement
+    fireEvent.click(screen.getByText('Valider et continuer'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Télécharger les fichiers')).toBeInTheDocument();
+      expect(screen.getByText('Document pseudonymisé')).toBeInTheDocument();
+      expect(screen.getByText('Clé .key.json')).toBeInTheDocument();
+    });
+  });
+
+  it('déclenche le téléchargement du document au clic sur le bouton', async () => {
+    extractRawTextMock.mockResolvedValue({
+      value: 'Contact : test@exemple.fr',
+      messages: [],
+    });
+
+    render(<App />);
+
+    const inputs = inputsFichier();
+    fireEvent.change(inputs[0], { target: { files: [creerFichier('mon-rapport.docx')] } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Lancer l\'analyse')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Lancer l\'analyse'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Valider et continuer'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Télécharger le document')).toBeInTheDocument();
+    });
+
+    // Clic sur Télécharger le document
+    fireEvent.click(screen.getByText('Télécharger le document'));
 
     await waitFor(() => {
       // buildDocument a été appelé avec le texte pseudonymisé + le format
@@ -169,11 +206,11 @@ describe('App', () => {
       );
     });
 
-    // createObjectURL a été appelé 2 fois : doc + .key.json
-    expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
+    // createObjectURL a été appelé 1 fois pour le document
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
   });
 
-  it('affiche un message de succès après téléchargement', async () => {
+  it('déclenche le téléchargement de la clé au clic sur le bouton', async () => {
     extractRawTextMock.mockResolvedValue({
       value: 'Contact : test@exemple.fr',
       messages: [],
@@ -191,14 +228,24 @@ describe('App', () => {
     fireEvent.click(screen.getByText('Lancer l\'analyse'));
 
     await waitFor(() => {
-      expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+      expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Valider et télécharger'));
+    fireEvent.click(screen.getByText('Valider et continuer'));
 
     await waitFor(() => {
-      expect(screen.getByText('Fichiers téléchargés avec succès ✓')).toBeInTheDocument();
+      expect(screen.getByText('Télécharger la clé')).toBeInTheDocument();
     });
+
+    // Clic sur Télécharger la clé
+    fireEvent.click(screen.getByText('Télécharger la clé'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Clé téléchargée ✓')).toBeInTheDocument();
+    });
+
+    // createObjectURL a été appelé 1 fois pour la clé
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
   });
 
   it('affiche les onglets de navigation', () => {

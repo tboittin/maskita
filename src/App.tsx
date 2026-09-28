@@ -2,14 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { FileDropZone } from './components/FileDropZone';
 import { EcranRevue } from './components/EcranRevue';
 import { EcranRestauration } from './components/EcranRestauration';
+import { EcranTelechargement } from './components/EcranTelechargement';
 import { useFileUpload } from './hooks/useFileUpload';
 import { analyserTexte, fusionnerAvecMappingExistant } from './utils/analyse';
-import { genererCleJson } from './utils/mapping';
 import { type Mapping } from './utils/mapping';
-import { buildDocument } from './utils/buildDocument';
-import { declencherTelechargement } from './utils/telechargement';
 import { FooterLegal } from './components/FooterLegal';
-import { nomContientValeursMapping } from './utils/mapping';
 import { I18nProvider, useLangue } from './i18n/context';
 import { type EtapeRestauration } from './hooks/useRestauration';
 import {
@@ -17,19 +14,11 @@ import {
   BrochetteIcon,
   Jalons,
   MessageSucces,
-  Modal,
   Panneau,
 } from '@khaleeno/maskita-design-system';
 
 type Onglet = 'pseudonymiser' | 'restaurer';
-type Etape = 'upload' | 'revue';
-
-interface WarningDownload {
-  mappingFinal: Mapping;
-  textePseudonymise: string;
-  nomFichier: string;
-  valeursSuspectes: string[];
-}
+type Etape = 'upload' | 'revue' | 'telechargement';
 
 function AppInterieur() {
   const { t, langue, basculer } = useLangue();
@@ -44,8 +33,11 @@ function AppInterieur() {
   const [etape, setEtape] = useState<Etape>('upload');
   const [etapeRestauration, setEtapeRestauration] = useState<EtapeRestauration>('upload');
   const [mapping, setMapping] = useState<Mapping | null>(null);
-  const [warningNom, setWarningNom] = useState<WarningDownload | null>(null);
   const [analysePrete, setAnalysePrete] = useState(false);
+
+  // États pour l'écran de téléchargement
+  const [textePseudonymise, setTextePseudonymise] = useState<string | null>(null);
+  const [mappingFinal, setMappingFinal] = useState<Mapping | null>(null);
 
   // Synchroniser l'attribut lang du document et le titre
   useEffect(() => {
@@ -78,55 +70,30 @@ function AppInterieur() {
     setEtape('revue');
   }, [texte, cle]);
 
-  const executerTelechargement = useCallback(
-    async (mappingFinal: Mapping, textePseudonymise: string) => {
-      const ext = extension ?? 'docx';
-      const nomBase = fichier?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'rapport';
-
-      const blobDoc = await buildDocument(textePseudonymise, ext);
-      declencherTelechargement(blobDoc, `${nomBase}-pseudonymise.${ext}`);
-
-      const contenuCle = genererCleJson(mappingFinal);
-      const blobCle = new Blob([contenuCle], { type: 'application/json' });
-      declencherTelechargement(blobCle, `${nomBase}.key.json`);
-
-      setMessageSucces(t('app.succes'));
-      setTimeout(() => setMessageSucces(null), 5000);
-    },
-    [fichier, extension, t],
-  );
-
   const handleValider = useCallback(
-    async (mappingFinal: Mapping, textePseudonymise: string) => {
-      const nomBase = fichier?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'rapport';
-      const ext = extension ?? 'docx';
-
-      const suspectes = nomContientValeursMapping(nomBase, mappingFinal);
-      if (suspectes.length > 0) {
-        setWarningNom({
-          mappingFinal,
-          textePseudonymise,
-          nomFichier: `${nomBase}-pseudonymise.${ext}`,
-          valeursSuspectes: suspectes,
-        });
-        return;
-      }
-
-      await executerTelechargement(mappingFinal, textePseudonymise);
+    (mFinal: Mapping, textePseudo: string) => {
+      setMappingFinal(mFinal);
+      setTextePseudonymise(textePseudo);
+      setEtape('telechargement');
     },
-    [fichier, extension, executerTelechargement],
+    [],
   );
-
-  const annulerWarningNom = useCallback(() => {
-    setWarningNom(null);
-  }, []);
 
   const handleRetour = useCallback(() => {
     reinitialiser();
     setMapping(null);
     setEtape('upload');
     setAnalysePrete(false);
+    setTextePseudonymise(null);
+    setMappingFinal(null);
   }, [reinitialiser]);
+
+  const handleRetourTelechargement = useCallback(() => {
+    setEtape('revue');
+  }, []);
+
+  const nomFichierBase = fichier?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'rapport';
+  const ext = extension ?? 'docx';
 
   return (
     <>
@@ -201,6 +168,8 @@ function AppInterieur() {
                   setEtape('upload');
                   setAnalysePrete(false);
                 } else {
+                  setTextePseudonymise(null);
+                  setMappingFinal(null);
                   setEtapeRestauration('upload');
                 }
               }}
@@ -230,11 +199,13 @@ function AppInterieur() {
               { id: 'verifier', libelle: t('app.jalon.verifier') },
               { id: 'recuperer', libelle: t('app.jalon.recuperer') },
             ]}
-            active={onglet === 'pseudonymiser' ? (etape === 'upload' ? 'deposer' : 'verifier') : (etapeRestauration === 'upload' ? 'deposer' : 'verifier')}
+            active={onglet === 'pseudonymiser' ? (etape === 'upload' ? 'deposer' : etape === 'revue' ? 'verifier' : 'recuperer') : (etapeRestauration === 'upload' ? 'deposer' : 'verifier')}
             onSelect={(id) => {
               if (id === 'deposer') {
                 setOnglet('pseudonymiser');
                 handleRetour();
+              } else if (id === 'verifier' && etape === 'telechargement') {
+                handleRetourTelechargement();
               }
             }}
           />
@@ -296,6 +267,18 @@ function AppInterieur() {
           </section>
         )}
 
+        {onglet === 'pseudonymiser' && etape === 'telechargement' && mappingFinal && textePseudonymise && (
+          <section>
+            <EcranTelechargement
+              textePseudonymise={textePseudonymise}
+              mappingFinal={mappingFinal}
+              nomFichierBase={nomFichierBase}
+              extension={ext}
+              onRetour={handleRetourTelechargement}
+            />
+          </section>
+        )}
+
         {onglet === 'restaurer' && (
           <section>
             <EcranRestauration onEtapeChange={setEtapeRestauration} />
@@ -304,35 +287,6 @@ function AppInterieur() {
       </div>
 
       <FooterLegal />
-
-      {warningNom && (
-        <Modal
-          ouvert={!!warningNom}
-          titre={t('app.warning.titre')}
-          onFermer={annulerWarningNom}
-          pied={
-            <>
-              <Bouton variante="secondaire" onClick={annulerWarningNom}>
-                {t('app.warning.annuler')}
-              </Bouton>
-              <Bouton
-                variante="danger"
-                onClick={() => {
-                  const w = warningNom;
-                  setWarningNom(null);
-                  executerTelechargement(w.mappingFinal, w.textePseudonymise);
-                }}
-              >
-                {t('app.warning.confirmer')}
-              </Bouton>
-            </>
-          }
-        >
-          <p className="text-sm leading-relaxed text-brume-500" style={{ whiteSpace: 'pre-wrap' }}>
-            {t('app.warning.message', warningNom.valeursSuspectes.join(', '), warningNom.nomFichier)}
-          </p>
-        </Modal>
-      )}
     </>
   );
 }

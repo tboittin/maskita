@@ -32,7 +32,7 @@ export const fr = {
   'revue.bouton.deplacer': (v: string) => `📦 Déplacer « ${v} »`,
   'revue.checkbox.sync': 'Scroll synchronisé',
   'revue.checkbox.recentrer': 'Recentrer auto',
-  'revue.bouton.valider': 'Valider et télécharger',
+  'revue.bouton.valider': 'Valider et continuer',
 
   /* Popup suppression dans EcranRevue */
   'revue.supprimer.titre': 'Supprimer le pseudo ?',
@@ -71,6 +71,17 @@ export const fr = {
   'dropzone.deposer': (lib: string) => `Glisser-déposer un fichier ${lib} ici`,
   'dropzone.ouCliquer': 'ou cliquer pour parcourir',
   'dropzone.ariaLabel': (lib: string) => `Zone de dépôt de fichier ${lib}`,
+
+  /* EcranTelechargement */
+  'telechargement.titre': 'Télécharger les fichiers',
+  'telechargement.sousTitre': 'Téléchargez chaque fichier indépendamment.',
+  'telechargement.document': 'Document pseudonymisé',
+  'telechargement.bouton.document': 'Télécharger le document',
+  'telechargement.cle': 'Clé .key.json',
+  'telechargement.bouton.cle': 'Télécharger la clé',
+  'telechargement.succes.document': 'Document téléchargé ✓',
+  'telechargement.succes.cle': 'Clé téléchargée ✓',
+  'telechargement.bouton.retour': '← Modifier les pseudos',
 
   /* EcranRestauration */
   'restauration.titre.rapport': 'Rapport modifié (avec des pseudos)',
