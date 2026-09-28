@@ -85,4 +85,52 @@ describe('useRevue', () => {
     act(() => result.current.ajouterValeur('[EMAIL]', 'autre@exemple.fr'));
     expect(result.current.mappingModifie).toBe(true);
   });
+
+  describe('Affichage du résultat de la vérification initiale', () => {
+    it('affiche tous les tags du mapping initial', () => {
+      const mappingComplet = {
+        '[EMAIL]': ['test@exemple.fr'],
+        '[TELEPHONE]': ['0612345678'],
+      };
+      const { result } = renderHook(() => useRevue(TEXTE, mappingComplet));
+      expect(result.current.tags).toHaveLength(2);
+      expect(result.current.tags.map(t => t.tag)).toEqual(['[EMAIL]', '[TELEPHONE]']);
+    });
+
+    it('auto-highlight le premier tag à l\'ouverture', () => {
+      const mappingComplet = {
+        '[EMAIL]': ['test@exemple.fr'],
+        '[TELEPHONE]': ['0612345678'],
+      };
+      const { result } = renderHook(() => useRevue(TEXTE, mappingComplet));
+      expect(result.current.tagSurbrillance).toBe('[EMAIL]');
+    });
+
+    it('génère le texte pseudonymisé avec tous les tags', () => {
+      const mappingComplet = {
+        '[EMAIL]': ['test@exemple.fr'],
+        '[TELEPHONE]': ['0612345678'],
+      };
+      const { result } = renderHook(() => useRevue(TEXTE, mappingComplet));
+      expect(result.current.textePseudonymise).toContain('[EMAIL]');
+      expect(result.current.textePseudonymise).toContain('[TELEPHONE]');
+      expect(result.current.textePseudonymise).not.toContain('test@exemple.fr');
+      expect(result.current.textePseudonymise).not.toContain('0612345678');
+    });
+
+    it('détecte les conflits initiaux dans le mapping', () => {
+      const mappingAvecConflit = {
+        '[EMAIL]': ['test@exemple.fr'],
+        '[EMAIL_2]': ['test@exemple.fr'], // doublon
+      };
+      const { result } = renderHook(() => useRevue(TEXTE, mappingAvecConflit));
+      expect(result.current.conflits.length).toBeGreaterThan(0);
+      expect(result.current.conflits[0].type).toBe('doublon');
+    });
+
+    it('mappingModifie est false à l\'initialisation', () => {
+      const { result } = renderHook(() => useRevue(TEXTE, MAPPING_INITIAL));
+      expect(result.current.mappingModifie).toBe(false);
+    });
+  });
 });

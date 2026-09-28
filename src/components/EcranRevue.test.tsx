@@ -70,4 +70,37 @@ describe('EcranRevue', () => {
     renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
     expect(screen.getByText('+ Ajouter un pseudo')).toBeInTheDocument();
   });
+
+  describe('Affichage du résultat de la vérification initiale', () => {
+    it('affiche tous les tags du mapping dans le tableau', () => {
+      const mappingComplet = {
+        '[EMAIL]': ['test@exemple.fr'],
+        '[TELEPHONE]': ['0612345678'],
+      };
+      renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={mappingComplet} onValider={vi.fn()} />);
+      expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('[TELEPHONE]').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('affiche le texte pseudonymisé avec les tags', () => {
+      renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+      expect(screen.getByText(/Texte pseudonymisé/)).toBeInTheDocument();
+      expect(screen.getAllByText('[EMAIL]').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('affiche le texte lisible avec les valeurs originales', () => {
+      renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+      expect(screen.getByText(/Texte lisible/)).toBeInTheDocument();
+    });
+
+    it('affiche le compte des pseudos dans le titre du tableau', () => {
+      renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+      expect(screen.getByText('Pseudos (1)')).toBeInTheDocument();
+    });
+
+    it('affiche le bouton Valider et télécharger', () => {
+      renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={vi.fn()} />);
+      expect(screen.getByText('Valider et télécharger')).toBeInTheDocument();
+    });
+  });
 });
