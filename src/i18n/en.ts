@@ -12,7 +12,7 @@ export const en: Dictionnaire = {
   'app.bouton.analyser': 'Run analysis',
   'app.jalon.deposer': 'Drop',
   'app.jalon.verifier': 'Review',
-  'app.jalon.recuperer': 'Retrieve',
+  'app.jalon.recuperer': 'Download',
   'app.bouton.recommencer': '← Start over with another file',
   'app.succes': 'Files downloaded successfully ✓',
   'app.warning.titre': 'Sensitive file name',
