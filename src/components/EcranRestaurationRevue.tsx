@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { TexteApercu } from './TexteApercu';
 import { useLangue } from '../i18n/context';
 import {
   Bouton,
+  Modal,
   PseudoTableau,
   TelechargerIcon,
   type LignePseudo,
@@ -16,6 +17,14 @@ interface EcranRestaurationRevueProps {
   mapping: Mapping;
   onValider: () => void;
   onRetour: () => void;
+  /* US-V03 — Modification du mapping à l'étape Restauration */
+  onAjouterValeur: (tag: string, valeur: string) => void;
+  onRetirerValeur: (tag: string, valeur: string) => void;
+  onDeplacerValeur: (valeur: string, tagSource: string, tagCible: string) => void;
+  onReordonnerValeurs: (tag: string, debut: number, fin: number) => void;
+  onRenommerTag: (ancien: string, nouveau: string) => void;
+  onSupprimerTag: (tag: string) => void;
+  onAjouterTag: (type: string, valeur: string) => void;
 }
 
 export function EcranRestaurationRevue({
@@ -24,6 +33,13 @@ export function EcranRestaurationRevue({
   mapping,
   onValider,
   onRetour,
+  onAjouterValeur,
+  onRetirerValeur,
+  onDeplacerValeur,
+  onReordonnerValeurs,
+  onRenommerTag,
+  onSupprimerTag,
+  onAjouterTag,
 }: EcranRestaurationRevueProps) {
   const { t } = useLangue();
   const [tagSurbrillance, setTagSurbrillance] = useState<string | null>(null);
@@ -36,13 +52,37 @@ export function EcranRestaurationRevue({
   const refTableau = useRef<HTMLDivElement>(null);
   const syncing = useRef(false);
 
+  /* US-V03 — Modales d'ajout manuel d'un pseudo et de confirmation suppression */
+  const [showAjoutManuel, setShowAjoutManuel] = useState(false);
+  const [typeAjout, setTypeAjout] = useState('');
+  const [valeurAjout, setValeurAjout] = useState('');
+  const [showCustomType, setShowCustomType] = useState(false);
+  const [supprimerTag, setSupprimerTag] = useState<string | null>(null);
+  const refAjoutType = useRef<HTMLSelectElement>(null);
+
+  // Focus sur le premier champ de la modal d'ajout (contournement focus Modal DS)
+  useEffect(() => {
+    if (showAjoutManuel) {
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          refAjoutType.current?.focus();
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [showAjoutManuel]);
+
   // Construire les lignes pour le PseudoTableau DS
   const lignes: LignePseudo[] = Object.entries(mapping).map(([tag, valeurs]) => ({
     tag,
-    statut: 'existant' as ToneStatut,
+    statut: (valeurs.length === 0 ? 'vide' : 'existant') as ToneStatut,
     valeurs,
     isActive: tag === tagSurbrillance,
   }));
+
+  const tagSupprime = supprimerTag
+    ? lignes.find(l => l.tag === supprimerTag)
+    : null;
 
   const handleTagClick = useCallback((tag: string) => {
     setTagSurbrillance(prev => prev === tag ? null : tag);
@@ -99,6 +139,16 @@ export function EcranRestaurationRevue({
     defilerTableauVers(tag);
   }, [defilerTableauVers]);
 
+  const handleConfirmerSuppression = useCallback(() => {
+    if (!supprimerTag) return;
+    onSupprimerTag(supprimerTag);
+    setSupprimerTag(null);
+  }, [supprimerTag, onSupprimerTag]);
+
+  const handleAnnulerSuppression = useCallback(() => {
+    setSupprimerTag(null);
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espacement-md)' }}>
@@ -123,20 +173,124 @@ export function EcranRestaurationRevue({
             libelleAucun={t('tableau.aucun')}
             libelleVoir={t('tableau.voir')}
             libelleValeursVides={t('tableau.vide')}
-            // Read-only — callbacks vides pour éviter les erreurs TS
-            onAjouterPseudo={() => {}}
-            onDeplacerValeur={() => {}}
-            onReordonnerValeurs={() => {}}
-            onRenommer={() => {}}
-            onRetirerValeur={() => {}}
-            onViderTag={() => {}}
-            onAjouterValeur={() => {}}
-            libelleAjouter=""
-            libelleAjouterValeur=""
-            libelleRetirerValeur={() => ''}
-            libelleViderTag=""
-            placeholderNouvelleValeur=""
+            /* US-V03 — Édition du mapping dans le parcours Restauration */
+            onAjouterPseudo={() => setShowAjoutManuel(true)}
+            onDeplacerValeur={onDeplacerValeur}
+            onReordonnerValeurs={onReordonnerValeurs}
+            onRenommer={onRenommerTag}
+            onRetirerValeur={onRetirerValeur}
+            onViderTag={(tag) => setSupprimerTag(tag)}
+            onAjouterValeur={onAjouterValeur}
+            libelleAjouter={t('tableau.bouton.ajouterPseudo')}
+            libelleAjouterValeur={t('tableau.tooltip.ajouterValeur')}
+            libelleRetirerValeur={(v) => t('tableau.retirerValeur', v)}
+            libelleViderTag={t('tableau.tooltip.supprimer')}
+            placeholderNouvelleValeur={t('tableau.placeholder.nouvelleValeur')}
           />
+          {/* Formulaire d'ajout manuel d'un pseudo */}
+          {showAjoutManuel && (
+            <Modal
+              ouvert={showAjoutManuel}
+              titre={t('tableau.ajoutManuel.titre')}
+              onFermer={() => setShowAjoutManuel(false)}
+              pied={
+                <>
+                  <Bouton variante="secondaire" onClick={() => { setShowCustomType(false); setShowAjoutManuel(false); }}>
+                    {t('tableau.bouton.annuler')}
+                  </Bouton>
+                  <Bouton
+                    variante="primaire"
+                    onClick={() => {
+                      if (typeAjout.trim() && valeurAjout.trim()) {
+                        onAjouterTag(typeAjout.trim(), valeurAjout.trim());
+                        setTypeAjout('');
+                        setValeurAjout('');
+                        setShowCustomType(false);
+                        setShowAjoutManuel(false);
+                      }
+                    }}
+                  >
+                    {t('tableau.bouton.ajouter')}
+                  </Bouton>
+                </>
+              }
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
+                <select
+                  ref={refAjoutType}
+                  value={showCustomType ? '__custom__' : typeAjout}
+                  onChange={e => {
+                    if (e.target.value === '__custom__') {
+                      setShowCustomType(true);
+                      setTypeAjout('');
+                    } else {
+                      setShowCustomType(false);
+                      setTypeAjout(e.target.value);
+                    }
+                  }}
+                  style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+                >
+                  <option value="" disabled>{t('tableau.ajoutManuel.type.label')}</option>
+                  <option value="PERSONNE">PERSONNE</option>
+                  <option value="DATE">DATE</option>
+                  <option value="LIEU">LIEU</option>
+                  <option value="ADRESSE">ADRESSE</option>
+                  <option value="PROFESSION">PROFESSION</option>
+                  <option value="ETABLISSEMENT">ETABLISSEMENT</option>
+                  <option value="TELEPHONE">TELEPHONE</option>
+                  <option value="EMAIL">EMAIL</option>
+                  <option value="__custom__">{t('tableau.ajoutManuel.type.custom')}</option>
+                </select>
+                {showCustomType && (
+                  <input
+                    value={typeAjout}
+                    onChange={e => setTypeAjout(e.target.value.toUpperCase())}
+                    placeholder={t('tableau.placeholder.type')}
+                    style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+                  />
+                )}
+                <input
+                  value={valeurAjout}
+                  onChange={e => setValeurAjout(e.target.value)}
+                  placeholder={t('tableau.placeholder.valeur')}
+                  style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+                />
+              </div>
+            </Modal>
+          )}
+          {/* Popup confirmation suppression d'un pseudo */}
+          {supprimerTag && tagSupprime && (
+            <Modal
+              ouvert={!!supprimerTag}
+              titre={t('revue.supprimer.titre')}
+              onFermer={handleAnnulerSuppression}
+              pied={
+                <>
+                  <Bouton variante="secondaire" onClick={handleAnnulerSuppression}>
+                    {t('revue.supprimer.annuler')}
+                  </Bouton>
+                  <Bouton variante="danger" onClick={handleConfirmerSuppression}>
+                    {t('revue.supprimer.confirmer')}
+                  </Bouton>
+                </>
+              }
+            >
+              <p style={{ fontSize: '0.875rem', lineHeight: 1.5, color: 'var(--couleur-texte-secondaire)' }}>
+                {t('revue.supprimer.message', supprimerTag)}
+              </p>
+              {tagSupprime.valeurs.length > 0 && (
+                <div style={{ marginTop: 'var(--espacement-sm)', fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)' }}>
+                  <p>{t('revue.supprimer.valeurs')}</p>
+                  <ul style={{ marginLeft: '1rem', listStyle: 'disc' }}>
+                    {tagSupprime.valeurs.map(v => <li key={v}>{v}</li>)}
+                  </ul>
+                </div>
+              )}
+              <p style={{ marginTop: 'var(--espacement-sm)', fontSize: '0.75rem', fontStyle: 'italic', color: 'var(--couleur-texte-secondaire)' }}>
+                {t('revue.supprimer.note')}
+              </p>
+            </Modal>
+          )}
         </div>
 
         {/* Volet droit : aperçus texte */}

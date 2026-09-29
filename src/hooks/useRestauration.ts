@@ -23,6 +23,14 @@ interface UseRestaurationReturn {
   handleLancerRestauration: () => void;
   handleValiderRevue: () => void;
   reinitialiser: () => void;
+  // US-V03 — Modification du mapping à l'étape Restauration
+  ajouterValeur: (tag: string, valeur: string) => void;
+  retirerValeur: (tag: string, valeur: string) => void;
+  deplacerValeur: (valeur: string, tagSource: string, tagCible: string) => void;
+  reordonnerValeurs: (tag: string, debut: number, fin: number) => void;
+  renommerTag: (ancien: string, nouveau: string) => void;
+  supprimerTag: (tag: string) => void;
+  ajouterTag: (type: string, valeur: string) => void;
 }
 
 export function useRestauration(): UseRestaurationReturn {
@@ -104,6 +112,86 @@ export function useRestauration(): UseRestaurationReturn {
     setEtape('telechargement');
   }, []);
 
+  /* US-V03 — Modification du mapping à l'étape Restauration.
+     Les handlers ne font rien si le mapping n'est pas encore chargé. */
+  const ajouterValeur = useCallback((tag: string, valeur: string) => {
+    setMapping(prev => {
+      if (!prev) return prev;
+      return { ...prev, [tag]: [...(prev[tag] || []), valeur] };
+    });
+  }, []);
+
+  const retirerValeur = useCallback((tag: string, valeur: string) => {
+    setMapping(prev => {
+      if (!prev) return prev;
+      return { ...prev, [tag]: (prev[tag] || []).filter(v => v !== valeur) };
+    });
+  }, []);
+
+  const deplacerValeur = useCallback((valeur: string, tagSource: string, tagCible: string) => {
+    if (tagSource === tagCible) return;
+    setMapping(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        [tagSource]: (prev[tagSource] || []).filter(v => v !== valeur),
+        [tagCible]: [...(prev[tagCible] || []), valeur],
+      };
+    });
+  }, []);
+
+  const reordonnerValeurs = useCallback((tag: string, debut: number, fin: number) => {
+    setMapping(prev => {
+      if (!prev) return prev;
+      const vals = [...(prev[tag] || [])];
+      if (debut < 0 || debut >= vals.length || fin < 0 || fin >= vals.length) return prev;
+      const [deplace] = vals.splice(debut, 1);
+      vals.splice(fin, 0, deplace);
+      return { ...prev, [tag]: vals };
+    });
+  }, []);
+
+  const renommerTag = useCallback((ancien: string, nouveau: string) => {
+    // B01 — Ajouter les crochets [] si l'utilisateur les a omis
+    let tagNettoye = nouveau.trim();
+    if (!tagNettoye.startsWith('[')) tagNettoye = '[' + tagNettoye;
+    if (!tagNettoye.endsWith(']')) tagNettoye = tagNettoye + ']';
+    // B03 — Forcer la majuscule sur le contenu entre crochets
+    tagNettoye = tagNettoye.replace(/^\[(.+)\]$/, (_, contenu) => {
+      return '[' + contenu.toUpperCase() + ']';
+    });
+
+    setMapping(prev => {
+      if (!prev) return prev;
+      const { [ancien]: valeurs, ...reste } = prev;
+      if (valeurs === undefined) return prev;
+      return { ...reste, [tagNettoye]: valeurs };
+    });
+  }, []);
+
+  const supprimerTag = useCallback((tag: string) => {
+    setMapping(prev => {
+      if (!prev) return prev;
+      const { [tag]: _, ...reste } = prev;
+      return reste;
+    });
+  }, []);
+
+  const ajouterTag = useCallback((type: string, valeur: string) => {
+    setMapping(prev => {
+      if (!prev) return prev;
+      const tagsExistants = Object.keys(prev).filter(
+        t => t.startsWith(`[${type}]`) || t.startsWith(`[${type}_`),
+      );
+      const maxNum = tagsExistants.reduce((max, t) => {
+        const match = t.match(/[_[](\d+)\]$/);
+        return match ? Math.max(max, parseInt(match[1])) : Math.max(max, 1);
+      }, 0);
+      const tag = maxNum === 0 ? `[${type}]` : `[${type}_${maxNum + 1}]`;
+      return { ...prev, [tag]: [valeur] };
+    });
+  }, []);
+
   const reinitialiser = useCallback(() => {
     setFichierDocx(null);
     setTexteAvecTags(null);
@@ -130,5 +218,12 @@ export function useRestauration(): UseRestaurationReturn {
     handleLancerRestauration,
     handleValiderRevue,
     reinitialiser,
+    ajouterValeur,
+    retirerValeur,
+    deplacerValeur,
+    reordonnerValeurs,
+    renommerTag,
+    supprimerTag,
+    ajouterTag,
   };
 }

@@ -30,6 +30,13 @@ export function EcranRestauration({ onEtapeChange }: EcranRestaurationProps) {
     handleLancerRestauration,
     handleValiderRevue,
     reinitialiser,
+    ajouterValeur,
+    retirerValeur,
+    deplacerValeur,
+    reordonnerValeurs,
+    renommerTag,
+    supprimerTag,
+    ajouterTag,
   } = useRestauration();
 
   // Synchroniser l'étape avec App.tsx pour les Jalons
@@ -88,6 +95,13 @@ export function EcranRestauration({ onEtapeChange }: EcranRestaurationProps) {
         mapping={mapping ?? {}}
         onValider={handleValiderRevue}
         onRetour={reinitialiser}
+        onAjouterValeur={ajouterValeur}
+        onRetirerValeur={retirerValeur}
+        onDeplacerValeur={deplacerValeur}
+        onReordonnerValeurs={reordonnerValeurs}
+        onRenommerTag={renommerTag}
+        onSupprimerTag={supprimerTag}
+        onAjouterTag={ajouterTag}
       />
     );
   }
