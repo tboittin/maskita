@@ -189,8 +189,8 @@ test.describe('Parcours complet Maskita', () => {
     // 7. Vérifier que le jalon est sur "Review"
     await expect(page.getByText('Review').first()).toBeVisible();
 
-    // 8. Vérifier le bouton "Validate and download"
-    await expect(page.getByRole('button', { name: /Validate and download/i })).toBeVisible();
+    // 8. Vérifier le bouton "Validate and continue"
+    await expect(page.getByRole('button', { name: /Validate and continue/i })).toBeVisible();
 
     // 9. Revenir à l'étape d'upload
     const boutonRecommencer = page.getByRole('button', { name: /Start over/i });
