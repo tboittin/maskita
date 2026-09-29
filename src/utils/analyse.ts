@@ -85,10 +85,20 @@ export function resoudreConflitsSousChaine(
 }
 
 /**
+ * Normalise une valeur détectée en forme canonique : trim + minuscule,
+ * en conservant l'espacement interne (DET-01 : casse insensible).
+ * Partagée par la déduplication pour garantir la cohérence de la casse.
+ */
+export function normaliserValeurCanonique(valeur: string): string {
+  return valeur.trim().toLowerCase();
+}
+
+/**
  * Fusionne les nouvelles détections avec un mapping existant.
  * - Les valeurs déjà présentes dans le mapping ne sont pas dupliquées.
  * - Les nouvelles valeurs sont ajoutées aux tags existants du même type,
  *   ou créent un nouveau tag si aucun tag du type n'existe.
+ * - La valeur canonique stockée est la version minuscule (DET-01).
  * - Réinitialise les compteurs pour éviter les conflits de numérotation.
  */
 export function fusionnerAvecMappingExistant(
@@ -130,10 +140,10 @@ export function fusionnerAvecMappingExistant(
       );
 
       if (tagExistant) {
-        resultat[tagExistant].push(d.valeur);
+        resultat[tagExistant].push(normaliserValeurCanonique(d.valeur));
       } else {
         const nouveauTag = genererTag(d.type);
-        resultat[nouveauTag] = [d.valeur];
+        resultat[nouveauTag] = [normaliserValeurCanonique(d.valeur)];
       }
     }
   }
