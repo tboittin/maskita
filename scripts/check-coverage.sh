@@ -31,8 +31,15 @@ LINES=$(get_total lines)
 FUNCTIONS=$(get_total functions)
 BRANCHES=$(get_total branches)
 
-# Lire la référence
-source "$REF_FILE"
+# Lire la référence (format "<nom>: <valeur>" ligne par ligne, sans la sourcer)
+get_ref() {
+  sed -n "s/^$1:[[:space:]]*//p" "$REF_FILE"
+}
+
+REF_STATEMENTS=$(get_ref statements)
+REF_LINES=$(get_ref lines)
+REF_FUNCTIONS=$(get_ref functions)
+REF_BRANCHES=$(get_ref branches)
 
 echo ""
 echo "📈 Coverage actuel :"
@@ -42,10 +49,10 @@ echo "  functions:  $FUNCTIONS%"
 echo "  branches:   $BRANCHES%"
 echo ""
 echo "📉 Référence (coverage-ref.txt) :"
-echo "  statements: ${statements:-N/A}%"
-echo "  lines:      ${lines:-N/A}%"
-echo "  functions:  ${functions:-N/A}%"
-echo "  branches:   ${branches:-N/A}%"
+echo "  statements: ${REF_STATEMENTS:-N/A}%"
+echo "  lines:      ${REF_LINES:-N/A}%"
+echo "  functions:  ${REF_FUNCTIONS:-N/A}%"
+echo "  branches:   ${REF_BRANCHES:-N/A}%"
 
 FAIL=0
 
@@ -53,6 +60,11 @@ check() {
   local label="$1"
   local current="$2"
   local ref="$3"
+  if [ -z "$ref" ]; then
+    echo "❌ $label : référence absente dans coverage-ref.txt"
+    FAIL=1
+    return
+  fi
   if [ "$(echo "$current < $ref" | bc -l)" -eq 1 ]; then
     echo "❌ $label a baissé : $current% < $ref%"
     FAIL=1
@@ -61,10 +73,10 @@ check() {
   fi
 }
 
-check "statements" "$STATEMENTS" "$statements"
-check "lines" "$LINES" "$lines"
-check "functions" "$FUNCTIONS" "$functions"
-check "branches" "$BRANCHES" "$branches"
+check "statements" "$STATEMENTS" "$REF_STATEMENTS"
+check "lines" "$LINES" "$REF_LINES"
+check "functions" "$FUNCTIONS" "$REF_FUNCTIONS"
+check "branches" "$BRANCHES" "$REF_BRANCHES"
 
 echo ""
 if [ "$FAIL" -eq 1 ]; then
