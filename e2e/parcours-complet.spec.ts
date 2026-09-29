@@ -107,13 +107,24 @@ test.describe('Parcours complet Maskita', () => {
     await expect(page.getByText(/Pseudonymised document/i)).toBeVisible();
     await expect(page.getByText(/\.key\.json key/i)).toBeVisible();
 
-    // Vérifier les noms de fichiers et les boutons de téléchargement
-    await expect(page.getByText('test-rapport-pseudonymise.docx')).toBeVisible();
-    await expect(page.getByText('test-rapport.key.json')).toBeVisible();
+    // Vérifier les noms de fichiers dans les champs texte et les boutons de téléchargement
+    await expect(page.getByRole('textbox', { name: 'Pseudonymised document' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: '.key.json key' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Download document/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Download key/i })).toBeVisible();
 
-    // 8. Revenir à l'écran de revue via "← Modify pseudos"
+    // 8. Modifier le nom du fichier avant téléchargement
+    const champDoc = page.getByRole('textbox', { name: 'Pseudonymised document' });
+    await expect(champDoc).toHaveValue('test-rapport-pseudonymise.docx');
+    await champDoc.fill('mon-rapport-final.docx');
+    await expect(champDoc).toHaveValue('mon-rapport-final.docx');
+
+    const champCle = page.getByRole('textbox', { name: '.key.json key' });
+    await expect(champCle).toHaveValue('test-rapport.key.json');
+    await champCle.fill('ma-cle.key.json');
+    await expect(champCle).toHaveValue('ma-cle.key.json');
+
+    // 9. Revenir à l'écran de revue via "← Modify pseudos"
     const boutonRetour = page.getByRole('button', { name: /Modify pseudos/i });
     await expect(boutonRetour).toBeVisible();
     await boutonRetour.click();
