@@ -193,6 +193,26 @@ describe('EcranTelechargement', () => {
       expect(buildDocumentMock).not.toHaveBeenCalled();
       expect(declencherTelechargementMock).not.toHaveBeenCalled();
     });
+
+    it('ne vérifie pas le nom sensible quand verifierNomSensible=false et télécharge directement', async () => {
+      nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
+
+      renderAvecI18n(
+        <EcranTelechargement {...PROPS_DEFAUT} verifierNomSensible={false} />,
+      );
+
+      fireEvent.click(screen.getByText('Télécharger le document'));
+
+      await waitFor(() => {
+        expect(buildDocumentMock).toHaveBeenCalledTimes(1);
+        expect(declencherTelechargementMock).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('Document téléchargé ✓')).toBeInTheDocument();
+      });
+
+      // Aucune modale de warning ne doit s'afficher
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByText('Télécharger quand même')).not.toBeInTheDocument();
+    });
   });
 
   describe('téléchargement de la clé', () => {
