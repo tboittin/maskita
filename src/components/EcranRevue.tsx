@@ -1,14 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { TexteApercu } from './TexteApercu';
 import { useRevue } from '../hooks/useRevue';
 import { useLangue } from '../i18n/context';
-import {
-  Bouton,
-  Modal,
-  PseudoTableau,
-  type LignePseudo,
-  type ToneStatut,
-} from '@khaleeno/maskita-design-system';
+import { Bouton, Modal, type ToneStatut } from '@khaleeno/maskita-design-system';
+import { PanneauTableauPseudos } from './PanneauTableauPseudos';
+import { PanneauApercus } from './PanneauApercus';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRevueProps {
@@ -27,38 +22,22 @@ export function EcranRevue({
   const [syncScroll, setSyncScroll] = useState(true);
   const [recentrer, setRecentrer] = useState(true);
 
+  const refPseudonymise = useRef<HTMLDivElement>(null);
+  const refLisible = useRef<HTMLDivElement>(null);
+  const refTableau = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<string>('');
+  const occurrenceIdx = useRef<Record<string, number>>({});
+
   const [selection, setSelection] = useState<{ valeur: string; source: 'pseudo' | 'lisible' } | null>(null);
   const [pickerPayload, setPickerPayload] = useState<{ valeur: string; tagSource?: string } | null>(null);
-  const [supprimerTag, setSupprimerTag] = useState<string | null>(null);
-  const [showAjoutManuel, setShowAjoutManuel] = useState(false);
-  const [typeAjout, setTypeAjout] = useState('');
-  const [valeurAjout, setValeurAjout] = useState('');
-  const [showCustomType, setShowCustomType] = useState(false);
-  const refAjoutType = useRef<HTMLSelectElement>(null);
-
-  // Contournement en attendant le fix DS v1.2.4 : la Modal (v1.2.3) focus
-  // le bouton ✕ du header au lieu du premier champ. Double rAF pour passer
-  // après le focus du dialog par Modal (requestAnimationFrame unique).
-  useEffect(() => {
-    if (showAjoutManuel) {
-      const raf = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          refAjoutType.current?.focus();
-        });
-      });
-      return () => cancelAnimationFrame(raf);
-    }
-  }, [showAjoutManuel]);
+  const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
 
   // Focus/édition inline du nouveau tag créé via sélection de texte → "Nouveau tag"
-  const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
   useEffect(() => {
     if (!focusNouveauTag || !refTableau.current) return;
-    // Attendre le render du nouveau tag dans le tableau
     const raf = requestAnimationFrame(() => {
       const tableau = refTableau.current;
       if (!tableau) return;
-      // Chercher le bouton du tag par son texte
       const spans = tableau.querySelectorAll('span');
       for (const span of spans) {
         if (span.textContent?.trim() === focusNouveauTag) {
@@ -73,13 +52,6 @@ export function EcranRevue({
     });
     return () => cancelAnimationFrame(raf);
   }, [focusNouveauTag]);
-
-  const refPseudonymise = useRef<HTMLDivElement>(null);
-  const refLisible = useRef<HTMLDivElement>(null);
-  const refTableau = useRef<HTMLDivElement>(null);
-  const syncing = useRef(false);
-  const selectionRef = useRef<string>('');
-  const occurrenceIdx = useRef<Record<string, number>>({});
 
   // Nettoyer la sélection si l'utilisateur clique ailleurs
   useEffect(() => {
@@ -126,26 +98,6 @@ export function EcranRevue({
     }
   }, []);
 
-  const handleScroll = useCallback(
-    (source: 'pseudo' | 'lisible') =>
-      (e: React.UIEvent<HTMLDivElement>) => {
-        if (!syncScroll || syncing.current) return;
-        syncing.current = true;
-
-        const sourceEl = e.currentTarget;
-        const ratio = sourceEl.scrollTop / (sourceEl.scrollHeight - sourceEl.clientHeight || 1);
-
-        const cible =
-          source === 'pseudo' ? refLisible.current : refPseudonymise.current;
-        if (cible) {
-          cible.scrollTop = ratio * (cible.scrollHeight - cible.clientHeight || 1);
-        }
-
-        requestAnimationFrame(() => { syncing.current = false; });
-      },
-    [syncScroll],
-  );
-
   const handleSelection = useCallback((valeur: string) => {
     selectionRef.current = valeur;
     setSelection({ valeur, source: 'lisible' });
@@ -176,11 +128,9 @@ export function EcranRevue({
   const handlePickerSelect = useCallback((tag: string) => {
     if (!pickerPayload) return;
     if (pickerPayload.tagSource) {
-      // Déplacer une valeur existante
       revue.deplacerValeur(pickerPayload.valeur, pickerPayload.tagSource, tag);
       revue.mettreSurbrillanceValeur(tag, pickerPayload.valeur);
     } else {
-      // Ajouter comme nouvelle valeur
       revue.ajouterValeur(tag, pickerPayload.valeur);
       revue.mettreSurbrillanceValeur(tag, pickerPayload.valeur);
     }
@@ -192,22 +142,10 @@ export function EcranRevue({
 
   const handlePickerAnnuler = useCallback(() => {
     setPickerPayload(null);
-    // Ne pas effacer selection quand c'est un déplacement depuis la table
-    // (l'utilisateur peut réessayer)
   }, []);
 
-  const handleSupprimer = useCallback((tag: string) => {
-    setSupprimerTag(tag);
-  }, []);
-
-  const handleConfirmerSuppression = useCallback(() => {
-    if (!supprimerTag) return;
-    revue.supprimerTag(supprimerTag);
-    setSupprimerTag(null);
-  }, [supprimerTag, revue]);
-
-  const handleAnnulerSuppression = useCallback(() => {
-    setSupprimerTag(null);
+  const handleDeplacerValeur = useCallback((valeur: string, tagSource: string) => {
+    setPickerPayload({ valeur, tagSource });
   }, []);
 
   const handleClicValider = () => {
@@ -221,7 +159,6 @@ export function EcranRevue({
   const handleValeurClick = useCallback((tag: string, valeur: string) => {
     revue.mettreSurbrillanceValeur(tag, valeur);
     defilerTableauVers(tag);
-    // Scroll to the value in the lisible view
     const lisible = refLisible.current;
     if (lisible) {
       const spans = Array.from(lisible.querySelectorAll('span'));
@@ -233,10 +170,6 @@ export function EcranRevue({
       }
     }
   }, [revue, defilerTableauVers]);
-
-  const handleDeplacerValeur = useCallback((valeur: string, tagSource: string) => {
-    setPickerPayload({ valeur, tagSource });
-  }, []);
 
   const handleTexteTagClick = useCallback((tag: string) => {
     setSelection(null);
@@ -256,11 +189,13 @@ export function EcranRevue({
     }
   }, [revue, defilerTableauVers, recentrer, defilerTexteVers]);
 
-  const tagsExistants = Object.keys(revue.mappingFinal);
+  const handleConflitVoir = useCallback((tag: string) => {
+    revue.mettreSurbrillance(tag);
+    defilerTexteVers(tag);
+    defilerTableauVers(tag);
+  }, [revue, defilerTexteVers, defilerTableauVers]);
 
-  const tagSupprime = supprimerTag
-    ? revue.tags.find(t => t.tag === supprimerTag)
-    : null;
+  const tagsExistants = Object.keys(revue.mappingFinal);
 
   const pickerTitre = pickerPayload?.tagSource
     ? t('revue.picker.titre.deplacer', pickerPayload.valeur)
@@ -270,163 +205,60 @@ export function EcranRevue({
     ? { tag: revue.tagSurbrillance!, valeur: revue.valeurSurbrillance }
     : null;
 
-  // Construire les lignes pour le PseudoTableau DS
   const conflitsParTag = revue.conflits.reduce<Record<string, string[]>>((acc, c) => {
     if (!acc[c.tag]) acc[c.tag] = [];
     acc[c.tag].push(c.message);
     return acc;
   }, {});
 
-  const lignes: LignePseudo[] = revue.tags.map(entry => {
-    const conflits = conflitsParTag[entry.tag] ?? [];
+  const construireLigne = (tag: string, valeurs: string[]): Partial<import('@khaleeno/maskita-design-system').LignePseudo> => {
+    const conflits = conflitsParTag[tag] ?? [];
     let statut: ToneStatut = 'existant';
     if (conflits.length > 0) statut = 'conflit';
-    else if (entry.valeurs.length === 0) statut = 'vide';
-    else if (entry.estNouveau) statut = 'nouveau';
+    else if (valeurs.length === 0) statut = 'vide';
+    else if (revue.tags.find(entry => entry.tag === tag)?.estNouveau) statut = 'nouveau';
     return {
-      tag: entry.tag,
       statut,
-      valeurs: entry.valeurs,
       conflitMessage: conflits.length > 0 ? conflits[conflits.length - 1] : undefined,
-      isActive: entry.tag === revue.tagSurbrillance,
     };
-  });
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espacement-md)' }}>
-        {/* Volet gauche : tableau des pseudos */}
-        <div
-          ref={refTableau}
-          style={{
-            background: 'var(--couleur-surface)',
-            border: '1px solid var(--couleur-bordure)',
-            borderRadius: 'var(--rayon-bordure)',
-            padding: 'var(--espacement-md)',
-            maxHeight: '500px',
-            overflowY: 'auto',
-          }}
-        >
-          <PseudoTableau
-            lignes={lignes}
-            activeTag={revue.tagSurbrillance ?? ''}
-            onSelect={handleTagClick}
-            onAjouterPseudo={() => setShowAjoutManuel(true)}
-            onDeplacerValeur={revue.deplacerValeur}
-            onReordonnerValeurs={revue.reordonnerValeurs}
-            onRenommer={revue.renommerTag}
-            onValeurClick={handleValeurClick}
-            onRetirerValeur={revue.retirerValeur}
-            onViderTag={handleSupprimer}
-            onAjouterValeur={revue.ajouterValeur}
-            onConflitVoir={(tag) => {
-              revue.mettreSurbrillance(tag);
-              defilerTexteVers(tag);
-              defilerTableauVers(tag);
-            }}
-            libelleTitre={t('tableau.titre', revue.tags.length)}
-            libelleAjouter={t('tableau.bouton.ajouterPseudo')}
-            libelleAucun={t('tableau.aucun')}
-            libelleVoir={t('tableau.voir')}
-            libelleAjouterValeur={t('tableau.tooltip.ajouterValeur')}
-            libelleRetirerValeur={(v) => t('tableau.retirerValeur', v)}
-            libelleViderTag={t('tableau.tooltip.supprimer')}
-            libelleValeursVides={t('tableau.vide')}
-            placeholderNouvelleValeur={t('tableau.placeholder.nouvelleValeur')}
-          />
-          {/* Formulaire d'ajout manuel d'un pseudo */}
-          {showAjoutManuel && (
-            <Modal
-              ouvert={showAjoutManuel}
-              titre={t('tableau.ajoutManuel.titre')}
-              onFermer={() => setShowAjoutManuel(false)}
-              pied={
-                <>
-                  <Bouton variante="secondaire" onClick={() => { setShowCustomType(false); setShowAjoutManuel(false); }}>
-                    {t('tableau.bouton.annuler')}
-                  </Bouton>
-                  <Bouton
-                    variante="primaire"
-                    onClick={() => {
-                      if (typeAjout.trim() && valeurAjout.trim()) {
-                        revue.ajouterTag(typeAjout.trim(), valeurAjout.trim());
-                        setTypeAjout('');
-                        setValeurAjout('');
-                        setShowCustomType(false);
-                        setShowAjoutManuel(false);
-                      }
-                    }}
-                  >
-                    {t('tableau.bouton.ajouter')}
-                  </Bouton>
-                </>
-              }
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
-                <select
-                  ref={refAjoutType}
-                  value={showCustomType ? '__custom__' : typeAjout}
-                  onChange={e => {
-                    if (e.target.value === '__custom__') {
-                      setShowCustomType(true);
-                      setTypeAjout('');
-                    } else {
-                      setShowCustomType(false);
-                      setTypeAjout(e.target.value);
-                    }
-                  }}
-                  style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
-                >
-                  <option value="" disabled>{t('tableau.ajoutManuel.type.label')}</option>
-                  <option value="PERSONNE">PERSONNE</option>
-                  <option value="DATE">DATE</option>
-                  <option value="LIEU">LIEU</option>
-                  <option value="ADRESSE">ADRESSE</option>
-                  <option value="PROFESSION">PROFESSION</option>
-                  <option value="ETABLISSEMENT">ETABLISSEMENT</option>
-                  <option value="TELEPHONE">TELEPHONE</option>
-                  <option value="EMAIL">EMAIL</option>
-                  <option value="__custom__">{t('tableau.ajoutManuel.type.custom')}</option>
-                </select>
-                {showCustomType && (
-                  <input
-                    value={typeAjout}
-                    onChange={e => setTypeAjout(e.target.value.toUpperCase())}
-                    placeholder={t('tableau.placeholder.type')}
-                    style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
-                  />
-                )}
-                <input
-                  value={valeurAjout}
-                  onChange={e => setValeurAjout(e.target.value)}
-                  placeholder={t('tableau.placeholder.valeur')}
-                  style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
-                />
-              </div>
-            </Modal>
-          )}
-        </div>
+        {/* Volet gauche : tableau des pseudos (composant neutre partagé) */}
+        <PanneauTableauPseudos
+          mapping={revue.mappingFinal}
+          activeTag={revue.tagSurbrillance}
+          onSelectTag={handleTagClick}
+          onClicValeur={handleValeurClick}
+          onAjouterValeur={revue.ajouterValeur}
+          onRetirerValeur={revue.retirerValeur}
+          onDeplacerValeur={revue.deplacerValeur}
+          onReordonnerValeurs={revue.reordonnerValeurs}
+          onRenommerTag={revue.renommerTag}
+          onSupprimerTag={revue.supprimerTag}
+          onAjouterTag={revue.ajouterTag}
+          onConflitVoir={handleConflitVoir}
+          construireLigne={construireLigne}
+          refTableau={refTableau}
+        />
 
-        {/* Volet droit : aperçus texte */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)', position: 'relative' }}>
-          <div style={{ position: 'relative' }}>
-            <TexteApercu
-              titre={t('revue.titre.pseudo')}
-              texte={revue.textePseudonymise}
-              mapping={revue.mappingFinal}
-              tagSurbrillance={revue.tagSurbrillance}
-              surlignerTags
-              containerRef={refPseudonymise}
-              onScroll={handleScroll('pseudo')}
-              onTagClick={handleTexteTagClick}
-              onSelection={handleSelectionPseudo}
-            />
-            {selection && selection.source === 'pseudo' && (
-              <div style={{
-                position: 'absolute', top: 0, right: 0,
-                display: 'flex', gap: 'var(--espacement-xs)',
-                padding: 'var(--espacement-sm)', zIndex: 10,
-              }}>
+        {/* Volet droit : aperçus texte (composant neutre partagé) */}
+        <PanneauApercus
+          mapping={revue.mappingFinal}
+          tagSurbrillance={revue.tagSurbrillance}
+          valeurSurbrillance={revue.valeurSurbrillance}
+          syncScroll={syncScroll}
+          voletHaut={{
+            titre: t('revue.titre.pseudo'),
+            texte: revue.textePseudonymise,
+            surlignerTags: true,
+            onClicTag: handleTexteTagClick,
+            onSelection: handleSelectionPseudo,
+            containerRef: refPseudonymise,
+            toolbar: selection && selection.source === 'pseudo' && (
+              <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: 'var(--espacement-xs)', padding: 'var(--espacement-sm)', zIndex: 10 }}>
                 <Bouton variante="primaire" taille="sm" onClick={handleNouveauTag} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
                   {t('revue.bouton.nouveauTag')}
                 </Bouton>
@@ -434,27 +266,17 @@ export function EcranRevue({
                   {t('revue.bouton.nouvelleValeur')}
                 </Bouton>
               </div>
-            )}
-          </div>
-          <div style={{ position: 'relative' }}>
-            <TexteApercu
-              titre={t('revue.titre.lisible')}
-              texte={texteOriginal}
-              mapping={revue.mappingFinal}
-              tagSurbrillance={revue.tagSurbrillance}
-              valeurSurbrillance={revue.valeurSurbrillance}
-              surlignerValeurs
-              containerRef={refLisible}
-              onScroll={handleScroll('lisible')}
-              onValeurClick={handleTexteValeurClick}
-              onSelection={handleSelection}
-            />
-            {selection && selection.source === 'lisible' && (
-              <div style={{
-                position: 'absolute', top: 0, right: 0,
-                display: 'flex', gap: 'var(--espacement-xs)',
-                padding: 'var(--espacement-sm)', zIndex: 10,
-              }}>
+            ),
+          }}
+          voletBas={{
+            titre: t('revue.titre.lisible'),
+            texte: texteOriginal,
+            surlignerValeurs: true,
+            onClicValeur: handleTexteValeurClick,
+            onSelection: handleSelection,
+            containerRef: refLisible,
+            toolbar: selection && selection.source === 'lisible' && (
+              <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: 'var(--espacement-xs)', padding: 'var(--espacement-sm)', zIndex: 10 }}>
                 <Bouton variante="primaire" taille="sm" onClick={handleNouveauTag} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
                   {t('revue.bouton.nouveauTag')}
                 </Bouton>
@@ -462,9 +284,9 @@ export function EcranRevue({
                   {t('revue.bouton.nouvelleValeur')}
                 </Bouton>
               </div>
-            )}
-          </div>
-        </div>
+            ),
+          }}
+        />
       </div>
 
       {/* Bouton déplacer si une valeur est sélectionnée dans la table */}
@@ -504,7 +326,7 @@ export function EcranRevue({
           </p>
           <div className="flex max-h-64 flex-col gap-1.5 overflow-y-auto">
             {tagsExistants
-              .filter(t => t !== pickerPayload.tagSource) // ne pas proposer le tag source
+              .filter(t => t !== pickerPayload.tagSource)
               .map((tag) => (
                 <Bouton
                   key={tag}
@@ -523,41 +345,6 @@ export function EcranRevue({
           </div>
         </Modal>
       )}
-
-      {/* Popup confirmation suppression */}
-      {supprimerTag && tagSupprime && (
-        <Modal
-          ouvert={!!supprimerTag}
-          titre={t('revue.supprimer.titre')}
-          onFermer={handleAnnulerSuppression}
-          pied={
-            <>
-              <Bouton variante="secondaire" onClick={handleAnnulerSuppression}>
-                {t('revue.supprimer.annuler')}
-              </Bouton>
-              <Bouton variante="danger" onClick={handleConfirmerSuppression}>
-                {t('revue.supprimer.confirmer')}
-              </Bouton>
-            </>
-          }
-        >
-          <p className="text-sm leading-relaxed text-brume-500">
-            {t('revue.supprimer.message', supprimerTag)}
-          </p>
-          {tagSupprime.valeurs.length > 0 && (
-            <div className="mt-3 text-sm text-brume-500">
-              <p className="mb-1">{t('revue.supprimer.valeurs')}</p>
-              <ul className="ml-4 list-disc">
-                {tagSupprime.valeurs.map(v => <li key={v}>{v}</li>)}
-              </ul>
-            </div>
-          )}
-          <p className="mt-3 text-xs italic text-brume-500">
-            {t('revue.supprimer.note')}
-          </p>
-        </Modal>
-      )}
-
     </div>
   );
 }
