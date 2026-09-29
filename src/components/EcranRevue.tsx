@@ -1,9 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRevue } from '../hooks/useRevue';
+import { useAjoutRapide } from '../hooks/useAjoutRapide';
 import { useLangue } from '../i18n/context';
-import { Bouton, Modal, type ToneStatut } from '@khaleeno/maskita-design-system';
+import { Bouton, type ToneStatut } from '@khaleeno/maskita-design-system';
 import { PanneauTableauPseudos } from './PanneauTableauPseudos';
 import { PanneauApercus } from './PanneauApercus';
+import { BarreAjoutSelection } from './BarreAjoutSelection';
+import { PickerAjoutValeur } from './PickerAjoutValeur';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRevueProps {
@@ -25,12 +28,16 @@ export function EcranRevue({
   const refPseudonymise = useRef<HTMLDivElement>(null);
   const refLisible = useRef<HTMLDivElement>(null);
   const refTableau = useRef<HTMLDivElement>(null);
-  const selectionRef = useRef<string>('');
   const occurrenceIdx = useRef<Record<string, number>>({});
 
-  const [selection, setSelection] = useState<{ valeur: string; source: 'pseudo' | 'lisible' } | null>(null);
-  const [pickerPayload, setPickerPayload] = useState<{ valeur: string; tagSource?: string } | null>(null);
   const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
+
+  const ajout = useAjoutRapide({
+    onAjouterPseudo: revue.ajouterTag,
+    onAjouterValeur: revue.ajouterValeur,
+    onDeplacerValeur: revue.deplacerValeur,
+    onFocusNouveauPseudo: setFocusNouveauTag,
+  });
 
   // Focus/édition inline du nouveau tag créé via sélection de texte → "Nouveau tag"
   useEffect(() => {
@@ -58,12 +65,12 @@ export function EcranRevue({
     const handleClick = () => {
       const sel = window.getSelection();
       if (!sel || sel.toString().trim() === '') {
-        setSelection(null);
+        ajout.effacerSelection();
       }
     };
     window.addEventListener('mouseup', handleClick);
     return () => window.removeEventListener('mouseup', handleClick);
-  }, []);
+  }, [ajout]);
 
   const defilerTableauVers = useCallback((tag: string) => {
     const tableau = refTableau.current;
@@ -98,55 +105,14 @@ export function EcranRevue({
     }
   }, []);
 
-  const handleSelection = useCallback((valeur: string) => {
-    selectionRef.current = valeur;
-    setSelection({ valeur, source: 'lisible' });
-  }, []);
-
-  const handleSelectionPseudo = useCallback((valeur: string) => {
-    selectionRef.current = valeur;
-    setSelection({ valeur, source: 'pseudo' });
-  }, []);
-
-  const handleNouveauTag = useCallback(() => {
-    const v = selectionRef.current;
-    if (!v) return;
-    const matchTag = v.match(/^\[(\w+(?:_\d+)?)\]$/);
-    const tagName = matchTag ? matchTag[1] : 'NOUVELLE_VALEUR';
-    revue.ajouterTag(tagName, v);
-    setFocusNouveauTag(`[${tagName}]`);
-    setSelection(null);
-    selectionRef.current = '';
-  }, [revue]);
-
-  const handleNouvelleValeur = useCallback(() => {
-    const v = selectionRef.current;
-    if (!v) return;
-    setPickerPayload({ valeur: v });
-  }, []);
-
-  const handlePickerSelect = useCallback((tag: string) => {
-    if (!pickerPayload) return;
-    if (pickerPayload.tagSource) {
-      revue.deplacerValeur(pickerPayload.valeur, pickerPayload.tagSource, tag);
-      revue.mettreSurbrillanceValeur(tag, pickerPayload.valeur);
-    } else {
-      revue.ajouterValeur(tag, pickerPayload.valeur);
-      revue.mettreSurbrillanceValeur(tag, pickerPayload.valeur);
+  const handleChoisirTag = useCallback((tag: string) => {
+    const valeur = ajout.picker?.valeur;
+    ajout.choixTag(tag);
+    if (valeur) {
+      revue.mettreSurbrillanceValeur(tag, valeur);
+      defilerTableauVers(tag);
     }
-    defilerTableauVers(tag);
-    setPickerPayload(null);
-    setSelection(null);
-    selectionRef.current = '';
-  }, [pickerPayload, revue, defilerTableauVers]);
-
-  const handlePickerAnnuler = useCallback(() => {
-    setPickerPayload(null);
-  }, []);
-
-  const handleDeplacerValeur = useCallback((valeur: string, tagSource: string) => {
-    setPickerPayload({ valeur, tagSource });
-  }, []);
+  }, [ajout, revue, defilerTableauVers]);
 
   const handleClicValider = () => {
     onValider(revue.mappingFinal, revue.textePseudonymise);
@@ -172,22 +138,20 @@ export function EcranRevue({
   }, [revue, defilerTableauVers]);
 
   const handleTexteTagClick = useCallback((tag: string) => {
-    setSelection(null);
-    selectionRef.current = '';
+    ajout.effacerSelection();
     revue.mettreSurbrillance(tag);
     defilerTableauVers(tag);
     defilerTexteVers(tag, 'next');
-  }, [revue, defilerTableauVers, defilerTexteVers]);
+  }, [ajout, revue, defilerTableauVers, defilerTexteVers]);
 
   const handleTexteValeurClick = useCallback((tag: string, valeur: string) => {
-    setSelection(null);
-    selectionRef.current = '';
+    ajout.effacerSelection();
     revue.mettreSurbrillanceValeur(tag, valeur);
     defilerTableauVers(tag);
     if (recentrer) {
       defilerTexteVers(tag);
     }
-  }, [revue, defilerTableauVers, recentrer, defilerTexteVers]);
+  }, [ajout, revue, defilerTableauVers, recentrer, defilerTexteVers]);
 
   const handleConflitVoir = useCallback((tag: string) => {
     revue.mettreSurbrillance(tag);
@@ -196,10 +160,6 @@ export function EcranRevue({
   }, [revue, defilerTexteVers, defilerTableauVers]);
 
   const tagsExistants = Object.keys(revue.mappingFinal);
-
-  const pickerTitre = pickerPayload?.tagSource
-    ? t('revue.picker.titre.deplacer', pickerPayload.valeur)
-    : t('revue.picker.titre.ajouter');
 
   const valeurSelectionnee = revue.valeurSurbrillance
     ? { tag: revue.tagSurbrillance!, valeur: revue.valeurSurbrillance }
@@ -222,6 +182,15 @@ export function EcranRevue({
       conflitMessage: conflits.length > 0 ? conflits[conflits.length - 1] : undefined,
     };
   };
+
+  const barreAjout = () => (
+    <BarreAjoutSelection
+      onNouveauPseudo={ajout.nouveauPseudo}
+      onNouvelleValeur={ajout.nouvelleValeur}
+      libelleNouveauPseudo={t('revue.bouton.nouveauTag')}
+      libelleNouvelleValeur={t('revue.bouton.nouvelleValeur')}
+    />
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
@@ -255,36 +224,18 @@ export function EcranRevue({
             texte: revue.textePseudonymise,
             surlignerTags: true,
             onClicTag: handleTexteTagClick,
-            onSelection: handleSelectionPseudo,
+            onSelection: ajout.gererSelection('haut'),
             containerRef: refPseudonymise,
-            toolbar: selection && selection.source === 'pseudo' && (
-              <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: 'var(--espacement-xs)', padding: 'var(--espacement-sm)', zIndex: 10 }}>
-                <Bouton variante="primaire" taille="sm" onClick={handleNouveauTag} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
-                  {t('revue.bouton.nouveauTag')}
-                </Bouton>
-                <Bouton variante="primaire" taille="sm" onClick={handleNouvelleValeur} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
-                  {t('revue.bouton.nouvelleValeur')}
-                </Bouton>
-              </div>
-            ),
+            toolbar: ajout.selection?.source === 'haut' ? barreAjout() : undefined,
           }}
           voletBas={{
             titre: t('revue.titre.lisible'),
             texte: texteOriginal,
             surlignerValeurs: true,
             onClicValeur: handleTexteValeurClick,
-            onSelection: handleSelection,
+            onSelection: ajout.gererSelection('bas'),
             containerRef: refLisible,
-            toolbar: selection && selection.source === 'lisible' && (
-              <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: 'var(--espacement-xs)', padding: 'var(--espacement-sm)', zIndex: 10 }}>
-                <Bouton variante="primaire" taille="sm" onClick={handleNouveauTag} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
-                  {t('revue.bouton.nouveauTag')}
-                </Bouton>
-                <Bouton variante="primaire" taille="sm" onClick={handleNouvelleValeur} style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
-                  {t('revue.bouton.nouvelleValeur')}
-                </Bouton>
-              </div>
-            ),
+            toolbar: ajout.selection?.source === 'bas' ? barreAjout() : undefined,
           }}
         />
       </div>
@@ -292,7 +243,7 @@ export function EcranRevue({
       {/* Bouton déplacer si une valeur est sélectionnée dans la table */}
       {valeurSelectionnee && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-8px' }}>
-          <Bouton variante="ghost" taille="sm" onClick={() => handleDeplacerValeur(valeurSelectionnee.valeur, valeurSelectionnee.tag)}>
+          <Bouton variante="ghost" taille="sm" onClick={() => ajout.ouvrirDeplacement(valeurSelectionnee.valeur, valeurSelectionnee.tag)}>
             {t('revue.bouton.deplacer', valeurSelectionnee.valeur)}
           </Bouton>
         </div>
@@ -310,40 +261,20 @@ export function EcranRevue({
       </div>
 
       {/* Picker tag pour Nouvelle valeur / Déplacer */}
-      {pickerPayload && (
-        <Modal
-          ouvert={!!pickerPayload}
-          titre={pickerTitre}
-          onFermer={handlePickerAnnuler}
-          pied={
-            <Bouton variante="secondaire" onClick={handlePickerAnnuler}>
-              {t('revue.picker.annuler')}
-            </Bouton>
-          }
-        >
-          <p className="mb-3 text-sm text-brume-500">
-            {t('revue.picker.valeur', pickerPayload.valeur)}
-          </p>
-          <div className="flex max-h-64 flex-col gap-1.5 overflow-y-auto">
-            {tagsExistants
-              .filter(t => t !== pickerPayload.tagSource)
-              .map((tag) => (
-                <Bouton
-                  key={tag}
-                  variante="secondaire"
-                  onClick={() => handlePickerSelect(tag)}
-                  className="justify-start font-donnees text-[13px]"
-                >
-                  {tag}
-                </Bouton>
-              ))}
-            {tagsExistants.filter(t => t !== pickerPayload.tagSource).length === 0 && (
-              <p className="text-sm italic text-brume-500">
-                {t('revue.picker.aucun')}
-              </p>
-            )}
-          </div>
-        </Modal>
+      {ajout.picker && (
+        <PickerAjoutValeur
+          ouvert={!!ajout.picker}
+          titre={ajout.picker.tagSource
+            ? t('revue.picker.titre.deplacer', ajout.picker.valeur)
+            : t('revue.picker.titre.ajouter')}
+          tagSource={ajout.picker.tagSource}
+          tags={tagsExistants}
+          onChoisir={handleChoisirTag}
+          onAnnuler={ajout.annulerPicker}
+          libelleValeur={t('revue.picker.valeur', ajout.picker.valeur)}
+          libelleAucun={t('revue.picker.aucun')}
+          libelleAnnuler={t('revue.picker.annuler')}
+        />
       )}
     </div>
   );

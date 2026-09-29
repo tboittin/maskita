@@ -1,8 +1,11 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLangue } from '../i18n/context';
 import { Bouton, TelechargerIcon } from '@khaleeno/maskita-design-system';
 import { PanneauTableauPseudos } from './PanneauTableauPseudos';
 import { PanneauApercus } from './PanneauApercus';
+import { BarreAjoutSelection } from './BarreAjoutSelection';
+import { PickerAjoutValeur } from './PickerAjoutValeur';
+import { useAjoutRapide } from '../hooks/useAjoutRapide';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRestaurationRevueProps {
@@ -43,6 +46,47 @@ export function EcranRestaurationRevue({
 
   const refTableau = useRef<HTMLDivElement>(null);
 
+  const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
+
+  const ajout = useAjoutRapide({
+    onAjouterPseudo: onAjouterTag,
+    onAjouterValeur,
+    onFocusNouveauPseudo: setFocusNouveauTag,
+  });
+
+  // Focus/édition inline du nouveau pseudo créé via sélection de texte
+  useEffect(() => {
+    if (!focusNouveauTag || !refTableau.current) return;
+    const raf = requestAnimationFrame(() => {
+      const tableau = refTableau.current;
+      if (!tableau) return;
+      const spans = tableau.querySelectorAll('span');
+      for (const span of spans) {
+        if (span.textContent?.trim() === focusNouveauTag) {
+          const btn = span.closest('button[type="button"]');
+          if (btn) {
+            btn.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+          }
+          break;
+        }
+      }
+      setFocusNouveauTag(null);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [focusNouveauTag]);
+
+  // Nettoyer la sélection si l'utilisateur clique ailleurs
+  useEffect(() => {
+    const handleClick = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.toString().trim() === '') {
+        ajout.effacerSelection();
+      }
+    };
+    window.addEventListener('mouseup', handleClick);
+    return () => window.removeEventListener('mouseup', handleClick);
+  }, [ajout]);
+
   const handleTagClick = useCallback((tag: string) => {
     setTagSurbrillance(prev => prev === tag ? null : tag);
     setValeurSurbrillance(null);
@@ -67,16 +111,27 @@ export function EcranRestaurationRevue({
   }, []);
 
   const handleTexteTagClick = useCallback((tag: string) => {
+    ajout.effacerSelection();
     setTagSurbrillance(tag);
     setValeurSurbrillance(null);
     defilerTableauVers(tag);
-  }, [defilerTableauVers]);
+  }, [ajout, defilerTableauVers]);
 
   const handleTexteValeurClick = useCallback((tag: string, valeur: string) => {
+    ajout.effacerSelection();
     setTagSurbrillance(tag);
     setValeurSurbrillance(v => v === valeur ? null : valeur);
     defilerTableauVers(tag);
-  }, [defilerTableauVers]);
+  }, [ajout, defilerTableauVers]);
+
+  const barreAjout = () => (
+    <BarreAjoutSelection
+      onNouveauPseudo={ajout.nouveauPseudo}
+      onNouvelleValeur={ajout.nouvelleValeur}
+      libelleNouveauPseudo={t('revue.bouton.nouveauTag')}
+      libelleNouvelleValeur={t('revue.bouton.nouvelleValeur')}
+    />
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
@@ -108,12 +163,16 @@ export function EcranRestaurationRevue({
             texte: texteAvecTags,
             surlignerTags: true,
             onClicTag: handleTexteTagClick,
+            onSelection: ajout.gererSelection('haut'),
+            toolbar: ajout.selection?.source === 'haut' ? barreAjout() : undefined,
           }}
           voletBas={{
             titre: t('restaurationRevue.titre.restaure'),
             texte: texteRestauré,
             surlignerValeurs: true,
             onClicValeur: handleTexteValeurClick,
+            onSelection: ajout.gererSelection('bas'),
+            toolbar: ajout.selection?.source === 'bas' ? barreAjout() : undefined,
           }}
         />
       </div>
@@ -133,6 +192,21 @@ export function EcranRestaurationRevue({
           </Bouton>
         </div>
       </div>
+
+      {/* Picker tag pour ajouter la valeur surlignée à un pseudo existant */}
+      {ajout.picker && (
+        <PickerAjoutValeur
+          ouvert={!!ajout.picker}
+          titre={t('revue.picker.titre.ajouter')}
+          tagSource={null}
+          tags={Object.keys(mapping)}
+          onChoisir={ajout.choixTag}
+          onAnnuler={ajout.annulerPicker}
+          libelleValeur={t('revue.picker.valeur', ajout.picker.valeur)}
+          libelleAucun={t('revue.picker.aucun')}
+          libelleAnnuler={t('revue.picker.annuler')}
+        />
+      )}
     </div>
   );
 }

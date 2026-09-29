@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { EcranRestaurationRevue } from './EcranRestaurationRevue';
 import { renderAvecI18n } from '../test/renderAvecI18n';
@@ -6,6 +6,25 @@ import { renderAvecI18n } from '../test/renderAvecI18n';
 const TEXTE_TAGS = 'Rapport pour [PERSONNE]';
 const TEXTE_RESTAURE = 'Rapport pour Sophie Lambert';
 const MAPPING = { '[PERSONNE]': ['Sophie Lambert'] };
+
+// Simule une sélection de texte dans un volet (comme EcranRevue.test)
+function simulerSelection(texte: string) {
+  vi.spyOn(window, 'getSelection')
+    .mockReturnValue({ toString: () => texte } as unknown as Selection);
+}
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+/** Surligne la valeur cible (déclenche onSelection du volet qui la contient). */
+function surlignerValeur(texte: string) {
+  const spans = screen.getAllByText(texte);
+  const span = spans.find(e => e.tagName === 'SPAN' && !e.closest('button'));
+  expect(span).toBeTruthy();
+  const conteneur = span!.closest('div[style*="max-height"]');
+  expect(conteneur).toBeTruthy();
+  fireEvent.mouseUp(conteneur as HTMLElement);
+}
 
 function rendu(overrides: Partial<Parameters<typeof EcranRestaurationRevue>[0]> = {}) {
   return renderAvecI18n(
@@ -297,5 +316,54 @@ describe('EcranRestaurationRevue — interactions', () => {
     rendre();
     fireEvent.click(screen.getByLabelText('Scroll synchronisé'));
     fireEvent.scroll(conteneurVolet());
+  });
+});
+
+describe('EcranRestaurationRevue — ajout rapide par surlignage', () => {
+  it('affiche la barre d\'ajout rapide quand on surligne une valeur (non-régression)', () => {
+    rendu();
+    simulerSelection('Sophie Lambert');
+    surlignerValeur('Sophie Lambert');
+
+    expect(screen.getByRole('button', { name: 'Nouveau pseudo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nouvelle valeur' })).toBeInTheDocument();
+  });
+
+  it('crée un nouveau pseudo depuis la valeur surlignée (non-régression)', () => {
+    const onAjouterTag = vi.fn();
+    rendu({ onAjouterTag });
+    simulerSelection('Autre Personne');
+    surlignerValeur('Sophie Lambert');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nouveau pseudo' }));
+    expect(onAjouterTag).toHaveBeenCalledWith('NOUVELLE_VALEUR', 'Autre Personne');
+  });
+
+  it('ajoute la valeur surlignée à un pseudo existant via le picker (non-régression)', () => {
+    const onAjouterValeur = vi.fn();
+    rendu({ onAjouterValeur });
+    simulerSelection('Autre Personne');
+    surlignerValeur('Sophie Lambert');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nouvelle valeur' }));
+    expect(screen.getByText('Ajouter à quel pseudo ?')).toBeInTheDocument();
+
+    // Le picker (rendu en fin de document via createPortal) est le dernier bouton [PERSONNE]
+    const tags = screen.getAllByRole('button', { name: '[PERSONNE]' });
+    fireEvent.click(tags[tags.length - 1]);
+    expect(onAjouterValeur).toHaveBeenCalledWith('[PERSONNE]', 'Autre Personne');
+  });
+
+  it('annule le picker sans ajouter de valeur', () => {
+    const onAjouterValeur = vi.fn();
+    rendu({ onAjouterValeur });
+    simulerSelection('Autre Personne');
+    surlignerValeur('Sophie Lambert');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nouvelle valeur' }));
+    fireEvent.click(screen.getByText('Annuler'));
+
+    expect(onAjouterValeur).not.toHaveBeenCalled();
+    expect(screen.queryByText('Ajouter à quel pseudo ?')).not.toBeInTheDocument();
   });
 });
