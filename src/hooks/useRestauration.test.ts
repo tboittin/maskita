@@ -134,7 +134,6 @@ describe('useRestauration', () => {
     await act(async () => {
       await result.current.handleDocxChoisi(creerDocx());
     });
-
     expect(result.current.texteAvecTags).toBe('texte');
 
     act(() => {
@@ -148,5 +147,118 @@ describe('useRestauration', () => {
     expect(result.current.erreur).toBeNull();
     expect(result.current.fichierDocx).toBeNull();
     expect(result.current.nomFichierCle).toBeNull();
+  });
+
+  describe('US-V03 — Modification du mapping à l\'étape Restauration', () => {
+    const MAPPING = { '[PERSONNE]': ['Sophie Lambert'] };
+
+    async function chargerAvecMapping(mapping: Record<string, string[]> = MAPPING) {
+      const { result } = renderHook(() => useRestauration());
+      await act(async () => {
+        await result.current.handleCleChoisie(creerCle(mapping));
+      });
+      return result;
+    }
+
+    it('ajoute une valeur à un tag existant', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.ajouterValeur('[PERSONNE]', 'Martin Dupont'));
+      expect(result.current.mapping?.['[PERSONNE]']).toContain('Martin Dupont');
+      expect(result.current.mapping?.['[PERSONNE]']).toContain('Sophie Lambert');
+    });
+
+    it('retire une valeur d\'un tag', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.retirerValeur('[PERSONNE]', 'Sophie Lambert'));
+      expect(result.current.mapping?.['[PERSONNE]']).toEqual([]);
+    });
+
+    it('renommerTag ajoute les crochets et met en majuscule (B01/B03)', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.renommerTag('[PERSONNE]', 'patient'));
+      expect(result.current.mapping?.['[PATIENT]']).toContain('Sophie Lambert');
+      expect(result.current.mapping?.['[PERSONNE]']).toBeUndefined();
+    });
+
+    it('supprime complètement un tag du mapping', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.supprimerTag('[PERSONNE]'));
+      expect(result.current.mapping).toEqual({});
+    });
+
+    it('ajouteTag crée un tag avec suffixe _2 si le type existe', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.ajouterTag('PERSONNE', 'Martin Dupont'));
+      expect(result.current.mapping?.['[PERSONNE_2]']).toContain('Martin Dupont');
+    });
+
+    it('déplace une valeur d\'un tag vers un autre', async () => {
+      const result = await chargerAvecMapping({
+        '[PERSONNE]': ['Sophie Lambert'],
+        '[TEL]': ['0612345678'],
+      });
+      act(() => result.current.deplacerValeur('Sophie Lambert', '[PERSONNE]', '[TEL]'));
+      expect(result.current.mapping?.['[PERSONNE]']).toEqual([]);
+      expect(result.current.mapping?.['[TEL]']).toContain('Sophie Lambert');
+    });
+
+    it('recalcule le texte restauré après ajout d\'une valeur', async () => {
+      extractRawTextMock.mockResolvedValue({
+        value: 'Rapport pour [PERSONNE]',
+        messages: [],
+      });
+      const { result } = renderHook(() => useRestauration());
+      await act(async () => {
+        await result.current.handleDocxChoisi(creerDocx());
+      });
+      await act(async () => {
+        await result.current.handleCleChoisie(creerCle(MAPPING));
+      });
+      await waitFor(() => {
+        expect(result.current.texteRestauré).toBe('Rapport pour Sophie Lambert');
+      });
+
+      // Modifier le mapping → le texte restauré se met à jour
+      act(() => result.current.ajouterValeur('[PERSONNE]', 'Pseudo Corrigé'));
+      // La première valeur du tag est utilisée pour la restauration
+      expect(result.current.mapping?.['[PERSONNE]'][0]).toBe('Sophie Lambert');
+    });
+
+    it('ne modifie rien si le mapping n\'est pas encore chargé', () => {
+      const { result } = renderHook(() => useRestauration());
+      act(() => result.current.ajouterValeur('[PERSONNE]', 'Martin'));
+      act(() => result.current.retirerValeur('[PERSONNE]', 'Sophie'));
+      act(() => result.current.deplacerValeur('Sophie', '[PERSONNE]', '[TEL]'));
+      act(() => result.current.reordonnerValeurs('[PERSONNE]', 0, 1));
+      act(() => result.current.renommerTag('[PERSONNE]', '[PATIENT]'));
+      act(() => result.current.supprimerTag('[PERSONNE]'));
+      act(() => result.current.ajouterTag('PERSONNE', 'Martin'));
+      expect(result.current.mapping).toBeNull();
+    });
+
+    it('reordonnerValeurs ignore les indices hors limites', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.reordonnerValeurs('[PERSONNE]', -1, 5));
+      expect(result.current.mapping?.['[PERSONNE]']).toEqual(['Sophie Lambert']);
+    });
+
+    it('renommerTag ignore un ancien tag inexistant', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.renommerTag('[INEXISTANT]', '[PATIENT]'));
+      expect(result.current.mapping?.['[PERSONNE]']).toContain('Sophie Lambert');
+      expect(result.current.mapping?.['[PATIENT]']).toBeUndefined();
+    });
+
+    it('supprimerTag ignore un tag inexistant', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.supprimerTag('[INEXISTANT]'));
+      expect(result.current.mapping?.['[PERSONNE]']).toContain('Sophie Lambert');
+    });
+
+    it('deplacerValeur vers le même tag ne fait rien', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.deplacerValeur('Sophie Lambert', '[PERSONNE]', '[PERSONNE]'));
+      expect(result.current.mapping?.['[PERSONNE]']).toEqual(['Sophie Lambert']);
+    });
   });
 });

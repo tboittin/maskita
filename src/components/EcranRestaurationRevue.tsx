@@ -1,13 +1,11 @@
-import { useState, useCallback, useRef } from 'react';
-import { TexteApercu } from './TexteApercu';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLangue } from '../i18n/context';
-import {
-  Bouton,
-  PseudoTableau,
-  TelechargerIcon,
-  type LignePseudo,
-  type ToneStatut,
-} from '@khaleeno/maskita-design-system';
+import { Bouton, TelechargerIcon } from '@khaleeno/maskita-design-system';
+import { PanneauTableauPseudos } from './PanneauTableauPseudos';
+import { PanneauApercus } from './PanneauApercus';
+import { BarreAjoutSelection } from './BarreAjoutSelection';
+import { PickerAjoutValeur } from './PickerAjoutValeur';
+import { useAjoutRapide } from '../hooks/useAjoutRapide';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRestaurationRevueProps {
@@ -16,6 +14,14 @@ interface EcranRestaurationRevueProps {
   mapping: Mapping;
   onValider: () => void;
   onRetour: () => void;
+  /* US-V03 — Modification du mapping à l'étape Restauration */
+  onAjouterValeur: (tag: string, valeur: string) => void;
+  onRetirerValeur: (tag: string, valeur: string) => void;
+  onDeplacerValeur: (valeur: string, tagSource: string, tagCible: string) => void;
+  onReordonnerValeurs: (tag: string, debut: number, fin: number) => void;
+  onRenommerTag: (ancien: string, nouveau: string) => void;
+  onSupprimerTag: (tag: string) => void;
+  onAjouterTag: (type: string, valeur: string) => void;
 }
 
 export function EcranRestaurationRevue({
@@ -24,6 +30,13 @@ export function EcranRestaurationRevue({
   mapping,
   onValider,
   onRetour,
+  onAjouterValeur,
+  onRetirerValeur,
+  onDeplacerValeur,
+  onReordonnerValeurs,
+  onRenommerTag,
+  onSupprimerTag,
+  onAjouterTag,
 }: EcranRestaurationRevueProps) {
   const { t } = useLangue();
   const [tagSurbrillance, setTagSurbrillance] = useState<string | null>(null);
@@ -31,18 +44,48 @@ export function EcranRestaurationRevue({
   const [syncScroll, setSyncScroll] = useState(true);
   const [recentrer, setRecentrer] = useState(true);
 
-  const refAvecTags = useRef<HTMLDivElement>(null);
-  const refRestauré = useRef<HTMLDivElement>(null);
   const refTableau = useRef<HTMLDivElement>(null);
-  const syncing = useRef(false);
 
-  // Construire les lignes pour le PseudoTableau DS
-  const lignes: LignePseudo[] = Object.entries(mapping).map(([tag, valeurs]) => ({
-    tag,
-    statut: 'existant' as ToneStatut,
-    valeurs,
-    isActive: tag === tagSurbrillance,
-  }));
+  const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
+
+  const ajout = useAjoutRapide({
+    onAjouterPseudo: onAjouterTag,
+    onAjouterValeur,
+    onFocusNouveauPseudo: setFocusNouveauTag,
+  });
+
+  // Focus/édition inline du nouveau pseudo créé via sélection de texte
+  useEffect(() => {
+    if (!focusNouveauTag || !refTableau.current) return;
+    const raf = requestAnimationFrame(() => {
+      const tableau = refTableau.current;
+      if (!tableau) return;
+      const spans = tableau.querySelectorAll('span');
+      for (const span of spans) {
+        if (span.textContent?.trim() === focusNouveauTag) {
+          const btn = span.closest('button[type="button"]');
+          if (btn) {
+            btn.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+          }
+          break;
+        }
+      }
+      setFocusNouveauTag(null);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [focusNouveauTag]);
+
+  // Nettoyer la sélection si l'utilisateur clique ailleurs
+  useEffect(() => {
+    const handleClick = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.toString().trim() === '') {
+        ajout.effacerSelection();
+      }
+    };
+    window.addEventListener('mouseup', handleClick);
+    return () => window.removeEventListener('mouseup', handleClick);
+  }, [ajout]);
 
   const handleTagClick = useCallback((tag: string) => {
     setTagSurbrillance(prev => prev === tag ? null : tag);
@@ -53,26 +96,6 @@ export function EcranRestaurationRevue({
     setTagSurbrillance(tag);
     setValeurSurbrillance(v => v === valeur ? null : valeur);
   }, []);
-
-  const handleScroll = useCallback(
-    (source: 'tags' | 'restauré') =>
-      (e: React.UIEvent<HTMLDivElement>) => {
-        if (!syncScroll || syncing.current) return;
-        syncing.current = true;
-
-        const sourceEl = e.currentTarget;
-        const ratio = sourceEl.scrollTop / (sourceEl.scrollHeight - sourceEl.clientHeight || 1);
-
-        const cible =
-          source === 'tags' ? refRestauré.current : refAvecTags.current;
-        if (cible) {
-          cible.scrollTop = ratio * (cible.scrollHeight - cible.clientHeight || 1);
-        }
-
-        requestAnimationFrame(() => { syncing.current = false; });
-      },
-    [syncScroll],
-  );
 
   const defilerTableauVers = useCallback((tag: string) => {
     const tableau = refTableau.current;
@@ -88,81 +111,70 @@ export function EcranRestaurationRevue({
   }, []);
 
   const handleTexteTagClick = useCallback((tag: string) => {
+    ajout.effacerSelection();
     setTagSurbrillance(tag);
     setValeurSurbrillance(null);
     defilerTableauVers(tag);
-  }, [defilerTableauVers]);
+  }, [ajout, defilerTableauVers]);
 
   const handleTexteValeurClick = useCallback((tag: string, valeur: string) => {
+    ajout.effacerSelection();
     setTagSurbrillance(tag);
     setValeurSurbrillance(v => v === valeur ? null : valeur);
     defilerTableauVers(tag);
-  }, [defilerTableauVers]);
+  }, [ajout, defilerTableauVers]);
+
+  const barreAjout = () => (
+    <BarreAjoutSelection
+      onNouveauPseudo={ajout.nouveauPseudo}
+      onNouvelleValeur={ajout.nouvelleValeur}
+      libelleNouveauPseudo={t('revue.bouton.nouveauTag')}
+      libelleNouvelleValeur={t('revue.bouton.nouvelleValeur')}
+    />
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espacement-md)' }}>
-        {/* Volet gauche : tableau des pseudos */}
-        <div
-          ref={refTableau}
-          style={{
-            background: 'var(--couleur-surface)',
-            border: '1px solid var(--couleur-bordure)',
-            borderRadius: 'var(--rayon-bordure)',
-            padding: 'var(--espacement-md)',
-            maxHeight: '500px',
-            overflowY: 'auto',
-          }}
-        >
-          <PseudoTableau
-            lignes={lignes}
-            activeTag={tagSurbrillance ?? ''}
-            onSelect={handleTagClick}
-            onValeurClick={handleValeurClick}
-            libelleTitre={t('tableau.titre', Object.keys(mapping).length)}
-            libelleAucun={t('tableau.aucun')}
-            libelleVoir={t('tableau.voir')}
-            libelleValeursVides={t('tableau.vide')}
-            // Read-only — callbacks vides pour éviter les erreurs TS
-            onAjouterPseudo={() => {}}
-            onDeplacerValeur={() => {}}
-            onReordonnerValeurs={() => {}}
-            onRenommer={() => {}}
-            onRetirerValeur={() => {}}
-            onViderTag={() => {}}
-            onAjouterValeur={() => {}}
-            libelleAjouter=""
-            libelleAjouterValeur=""
-            libelleRetirerValeur={() => ''}
-            libelleViderTag=""
-            placeholderNouvelleValeur=""
-          />
-        </div>
+        {/* Volet gauche : tableau des pseudos (composant neutre partagé) */}
+        <PanneauTableauPseudos
+          mapping={mapping}
+          activeTag={tagSurbrillance}
+          onSelectTag={handleTagClick}
+          onClicValeur={handleValeurClick}
+          onAjouterValeur={onAjouterValeur}
+          onRetirerValeur={onRetirerValeur}
+          onDeplacerValeur={onDeplacerValeur}
+          onReordonnerValeurs={onReordonnerValeurs}
+          onRenommerTag={onRenommerTag}
+          onSupprimerTag={onSupprimerTag}
+          onAjouterTag={onAjouterTag}
+          refTableau={refTableau}
+        />
 
-        {/* Volet droit : aperçus texte */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
-          <TexteApercu
-            titre={t('revue.titre.pseudo')}
-            texte={texteAvecTags}
-            mapping={mapping}
-            tagSurbrillance={tagSurbrillance}
-            surlignerTags
-            containerRef={refAvecTags}
-            onScroll={handleScroll('tags')}
-            onTagClick={handleTexteTagClick}
-          />
-          <TexteApercu
-            titre={t('restaurationRevue.titre.restaure')}
-            texte={texteRestauré}
-            mapping={mapping}
-            tagSurbrillance={tagSurbrillance}
-            valeurSurbrillance={valeurSurbrillance}
-            surlignerValeurs
-            containerRef={refRestauré}
-            onScroll={handleScroll('restauré')}
-            onValeurClick={handleTexteValeurClick}
-          />
-        </div>
+        {/* Volet droit : aperçus texte (composant neutre partagé) */}
+        <PanneauApercus
+          mapping={mapping}
+          tagSurbrillance={tagSurbrillance}
+          valeurSurbrillance={valeurSurbrillance}
+          syncScroll={syncScroll}
+          voletHaut={{
+            titre: t('revue.titre.pseudo'),
+            texte: texteAvecTags,
+            surlignerTags: true,
+            onClicTag: handleTexteTagClick,
+            onSelection: ajout.gererSelection('haut'),
+            toolbar: ajout.selection?.source === 'haut' ? barreAjout() : undefined,
+          }}
+          voletBas={{
+            titre: t('restaurationRevue.titre.restaure'),
+            texte: texteRestauré,
+            surlignerValeurs: true,
+            onClicValeur: handleTexteValeurClick,
+            onSelection: ajout.gererSelection('bas'),
+            toolbar: ajout.selection?.source === 'bas' ? barreAjout() : undefined,
+          }}
+        />
       </div>
 
       {/* Barre d'outils */}
@@ -180,6 +192,21 @@ export function EcranRestaurationRevue({
           </Bouton>
         </div>
       </div>
+
+      {/* Picker tag pour ajouter la valeur surlignée à un pseudo existant */}
+      {ajout.picker && (
+        <PickerAjoutValeur
+          ouvert={!!ajout.picker}
+          titre={t('revue.picker.titre.ajouter')}
+          tagSource={null}
+          tags={Object.keys(mapping)}
+          onChoisir={ajout.choixTag}
+          onAnnuler={ajout.annulerPicker}
+          libelleValeur={t('revue.picker.valeur', ajout.picker.valeur)}
+          libelleAucun={t('revue.picker.aucun')}
+          libelleAnnuler={t('revue.picker.annuler')}
+        />
+      )}
     </div>
   );
 }
