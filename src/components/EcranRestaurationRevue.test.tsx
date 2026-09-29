@@ -168,5 +168,41 @@ describe('EcranRestaurationRevue', () => {
       fireEvent.click(boutonConfirmer);
       expect(onSupprimerTag).toHaveBeenCalledWith('[PERSONNE]');
     });
+
+    it('annule la suppression sans appeler onSupprimerTag', () => {
+      const onSupprimerTag = vi.fn();
+      rendu({ onSupprimerTag });
+      fireEvent.click(screen.getByLabelText('Supprimer'));
+      expect(screen.getByText('Supprimer le pseudo ?')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Annuler'));
+      expect(onSupprimerTag).not.toHaveBeenCalled();
+    });
+
+    it('annule l\'ajout manuel sans appeler onAjouterTag', () => {
+      const onAjouterTag = vi.fn();
+      rendu({ onAjouterTag });
+      fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
+      expect(screen.getByText('Ajouter un pseudo')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Annuler'));
+      expect(onAjouterTag).not.toHaveBeenCalled();
+    });
+
+    it('ajoute un pseudo avec un type personnalisé', () => {
+      const onAjouterTag = vi.fn();
+      rendu({ onAjouterTag });
+      fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
+
+      const select = screen.getByRole('combobox') as HTMLSelectElement;
+      fireEvent.change(select, { target: { value: '__custom__' } });
+      const inputType = screen.getByPlaceholderText('Type (ex: PERSONNE)');
+      fireEvent.change(inputType, { target: { value: 'OBJECTIF' } });
+      const inputValeur = screen.getAllByPlaceholderText('Valeur')[0];
+      fireEvent.change(inputValeur, { target: { value: 'Objectif clinique' } });
+
+      fireEvent.click(screen.getByText('Ajouter'));
+      expect(onAjouterTag).toHaveBeenCalledWith('OBJECTIF', 'Objectif clinique');
+    });
   });
 });

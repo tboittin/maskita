@@ -223,5 +223,42 @@ describe('useRestauration', () => {
       // La première valeur du tag est utilisée pour la restauration
       expect(result.current.mapping?.['[PERSONNE]'][0]).toBe('Sophie Lambert');
     });
+
+    it('ne modifie rien si le mapping n\'est pas encore chargé', () => {
+      const { result } = renderHook(() => useRestauration());
+      act(() => result.current.ajouterValeur('[PERSONNE]', 'Martin'));
+      act(() => result.current.retirerValeur('[PERSONNE]', 'Sophie'));
+      act(() => result.current.deplacerValeur('Sophie', '[PERSONNE]', '[TEL]'));
+      act(() => result.current.reordonnerValeurs('[PERSONNE]', 0, 1));
+      act(() => result.current.renommerTag('[PERSONNE]', '[PATIENT]'));
+      act(() => result.current.supprimerTag('[PERSONNE]'));
+      act(() => result.current.ajouterTag('PERSONNE', 'Martin'));
+      expect(result.current.mapping).toBeNull();
+    });
+
+    it('reordonnerValeurs ignore les indices hors limites', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.reordonnerValeurs('[PERSONNE]', -1, 5));
+      expect(result.current.mapping?.['[PERSONNE]']).toEqual(['Sophie Lambert']);
+    });
+
+    it('renommerTag ignore un ancien tag inexistant', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.renommerTag('[INEXISTANT]', '[PATIENT]'));
+      expect(result.current.mapping?.['[PERSONNE]']).toContain('Sophie Lambert');
+      expect(result.current.mapping?.['[PATIENT]']).toBeUndefined();
+    });
+
+    it('supprimerTag ignore un tag inexistant', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.supprimerTag('[INEXISTANT]'));
+      expect(result.current.mapping?.['[PERSONNE]']).toContain('Sophie Lambert');
+    });
+
+    it('deplacerValeur vers le même tag ne fait rien', async () => {
+      const result = await chargerAvecMapping();
+      act(() => result.current.deplacerValeur('Sophie Lambert', '[PERSONNE]', '[PERSONNE]'));
+      expect(result.current.mapping?.['[PERSONNE]']).toEqual(['Sophie Lambert']);
+    });
   });
 });
