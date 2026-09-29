@@ -84,7 +84,8 @@ check() {
   local current="$2"
   local ref="$3"
   if [ -z "$ref" ]; then
-    echo "⚠️ $label : pas de référence"
+    echo "❌ $label : référence absente dans coverage-ref.txt"
+    FAIL=1
     return
   fi
   if [ "$(echo "$current < $ref" | bc -l)" -eq 1 ]; then
