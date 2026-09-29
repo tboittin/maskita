@@ -13,19 +13,49 @@ import {
 } from '@khaleeno/maskita-design-system';
 
 interface EcranTelechargementProps {
-  textePseudonymise: string;
+  contenuDocument: string;
   mappingFinal: Mapping;
   nomFichierBase: string;
   extension: string;
   onRetour: () => void;
+  /** Suffixe ajouté au nom du document (ex: "-pseudonymisé" ou "-restauré") */
+  suffixeDocument: string;
+  /** Titre de l'écran */
+  titre: string;
+  /** Sous-titre de l'écran */
+  sousTitre: string;
+  /** Libellé du panneau document */
+  libelleDocument: string;
+  /** Libellé du panneau clé */
+  libelleCle: string;
+  /** Texte du bouton de téléchargement du document */
+  boutonDocument: string;
+  /** Texte du bouton de téléchargement de la clé */
+  boutonCle: string;
+  /** Texte de succès après téléchargement du document */
+  succesDocument: string;
+  /** Texte de succès après téléchargement de la clé */
+  succesCle: string;
+  /** Texte du bouton retour */
+  boutonRetour: string;
 }
 
 export function EcranTelechargement({
-  textePseudonymise,
+  contenuDocument,
   mappingFinal,
   nomFichierBase,
   extension,
   onRetour,
+  suffixeDocument,
+  titre,
+  sousTitre,
+  libelleDocument,
+  libelleCle,
+  boutonDocument,
+  boutonCle,
+  succesDocument,
+  succesCle,
+  boutonRetour,
 }: EcranTelechargementProps) {
   const { t } = useLangue();
   const [docTelecharge, setDocTelecharge] = useState(false);
@@ -36,7 +66,7 @@ export function EcranTelechargement({
     valeursSuspectes: string[];
   } | null>(null);
 
-  const nomDocInitial = `${nomFichierBase}-pseudonymise.${extension}`;
+  const nomDocInitial = `${nomFichierBase}${suffixeDocument}.${extension}`;
   const nomCleInitial = `${nomFichierBase}.key.json`;
 
   const [nomDocEdite, setNomDocEdite] = useState(nomDocInitial);
@@ -53,10 +83,10 @@ export function EcranTelechargement({
       return;
     }
 
-    const blobDoc = await buildDocument(textePseudonymise, extension as 'docx' | 'txt' | 'md');
+    const blobDoc = await buildDocument(contenuDocument, extension as 'docx' | 'txt' | 'md');
     declencherTelechargement(blobDoc, nomDocEdite);
     setDocTelecharge(true);
-  }, [textePseudonymise, mappingFinal, nomFichierBase, nomDocEdite, extension]);
+  }, [contenuDocument, mappingFinal, nomFichierBase, nomDocEdite, extension]);
 
   const handleTelechargerCle = useCallback(async () => {
     const contenuCle = genererCleJson(mappingFinal);
@@ -69,15 +99,15 @@ export function EcranTelechargement({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div style={{ textAlign: 'center' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--couleur-texte)' }}>
-          {t('telechargement.titre')}
+          {titre}
         </h2>
         <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-          {t('telechargement.sousTitre')}
+          {sousTitre}
         </p>
       </div>
 
-      {/* Ligne 1 : Document pseudonymisé */}
-      <Panneau title={t('telechargement.document')}>
+      {/* Ligne 1 : Document */}
+      <Panneau title={libelleDocument}>
         <div
           style={{
             padding: 'var(--espacement-md)',
@@ -90,7 +120,7 @@ export function EcranTelechargement({
             type="text"
             value={nomDocEdite}
             onChange={(e) => setNomDocEdite(e.target.value)}
-            aria-label={t('telechargement.document')}
+            aria-label={libelleDocument}
             style={{
               flex: 1,
               fontSize: '0.875rem',
@@ -110,14 +140,14 @@ export function EcranTelechargement({
             iconeDroite={docTelecharge ? <ValiderIcon className="size-5" /> : <TelechargerIcon className="size-5" />}
           >
             {docTelecharge
-              ? t('telechargement.succes.document')
-              : t('telechargement.bouton.document')}
+              ? succesDocument
+              : boutonDocument}
           </Bouton>
         </div>
       </Panneau>
 
       {/* Ligne 2 : Clé .key.json */}
-      <Panneau title={t('telechargement.cle')}>
+      <Panneau title={libelleCle}>
         <div
           style={{
             padding: 'var(--espacement-md)',
@@ -130,7 +160,7 @@ export function EcranTelechargement({
             type="text"
             value={nomCleEdite}
             onChange={(e) => setNomCleEdite(e.target.value)}
-            aria-label={t('telechargement.cle')}
+            aria-label={libelleCle}
             style={{
               flex: 1,
               fontSize: '0.875rem',
@@ -150,8 +180,8 @@ export function EcranTelechargement({
             iconeDroite={cleTelechargee ? <ValiderIcon className="size-5" /> : <TelechargerIcon className="size-5" />}
           >
             {cleTelechargee
-              ? t('telechargement.succes.cle')
-              : t('telechargement.bouton.cle')}
+              ? succesCle
+              : boutonCle}
           </Bouton>
         </div>
       </Panneau>
@@ -159,7 +189,7 @@ export function EcranTelechargement({
       {/* Bouton retour */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <Bouton variante="secondaire" onClick={onRetour}>
-          {t('telechargement.bouton.retour')}
+          {boutonRetour}
         </Bouton>
       </div>
 
@@ -179,7 +209,7 @@ export function EcranTelechargement({
                 onClick={async () => {
                   const w = warningNom;
                   setWarningNom(null);
-                  const blobDoc = await buildDocument(textePseudonymise, extension as 'docx' | 'txt' | 'md');
+                  const blobDoc = await buildDocument(contenuDocument, extension as 'docx' | 'txt' | 'md');
                   declencherTelechargement(blobDoc, w.nomFichier);
                   setDocTelecharge(true);
                 }}
