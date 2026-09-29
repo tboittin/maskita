@@ -107,7 +107,7 @@ describe('EcranTelechargement', () => {
       });
     });
 
-    it('désactive le bouton document après téléchargement', async () => {
+    it('reste cliquable après téléchargement du document', async () => {
       renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
 
       const boutonDoc = screen.getByText('Télécharger le document').closest('button');
@@ -119,8 +119,9 @@ describe('EcranTelechargement', () => {
         expect(screen.getByText('Document téléchargé ✓')).toBeInTheDocument();
       });
 
+      // Le bouton change de label mais reste cliquable
       const boutonDocAfter = screen.getByText('Document téléchargé ✓').closest('button');
-      expect(boutonDocAfter).toBeDisabled();
+      expect(boutonDocAfter).not.toBeDisabled();
     });
 
     it('affiche une modale de warning quand le nom contient des valeurs sensibles', async () => {
@@ -211,14 +212,14 @@ describe('EcranTelechargement', () => {
       });
     });
 
-    it('désactive le bouton clé après téléchargement', async () => {
+    it('reste cliquable après téléchargement de la clé', async () => {
       renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
 
       fireEvent.click(screen.getByText('Télécharger la clé'));
 
       await waitFor(() => {
         const bouton = screen.getByText('Clé téléchargée ✓').closest('button');
-        expect(bouton).toBeDisabled();
+        expect(bouton).not.toBeDisabled();
       });
     });
   });
@@ -350,7 +351,7 @@ describe('EcranTelechargement', () => {
       });
     });
 
-    it('désactive le champ document après téléchargement', async () => {
+    it('reste éditable après téléchargement du document', async () => {
       renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
 
       const inputDoc = screen.getByDisplayValue('mon-rapport-pseudonymise.docx');
@@ -359,11 +360,11 @@ describe('EcranTelechargement', () => {
       fireEvent.click(screen.getByText('Télécharger le document'));
 
       await waitFor(() => {
-        expect(inputDoc).toBeDisabled();
+        expect(inputDoc).not.toBeDisabled();
       });
     });
 
-    it('désactive le champ clé après téléchargement', async () => {
+    it('reste éditable après téléchargement de la clé', async () => {
       renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
 
       const inputCle = screen.getByDisplayValue('mon-rapport.key.json');
@@ -372,7 +373,7 @@ describe('EcranTelechargement', () => {
       fireEvent.click(screen.getByText('Télécharger la clé'));
 
       await waitFor(() => {
-        expect(inputCle).toBeDisabled();
+        expect(inputCle).not.toBeDisabled();
       });
     });
   });

@@ -90,7 +90,6 @@ export function EcranTelechargement({
             type="text"
             value={nomDocEdite}
             onChange={(e) => setNomDocEdite(e.target.value)}
-            disabled={docTelecharge}
             aria-label={t('telechargement.document')}
             style={{
               flex: 1,
@@ -109,7 +108,6 @@ export function EcranTelechargement({
             taille="md"
             onClick={handleTelechargerDocument}
             iconeDroite={docTelecharge ? <ValiderIcon className="size-5" /> : <TelechargerIcon className="size-5" />}
-            disabled={docTelecharge}
           >
             {docTelecharge
               ? t('telechargement.succes.document')
@@ -132,7 +130,6 @@ export function EcranTelechargement({
             type="text"
             value={nomCleEdite}
             onChange={(e) => setNomCleEdite(e.target.value)}
-            disabled={cleTelechargee}
             aria-label={t('telechargement.cle')}
             style={{
               flex: 1,
@@ -151,7 +148,6 @@ export function EcranTelechargement({
             taille="md"
             onClick={handleTelechargerCle}
             iconeDroite={cleTelechargee ? <ValiderIcon className="size-5" /> : <TelechargerIcon className="size-5" />}
-            disabled={cleTelechargee}
           >
             {cleTelechargee
               ? t('telechargement.succes.cle')
