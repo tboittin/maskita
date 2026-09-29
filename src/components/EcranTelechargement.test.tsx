@@ -32,11 +32,21 @@ const nomContientValeursMappingMock = vi.mocked(nomContientValeursMapping);
 const MAPPING: Mapping = { '[EMAIL]': ['test@exemple.fr'] };
 const TEXTE_PSEUDO = 'Contact : [EMAIL]';
 const PROPS_DEFAUT = {
-  textePseudonymise: TEXTE_PSEUDO,
+  contenuDocument: TEXTE_PSEUDO,
   mappingFinal: MAPPING,
   nomFichierBase: 'mon-rapport',
   extension: 'docx' as const,
   onRetour: vi.fn(),
+  suffixeDocument: '-pseudonymise',
+  titre: 'Télécharger les fichiers',
+  sousTitre: 'Téléchargez chaque fichier indépendamment.',
+  libelleDocument: 'Document pseudonymisé',
+  libelleCle: 'Clé .key.json',
+  boutonDocument: 'Télécharger le document',
+  boutonCle: 'Télécharger la clé',
+  succesDocument: 'Document téléchargé ✓',
+  succesCle: 'Clé téléchargée ✓',
+  boutonRetour: '← Modifier les pseudos',
 };
 
 describe('EcranTelechargement', () => {
@@ -279,7 +289,7 @@ describe('EcranTelechargement', () => {
   });
 
   describe('nom de fichier différent', () => {
-    it('affiche le nom du document basé sur nomFichierBase et extension', () => {
+    it('affiche le nom du document basé sur nomFichierBase, suffixeDocument et extension', () => {
       renderAvecI18n(
         <EcranTelechargement
           {...PROPS_DEFAUT}
@@ -375,6 +385,30 @@ describe('EcranTelechargement', () => {
       await waitFor(() => {
         expect(inputCle).not.toBeDisabled();
       });
+    });
+  });
+
+  describe('personnalisation via props (labels)', () => {
+    it('affiche les labels personnalisés pour la restauration', () => {
+      renderAvecI18n(
+        <EcranTelechargement
+          {...PROPS_DEFAUT}
+          titre="Télécharger les fichiers restaurés"
+          sousTitre="Téléchargez chaque fichier indépendamment."
+          libelleDocument="Document restauré"
+          libelleCle="Clé .key.json"
+          boutonDocument="Télécharger le document restauré"
+          boutonCle="Télécharger la clé"
+          succesDocument="Document restauré téléchargé ✓"
+          succesCle="Clé téléchargée ✓"
+          suffixeDocument="-restauré"
+          boutonRetour="← Modifier les pseudos"
+        />,
+      );
+      expect(screen.getByText('Télécharger les fichiers restaurés')).toBeInTheDocument();
+      expect(screen.getByText('Document restauré')).toBeInTheDocument();
+      expect(screen.getByText('Télécharger le document restauré')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('mon-rapport-restauré.docx')).toBeInTheDocument();
     });
   });
 });

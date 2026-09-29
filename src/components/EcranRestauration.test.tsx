@@ -3,16 +3,9 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { EcranRestauration } from './EcranRestauration';
 import { renderAvecI18n } from '../test/renderAvecI18n';
 import * as mammoth from 'mammoth';
-import { buildDocument } from '../utils/buildDocument';
 
 vi.mock('mammoth', () => ({
   extractRawText: vi.fn(),
-}));
-
-vi.mock('../utils/buildDocument', () => ({
-  buildDocument: vi.fn(() =>
-    Promise.resolve(new Blob(['fake doc'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })),
-  ),
 }));
 
 const extractRawTextMock = vi.mocked(mammoth.extractRawText);
@@ -116,9 +109,7 @@ describe('EcranRestauration', () => {
     });
   });
 
-  it('déclenche le téléchargement après validation dans la revue', async () => {
-    const buildDocumentMock = vi.mocked(buildDocument);
-
+  it("affiche l'écran de téléchargement après validation dans la revue", async () => {
     extractRawTextMock.mockResolvedValue({
       value: 'Rapport pour [PERSONNE]',
       messages: [],
@@ -154,17 +145,20 @@ describe('EcranRestauration', () => {
     });
     fireEvent.click(screen.getByText('Lancer la restauration'));
 
-    // Cliquer sur "Valider et continuer"
+    // Cliquer sur "Valider et continuer" → va à l'écran de téléchargement
     await waitFor(() => {
       expect(screen.getByText('Valider et continuer')).toBeInTheDocument();
     });
     fireEvent.click(screen.getByText('Valider et continuer'));
 
+    // Vérifier que l'écran de téléchargement est affiché
     await waitFor(() => {
-      expect(buildDocumentMock).toHaveBeenCalledTimes(1);
-      expect(buildDocumentMock).toHaveBeenCalledWith('Rapport pour Sophie Lambert', 'docx');
+      expect(screen.getByText('Document restauré')).toBeInTheDocument();
+      expect(screen.getByText('Télécharger le document restauré')).toBeInTheDocument();
+      expect(screen.getByText('Clé .key.json')).toBeInTheDocument();
+      expect(screen.getByText('Télécharger la clé')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('modifié-restauré.docx')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('modifié.key.json')).toBeInTheDocument();
     });
-
-    expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
   });
 });

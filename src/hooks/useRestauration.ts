@@ -6,7 +6,7 @@ import type { ExtensionFichier } from '../utils/extraction';
 
 const TAILLE_MAX_OCTETS = 10 * 1024 * 1024; // 10 Mo
 
-export type EtapeRestauration = 'upload' | 'revue';
+export type EtapeRestauration = 'upload' | 'revue' | 'telechargement';
 
 interface UseRestaurationReturn {
   texteAvecTags: string | null;
@@ -21,6 +21,7 @@ interface UseRestaurationReturn {
   handleDocxChoisi: (file: File) => Promise<void>;
   handleCleChoisie: (file: File) => Promise<void>;
   handleLancerRestauration: () => void;
+  handleValiderRevue: () => void;
   reinitialiser: () => void;
 }
 
@@ -99,6 +100,10 @@ export function useRestauration(): UseRestaurationReturn {
     setEtape('revue');
   }, []);
 
+  const handleValiderRevue = useCallback(() => {
+    setEtape('telechargement');
+  }, []);
+
   const reinitialiser = useCallback(() => {
     setFichierDocx(null);
     setTexteAvecTags(null);
@@ -123,6 +128,7 @@ export function useRestauration(): UseRestaurationReturn {
     handleDocxChoisi,
     handleCleChoisie,
     handleLancerRestauration,
+    handleValiderRevue,
     reinitialiser,
   };
 }

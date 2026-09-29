@@ -83,6 +83,17 @@ export const fr = {
   'telechargement.succes.cle': 'Clé téléchargée ✓',
   'telechargement.bouton.retour': '← Modifier les pseudos',
 
+  /* EcranTelechargement — Restauration */
+  'restaurationTelechargement.titre': 'Télécharger les fichiers restaurés',
+  'restaurationTelechargement.sousTitre': 'Téléchargez chaque fichier indépendamment.',
+  'restaurationTelechargement.document': 'Document restauré',
+  'restaurationTelechargement.bouton.document': 'Télécharger le document restauré',
+  'restaurationTelechargement.cle': 'Clé .key.json',
+  'restaurationTelechargement.bouton.cle': 'Télécharger la clé',
+  'restaurationTelechargement.succes.document': 'Document restauré téléchargé ✓',
+  'restaurationTelechargement.succes.cle': 'Clé téléchargée ✓',
+  'restaurationTelechargement.bouton.retour': '← Modifier les pseudos',
+
   /* EcranRestauration */
   'restauration.titre.rapport': 'Rapport modifié (avec des pseudos)',
   'restauration.titre.cle': 'Clé .key.json correspondante',
