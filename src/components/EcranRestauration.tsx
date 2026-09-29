@@ -110,6 +110,7 @@ export function EcranRestauration({ onEtapeChange }: EcranRestaurationProps) {
       succesDocument={t('restaurationTelechargement.succes.document')}
       succesCle={t('restaurationTelechargement.succes.cle')}
       boutonRetour={t('restaurationTelechargement.bouton.retour')}
+      verifierNomSensible={false}
     />
   );
 }

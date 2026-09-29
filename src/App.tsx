@@ -285,6 +285,7 @@ function AppInterieur() {
               succesDocument={t('telechargement.succes.document')}
               succesCle={t('telechargement.succes.cle')}
               boutonRetour={t('telechargement.bouton.retour')}
+              verifierNomSensible
             />
           </section>
         )}

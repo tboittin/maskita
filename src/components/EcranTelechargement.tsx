@@ -38,6 +38,8 @@ interface EcranTelechargementProps {
   succesCle: string;
   /** Texte du bouton retour */
   boutonRetour: string;
+  /** Active la vérification du nom de fichier pour les données sensibles (pseudonymisation uniquement) */
+  verifierNomSensible?: boolean;
 }
 
 export function EcranTelechargement({
@@ -56,6 +58,7 @@ export function EcranTelechargement({
   succesDocument,
   succesCle,
   boutonRetour,
+  verifierNomSensible = true,
 }: EcranTelechargementProps) {
   const { t } = useLangue();
   const [docTelecharge, setDocTelecharge] = useState(false);
@@ -73,20 +76,22 @@ export function EcranTelechargement({
   const [nomCleEdite, setNomCleEdite] = useState(nomCleInitial);
 
   const handleTelechargerDocument = useCallback(async () => {
-    const suspectes = nomContientValeursMapping(nomFichierBase, mappingFinal);
-    if (suspectes.length > 0) {
-      setWarningNom({
-        mappingFinal,
-        nomFichier: nomDocEdite,
-        valeursSuspectes: suspectes,
-      });
-      return;
+    if (verifierNomSensible) {
+      const suspectes = nomContientValeursMapping(nomFichierBase, mappingFinal);
+      if (suspectes.length > 0) {
+        setWarningNom({
+          mappingFinal,
+          nomFichier: nomDocEdite,
+          valeursSuspectes: suspectes,
+        });
+        return;
+      }
     }
 
     const blobDoc = await buildDocument(contenuDocument, extension as 'docx' | 'txt' | 'md');
     declencherTelechargement(blobDoc, nomDocEdite);
     setDocTelecharge(true);
-  }, [contenuDocument, mappingFinal, nomFichierBase, nomDocEdite, extension]);
+  }, [contenuDocument, mappingFinal, nomFichierBase, nomDocEdite, extension, verifierNomSensible]);
 
   const handleTelechargerCle = useCallback(async () => {
     const contenuCle = genererCleJson(mappingFinal);

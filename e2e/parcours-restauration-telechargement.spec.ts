@@ -166,6 +166,45 @@ test.describe('Parcours Restauration — Écran Téléchargement', () => {
     await expect(champCle).toHaveValue('ma-cle.key.json');
   });
 
+  test('ne montre aucun warning de données sensibles lors du téléchargement en restauration', async ({ page }) => {
+    await page.goto('/');
+
+    // Onglet Restore
+    await page.getByRole('button', { name: 'Restore' }).click();
+
+    // Upload .docx dont le nom contient une valeur présente dans la clé (donnée sensible)
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: 'Sophie Lambert.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: Buffer.from(fichierDocx),
+    });
+
+    // Upload clé contenant la valeur "Sophie Lambert"
+    const cleJson = JSON.stringify({ '[PERSONNE]': ['Sophie Lambert'] });
+    await page.locator('input[type="file"]').nth(1).setInputFiles({
+      name: 'document.key.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(cleJson),
+    });
+
+    // Lancer la restauration
+    await page.getByRole('button', { name: /Run restoration/i }).click({ timeout: 15000 });
+    await expect(page.getByText('Validate and continue')).toBeVisible({ timeout: 10000 });
+
+    // Valider → téléchargement
+    await page.getByRole('button', { name: /Validate and continue/i }).click();
+    await expect(page.getByText('Download restored files')).toBeVisible({ timeout: 10000 });
+
+    // Cliquer sur "Download restored document" : le téléchargement doit aboutir SANS modale de warning
+    await page.getByRole('button', { name: /Download restored document/i }).click();
+
+    await expect(page.getByText('Restored document downloaded ✓')).toBeVisible({ timeout: 10000 });
+
+    // Aucune modale de warning sensible ne doit être visible
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByText(/download anyway|Télécharger quand même/i)).toHaveCount(0);
+  });
+
   test('permet de revenir à la revue depuis l\'écran de téléchargement', async ({ page }) => {
     await page.goto('/');
 
