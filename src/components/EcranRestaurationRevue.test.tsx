@@ -206,3 +206,96 @@ describe('EcranRestaurationRevue', () => {
     });
   });
 });
+
+describe('EcranRestaurationRevue — interactions', () => {
+  const rendre = (props: Partial<Parameters<typeof EcranRestaurationRevue>[0]> = {}) =>
+    renderAvecI18n(
+      <EcranRestaurationRevue
+        texteAvecTags={TEXTE_TAGS}
+        texteRestauré={TEXTE_RESTAURE}
+        mapping={MAPPING}
+        onValider={vi.fn()}
+        onRetour={vi.fn()}
+        onAjouterValeur={vi.fn()}
+        onRetirerValeur={vi.fn()}
+        onDeplacerValeur={vi.fn()}
+        onReordonnerValeurs={vi.fn()}
+        onRenommerTag={vi.fn()}
+        onSupprimerTag={vi.fn()}
+        onAjouterTag={vi.fn()}
+        {...props}
+      />,
+    );
+
+  /** Span du volet texte (hors bouton) correspondant. */
+  function spanVolet(texte: string): HTMLElement {
+    const el = screen.getAllByText(texte).find(e => e.tagName === 'SPAN' && !e.closest('button'));
+    expect(el).toBeTruthy();
+    return el!;
+  }
+
+  it('bascule la surbrillance d\'un tag au clic dans le tableau', () => {
+    rendre();
+    const boutonTag = screen.getByRole('button', { name: '[PERSONNE]' });
+    expect(boutonTag).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(boutonTag);
+    expect(boutonTag).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(boutonTag);
+    expect(boutonTag).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('sélectionne une valeur depuis la table', () => {
+    rendre();
+    fireEvent.click(screen.getByRole('button', { name: 'Sophie Lambert' }));
+
+    // handleValeurClick marque le tag actif
+    expect(screen.getByRole('button', { name: '[PERSONNE]' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('active un tag via le volet pseudonymisé', () => {
+    rendre();
+    // D'abord activer la surbrillance pour que le pseudo soit découpé en segments cliquables
+    fireEvent.click(screen.getByRole('button', { name: '[PERSONNE]' }));
+    // Récupère le span du tag dans le volet (hors bouton — c'est la colonne de droite)
+    const spans = screen.getAllByText('[PERSONNE]').filter(e => e.tagName === 'SPAN' && !e.closest('button'));
+    const spanPseudo = spans[0] || spans[1];
+    fireEvent.click(spanPseudo);
+    expect(screen.getByRole('button', { name: '[PERSONNE]' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('clique sur une valeur dans l\'aperçu restauré', () => {
+    rendre();
+    fireEvent.click(spanVolet('Sophie Lambert'));
+    expect(screen.getByRole('button', { name: '[PERSONNE]' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('bascule les cases à cocher Scroll synchronisé et Recentrer auto', () => {
+    rendre();
+    const sync = screen.getByLabelText('Scroll synchronisé') as HTMLInputElement;
+    const recentrer = screen.getByLabelText('Recentrer auto') as HTMLInputElement;
+    fireEvent.click(sync);
+    fireEvent.click(recentrer);
+    expect(sync.checked).toBe(false);
+    expect(recentrer.checked).toBe(false);
+  });
+
+  /** Conteneur scrollable du volet texte (le plus proche de la valeur affichée). */
+  function conteneurVolet(): HTMLElement {
+    const conteneur = spanVolet('Sophie Lambert').closest('div[style*="max-height"]');
+    expect(conteneur).toBeTruthy();
+    return conteneur as HTMLElement;
+  }
+
+  it('synchronise le défilement du volet restauré', () => {
+    rendre();
+    fireEvent.scroll(conteneurVolet());
+  });
+
+  it('ignore le défilement quand la synchronisation est désactivée', () => {
+    rendre();
+    fireEvent.click(screen.getByLabelText('Scroll synchronisé'));
+    fireEvent.scroll(conteneurVolet());
+  });
+});

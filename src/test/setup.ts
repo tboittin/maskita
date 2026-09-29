@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom';
 
+// jsdom n'implémente pas scrollIntoView (utilisé par EcranRevue/ECranRestaurationRevue)
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+
 // Polyfill pour jsdom — Blob/File n'ont pas arrayBuffer(), text(), stream()
 if (!Blob.prototype.arrayBuffer) {
   Blob.prototype.arrayBuffer = function (): Promise<ArrayBuffer> {

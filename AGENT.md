@@ -53,6 +53,7 @@ de `main`, car il pilote tous les subagents.
 ## Qualité
 
 - couverture de test maximale. Chaque composant, fonction utilitaire doit avoir des tests unitaires associés
+- les tests e2e (Playwright) dans `e2e/` doivent être mis à jour pour couvrir les nouveaux comportements
 - `npm test` doit passer avant chaque commit
 - `tsc --noEmit` doit passer avant chaque commit
 - Les bugs signalés par l'utilisateur sont prioritaires sur les nouvelles
