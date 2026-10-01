@@ -97,13 +97,67 @@ describe('restaurerTexte', () => {
 });
 
 describe('genererCleJson / chargerCleJson', () => {
-  it('fait un round-trip JSON', () => {
+  it('fait un round-trip JSON (valeurs valides seulement)', () => {
     const mapping = { '[EMAIL]': ['test@exemple.fr'] };
 
     const json = genererCleJson(mapping);
-    const reloaded = chargerCleJson(json);
+    const { mapping: reloaded, valeursRetirees } = chargerCleJson(json);
 
     expect(reloaded).toEqual(mapping);
+    expect(valeursRetirees).toEqual([]);
+  });
+
+  it('filtre les valeurs contenant des crochets', () => {
+    const json = JSON.stringify({
+      '[PERSONNE]': ['Tom', '[ADRESSE]', 'Jean [Dupont]'],
+    });
+
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping['[PERSONNE]']).toEqual(['Tom']);
+    expect(valeursRetirees).toEqual([
+      { tag: '[PERSONNE]', valeur: '[ADRESSE]' },
+      { tag: '[PERSONNE]', valeur: 'Jean [Dupont]' },
+    ]);
+  });
+
+  it('conserve un tag vidé de toutes ses valeurs', () => {
+    const json = JSON.stringify({
+      '[PERSONNE]': ['[ADRESSE]', '[PERS'],
+    });
+
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping['[PERSONNE]']).toEqual([]);
+    expect(valeursRetirees).toHaveLength(2);
+  });
+
+  it('ne modifie pas un entièrement valide', () => {
+    const original = {
+      '[EMAIL]': ['test@exemple.fr'],
+      '[TEL]': ['0612345678'],
+    };
+
+    const json = genererCleJson(original);
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping).toEqual(original);
+    expect(valeursRetirees).toEqual([]);
+  });
+
+  it('laisse les autres tags intacts quand un tag a des invalides', () => {
+    const json = JSON.stringify({
+      '[PERSONNE]': ['Tom', '[ADRESSE]'],
+      '[EMAIL]': ['test@exemple.fr'],
+    });
+
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping['[PERSONNE]']).toEqual(['Tom']);
+    expect(mapping['[EMAIL]']).toEqual(['test@exemple.fr']);
+    expect(valeursRetirees).toEqual([
+      { tag: '[PERSONNE]', valeur: '[ADRESSE]' },
+    ]);
   });
 });
 

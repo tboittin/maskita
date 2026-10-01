@@ -70,8 +70,40 @@ export function genererCleJson(mapping: Mapping): string {
   return JSON.stringify(mapping, null, 2);
 }
 
-export function chargerCleJson(contenu: string): Mapping {
-  return JSON.parse(contenu);
+export interface ValeurRetiree {
+  tag: string;
+  valeur: string;
+}
+
+export interface ChargementCleResult {
+  mapping: Mapping;
+  valeursRetirees: ValeurRetiree[];
+}
+
+/**
+ * Charge un mapping depuis une chaîne JSON et assainit les valeurs.
+ * Les valeurs invalides (contenant des crochets) sont filtrées via
+ * estValeurValide. Les tags vidés de toutes leurs valeurs sont conservés
+ * avec un tableau vide. Retourne le mapping nettoyé et la liste des
+ * valeurs retirées.
+ */
+export function chargerCleJson(contenu: string): ChargementCleResult {
+  const brut = JSON.parse(contenu) as Mapping;
+  const valeursRetirees: ValeurRetiree[] = [];
+  const mapping: Mapping = {};
+
+  for (const [tag, valeurs] of Object.entries(brut)) {
+    const valides = valeurs.filter(v => {
+      if (!estValeurValide(v)) {
+        valeursRetirees.push({ tag, valeur: v });
+        return false;
+      }
+      return true;
+    });
+    mapping[tag] = valides;
+  }
+
+  return { mapping, valeursRetirees };
 }
 
 /**

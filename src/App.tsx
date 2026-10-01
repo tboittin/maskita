@@ -26,7 +26,7 @@ function AppInterieur() {
   const [messageSucces, setMessageSucces] = useState<string | null>(null);
   const {
     fichier, extension, texte, chargement, erreur,
-    cle, erreurCle, nomFichierCle,
+    cle, erreurCle, messageCle, nomFichierCle,
     uploader, uploaderCle, reinitialiser,
   } = useFileUpload();
 
@@ -240,6 +240,22 @@ function AppInterieur() {
                   accept=".json"
                   libelle=".key.json"
                 />
+                {messageCle && (
+                  <div
+                    role="alert"
+                    style={{
+                      marginTop: 'var(--espacement-sm)',
+                      padding: 'var(--espacement-sm) var(--espacement-md)',
+                      background: 'var(--couleur-surface-avertissement, #fef3cd)',
+                      border: '1px solid var(--couleur-bordure-avertissement, #f59e0b)',
+                      borderRadius: 'var(--rayon, 0.5rem)',
+                      fontSize: '0.875rem',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {messageCle}
+                  </div>
+                )}
               </div>
             </Panneau>
             {analysePrete && (
