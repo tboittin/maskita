@@ -75,6 +75,15 @@ export function chargerCleJson(contenu: string): Mapping {
 }
 
 /**
+ * Vérifie qu'une valeur sélectionnée ne contient pas de crochets (tags).
+ * INT-1 — Garde-fou à la sélection : si la sélection contient '[' ou ']',
+ * on est en train de sélectionner un tag existant, pas une valeur à pseudonymiser.
+ */
+export function estValeurValide(valeur: string): boolean {
+  return !valeur.includes('[') && !valeur.includes(']');
+}
+
+/**
  * Vérifie si un nom de fichier (sans extension) contient des valeurs
  * ou des tags issus du mapping (données sensibles). Retourne la liste
  * des éléments détectés (valeur ou tag complet), ou une liste vide si
