@@ -27,6 +27,7 @@ export const fr = {
   'revue.ajoutClassique.titre': 'Ajouter un pseudo',
   'revue.ajoutClassique.labelType': 'Pseudo',
   'revue.ajoutClassique.labelValeur': 'Valeur',
+  'revue.ajoutClassique.alerteCrochet': 'La valeur ne peut pas contenir de crochets « [ » ou « ] »',
   'revue.picker.titre.deplacer': (v: string) => `Déplacer « ${v} » vers quel pseudo ?`,
   'revue.picker.titre.ajouter': 'Ajouter à quel pseudo ?',
   'revue.picker.valeur': (v: string) => `Valeur : ${v}`,

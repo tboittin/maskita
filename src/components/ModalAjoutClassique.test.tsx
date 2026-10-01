@@ -21,6 +21,7 @@ function rendu(overrides: Partial<Parameters<typeof ModalAjoutClassique>[0]> = {
       libelleAnnuler="Annuler"
       placeholderType="Type (ex: PERSONNE)"
       placeholderValeur="Valeur"
+      alerteCrochet="Alerte crochet"
       {...overrides}
     />,
   );
@@ -92,5 +93,43 @@ describe('ModalAjoutClassique', () => {
     fireEvent.change(customInput, { target: { value: 'VILLE' } });
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
     expect(onValider).toHaveBeenCalledWith('VILLE', 'Paris');
+  });
+
+  it('affiche une alerte et désactive le bouton quand la valeur contient des crochets', () => {
+    const { onValider } = rendu({ valeurInitiale: '[ADRESSE]' });
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'PERSONNE' } });
+    // L'alerte est visible
+    expect(screen.getByText('Alerte crochet')).toBeInTheDocument();
+    // Le bouton est désactivé
+    const boutonAjouter = screen.getByRole('button', { name: 'Ajouter' });
+    expect(boutonAjouter).toBeDisabled();
+    fireEvent.click(boutonAjouter);
+    expect(onValider).not.toHaveBeenCalled();
+  });
+
+  it('réactive le bouton quand la valeur est corrigée (plus de crochet)', () => {
+    rendu({ valeurInitiale: '[ADRESSE]' });
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'PERSONNE' } });
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    expect(input.value).toBe('[ADRESSE]');
+    expect(screen.getByText('Alerte crochet')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeDisabled();
+
+    // Corriger la valeur : enlever les crochets
+    fireEvent.change(input, { target: { value: '12 rue de Paris' } });
+    expect(screen.queryByText('Alerte crochet')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Ajouter' })).not.toBeDisabled();
+  });
+
+  it("n'affiche pas d'alerte pour une valeur préremplie valide", () => {
+    rendu({ valeurInitiale: 'Sophie Lambert' });
+    expect(screen.queryByText('Alerte crochet')).toBeNull();
+    const boutonAjouter = screen.getByRole('button', { name: 'Ajouter' });
+    expect(boutonAjouter).toBeDisabled(); // type vide encore
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'PERSONNE' } });
+    expect(boutonAjouter).not.toBeDisabled();
   });
 });
