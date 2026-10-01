@@ -7,6 +7,7 @@ import { PanneauTableauPseudos } from './PanneauTableauPseudos';
 import { PanneauApercus } from './PanneauApercus';
 import { BarreAjoutSelection } from './BarreAjoutSelection';
 import { PickerAjoutValeur } from './PickerAjoutValeur';
+import { ModalAjoutClassique } from './ModalAjoutClassique';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRevueProps {
@@ -114,6 +115,12 @@ export function EcranRevue({
     }
   }, [ajout, revue, defilerTableauVers]);
 
+  const handleAjoutClassiqueValider = useCallback((type: string, valeur: string) => {
+    revue.ajouterTag(type, valeur);
+    ajout.effacerSelection();
+    ajout.annulerAjoutClassique();
+  }, [revue, ajout]);
+
   const handleClicValider = () => {
     onValider(revue.mappingFinal, revue.textePseudonymise);
   };
@@ -209,6 +216,7 @@ export function EcranRevue({
           onSupprimerTag={revue.supprimerTag}
           onAjouterTag={revue.ajouterTag}
           onConflitVoir={handleConflitVoir}
+          onAjoutPseudoExterne={ajout.ouvrirAjoutClassique}
           construireLigne={construireLigne}
           refTableau={refTableau}
         />
@@ -276,6 +284,23 @@ export function EcranRevue({
           libelleAnnuler={t('revue.picker.annuler')}
         />
       )}
+
+      {/* Modale d'ajout classique (formulaire Type + Valeur prérempli) */}
+      <ModalAjoutClassique
+        ouvert={ajout.showAjoutClassique}
+        valeurInitiale={ajout.valeurAjoutClassique}
+        onValider={handleAjoutClassiqueValider}
+        onAnnuler={ajout.annulerAjoutClassique}
+        titre={t('revue.ajoutClassique.titre')}
+        labelType={t('revue.ajoutClassique.labelType')}
+        labelValeur={t('revue.ajoutClassique.labelValeur')}
+        libelleType={t('tableau.ajoutManuel.type.label')}
+        libelleTypeCustom={t('tableau.ajoutManuel.type.custom')}
+        libelleAjouter={t('tableau.bouton.ajouter')}
+        libelleAnnuler={t('tableau.bouton.annuler')}
+        placeholderType={t('tableau.placeholder.type')}
+        placeholderValeur={t('tableau.placeholder.valeur')}
+      />
     </div>
   );
 }

@@ -26,6 +26,9 @@ export const en: Dictionnaire = {
   'revue.titre.lisible': 'Readable text',
   'revue.bouton.nouveauTag': 'New pseudo',
   'revue.bouton.nouvelleValeur': 'New value',
+  'revue.ajoutClassique.titre': 'Add a pseudo',
+  'revue.ajoutClassique.labelType': 'Pseudonym',
+  'revue.ajoutClassique.labelValeur': 'Value',
   'revue.picker.titre.deplacer': (v: string) => `Move « ${v} » to which pseudo?`,
   'revue.picker.titre.ajouter': 'Add to which pseudo?',
   'revue.picker.valeur': (v: string) => `Value: ${v}`,
@@ -64,7 +67,7 @@ export const en: Dictionnaire = {
   'tableau.placeholder.valeur': 'Value',
   'tableau.bouton.ajouter': 'Add',
   'tableau.bouton.annuler': 'Cancel',
-  'tableau.bouton.ajouterPseudo': '+ Add a pseudo',
+  'tableau.bouton.ajouterPseudoClassique': '+ Add a pseudo',
 
   /* FileDropZone */
   'dropzone.chargement': 'Extracting…',

@@ -30,6 +30,8 @@ export function useAjoutRapide({
 }: OptionsAjoutRapide) {
   const [selection, setSelection] = useState<SelectionApercu | null>(null);
   const [picker, setPicker] = useState<{ valeur: string; tagSource?: string } | null>(null);
+  const [valeurAjoutClassique, setValeurAjoutClassique] = useState('');
+  const [showAjoutClassique, setShowAjoutClassique] = useState(false);
   const selectionRef = useRef('');
 
   const gererSelection = (source: SourceApercu) => (valeur: string) => {
@@ -80,6 +82,16 @@ export function useAjoutRapide({
     selectionRef.current = '';
   };
 
+  const ouvrirAjoutClassique = () => {
+    setValeurAjoutClassique(selectionRef.current);
+    setShowAjoutClassique(true);
+  };
+
+  const annulerAjoutClassique = () => {
+    setValeurAjoutClassique('');
+    setShowAjoutClassique(false);
+  };
+
   return {
     selection,
     gererSelection,
@@ -90,5 +102,9 @@ export function useAjoutRapide({
     annulerPicker,
     effacerSelection,
     picker,
+    valeurAjoutClassique,
+    ouvrirAjoutClassique,
+    annulerAjoutClassique,
+    showAjoutClassique,
   };
 }
