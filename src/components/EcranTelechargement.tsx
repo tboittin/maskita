@@ -148,7 +148,9 @@ export function EcranTelechargement({
         {valeursSuspectes.length > 0 && (
           <div style={{ padding: '0 var(--espacement-md) var(--espacement-md)' }}>
             <MessageErreur>
-              {t('app.warning.message', valeursSuspectes.join(', '), nomDocEdite)}
+              <span style={{ whiteSpace: 'pre-wrap' }}>
+                {t('app.warning.message', valeursSuspectes.join(', '), nomDocEdite)}
+              </span>
             </MessageErreur>
           </div>
         )}
