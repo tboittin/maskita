@@ -93,6 +93,10 @@ export function chargerCleJson(contenu: string): Mapping {
  * tokens de 2 caractères comme "M." — souhaité pour détecter l'invocation
  * et l'initiale dans le titre (ex: "Docteur M. Smith").
  */
+export function estValeurValide(valeur: string): boolean {
+  return !valeur.includes('[') && !valeur.includes(']');
+}
+
 export function nomContientValeursMapping(
   nomFichier: string,
   mapping: Mapping,

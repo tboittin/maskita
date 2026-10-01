@@ -8,6 +8,7 @@ import {
   genererCleJson,
   chargerCleJson,
   nomContientValeursMapping,
+  estValeurValide,
 } from './mapping';
 
 describe('genererTag', () => {
@@ -215,5 +216,21 @@ describe('nomContientValeursMapping', () => {
     expect(nomContientValeursMapping('compte-rendu patient', mapping)).toEqual(
       [],
     );
+  });
+});
+
+describe('estValeurValide', () => {
+  it.each([
+    ['[ADRESSE]', false],
+    ['[PERS', false],
+    ['PERS]', false],
+    ['6, [ADRESSE], Paris', false],
+    ['Jean [Dupont]', false],
+    ['Tom', true],
+    ['Jean-Paul', true],
+    ['6, rue de Paris', true],
+    ['Émilie', true],
+  ])('retourne %s pour %s', (valeur, attendu) => {
+    expect(estValeurValide(valeur)).toBe(attendu);
   });
 });
