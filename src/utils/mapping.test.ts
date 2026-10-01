@@ -166,4 +166,54 @@ describe('nomContientValeursMapping', () => {
       '[PERSONNE]',
     ]);
   });
+
+  // ── DET-02 — Détection par tokens (espaces / tirets) ─────────────────
+  it('détecte une valeur quand un seul de ses tokens est présent dans le titre (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    // Le titre ne contient PAS la chaîne complète "M. Lefevre", mais le token "Lefevre"
+    expect(nomContientValeursMapping('Henri Lefevre', mapping)).toEqual([
+      'M. Lefevre',
+    ]);
+  });
+
+  it('détecte grâce au token "M." (initiale conservée, 2 caractères) (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    expect(nomContientValeursMapping('Docteur M. Smith', mapping)).toEqual([
+      'M. Lefevre',
+    ]);
+  });
+
+  it('découpe les valeurs sur les tirets (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['Jean-Paul'] };
+    expect(nomContientValeursMapping('Contact Paul', mapping)).toEqual([
+      'Jean-Paul',
+    ]);
+    expect(nomContientValeursMapping('Contact Jean', mapping)).toEqual([
+      'Jean-Paul',
+    ]);
+  });
+
+  it('reste insensible à la casse après tokenisation (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    expect(nomContientValeursMapping('HENRI LEFEVRE', mapping)).toEqual([
+      'M. Lefevre',
+    ]);
+  });
+
+  it('ignore les tokens trop courts (< 2 caractères) pour éviter les faux positifs (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['J Martin'] };
+    // L'initiale "J" (1 caractère) seule ne doit pas déclencher la détection
+    expect(nomContientValeursMapping('rapport J', mapping)).toEqual([]);
+    // mais "Martin" doit déclencher la détection de la valeur complète
+    expect(nomContientValeursMapping('rapport Martin', mapping)).toEqual([
+      'J Martin',
+    ]);
+  });
+
+  it('ne détecte pas un nom sûr quand aucun token ne correspond (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    expect(nomContientValeursMapping('compte-rendu patient', mapping)).toEqual(
+      [],
+    );
+  });
 });

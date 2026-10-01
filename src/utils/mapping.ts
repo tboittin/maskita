@@ -77,7 +77,21 @@ export function chargerCleJson(contenu: string): Mapping {
 /**
  * Vérifie si un nom de fichier (sans extension) contient des valeurs
  * ou des tags issus du mapping (données sensibles). Retourne la liste
- * des éléments détectés, ou une liste vide si le nom est sûr.
+ * des éléments détectés (valeur ou tag complet), ou une liste vide si
+ * le nom est sûr.
+ *
+ * DET-02 — Détection par tokens : chaque valeur est découpée en tokens
+ * sur les espaces ET les tirets (ex: "M. Lefevre" → ["M.", "Lefevre"],
+ * "Jean-Paul" → ["Jean", "Paul"]). Une valeur est DÉTECTÉE dès qu'AU
+ * MOINS UN de ses tokens est présent dans le nom du fichier. On retourne
+ * toujours la VALEUR COMPLÈTE détectée (et non le token seul), afin de
+ * préserver le format de retour existant et d'afficher la donnée sensible
+ * correspondante dans le warning.
+ *
+ * Les tokens trop courts (< 2 caractères, ex: l'initiale "M" seule) sont
+ * ignorés pour limiter les faux positifs. On conserve en revanche les
+ * tokens de 2 caractères comme "M." — souhaité pour détecter l'invocation
+ * et l'initiale dans le titre (ex: "Docteur M. Smith").
  */
 export function nomContientValeursMapping(
   nomFichier: string,
@@ -87,9 +101,17 @@ export function nomContientValeursMapping(
   const detectees: string[] = [];
 
   // Vérifier les valeurs du mapping (ex: "Sophie Lambert")
+  const valeurPresente = (valeur: string): boolean => {
+    const tokens = valeur
+      .split(/[\s-]+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length >= 2);
+    return tokens.some((token) => nomMinuscule.includes(token.toLowerCase()));
+  };
+
   for (const valeurs of Object.values(mapping)) {
     for (const valeur of valeurs) {
-      if (valeur.length > 0 && nomMinuscule.includes(valeur.toLowerCase())) {
+      if (valeur.length > 0 && valeurPresente(valeur)) {
         if (!detectees.includes(valeur)) {
           detectees.push(valeur);
         }
