@@ -1,17 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { FileDropZone } from './FileDropZone';
 import { EcranRestaurationRevue } from './EcranRestaurationRevue';
+import { EcranTelechargement } from './EcranTelechargement';
 import { useRestauration, type EtapeRestauration } from '../hooks/useRestauration';
-import { buildDocument } from '../utils/buildDocument';
-import { declencherTelechargement } from '../utils/telechargement';
-import { nomContientValeursMapping } from '../utils/mapping';
 import { useLangue } from '../i18n/context';
 import {
   Bouton,
-  Modal,
   Panneau,
 } from '@khaleeno/maskita-design-system';
-import type { Mapping } from '../utils/mapping';
 
 interface EcranRestaurationProps {
   onEtapeChange?: (etape: EtapeRestauration) => void;
@@ -32,7 +28,15 @@ export function EcranRestauration({ onEtapeChange }: EcranRestaurationProps) {
     handleDocxChoisi,
     handleCleChoisie,
     handleLancerRestauration,
+    handleValiderRevue,
     reinitialiser,
+    ajouterValeur,
+    retirerValeur,
+    deplacerValeur,
+    reordonnerValeurs,
+    renommerTag,
+    supprimerTag,
+    ajouterTag,
   } = useRestauration();
 
   // Synchroniser l'étape avec App.tsx pour les Jalons
@@ -40,39 +44,9 @@ export function EcranRestauration({ onEtapeChange }: EcranRestaurationProps) {
     onEtapeChange?.(etape);
   }, [etape, onEtapeChange]);
 
-  const [warningNom, setWarningNom] = useState<{
-    mappingFinal: Mapping;
-    nomFichier: string;
-    valeursSuspectes: string[];
-  } | null>(null);
-
-  const executerTelechargement = useCallback(async () => {
-    if (!texteRestauré || !fichierDocx) return;
-    const ext = extension ?? 'docx';
-    const nomBase = fichierDocx.name.replace(/\\.(docx|txt|md)$/i, '') + '-restauré';
-    const blob = await buildDocument(texteRestauré, ext);
-    declencherTelechargement(blob, `${nomBase}.${ext}`);
-  }, [texteRestauré, fichierDocx, extension]);
-
-  const handleTelecharger = useCallback(async () => {
-    if (!texteRestauré || !fichierDocx || !mapping) return;
-    const ext = extension ?? 'docx';
-    const nomBase = fichierDocx.name.replace(/\\.(docx|txt|md)$/i, '');
-
-    const suspectes = nomContientValeursMapping(nomBase, mapping);
-    if (suspectes.length > 0) {
-      setWarningNom({
-        mappingFinal: mapping,
-        nomFichier: `${nomBase}-restauré.${ext}`,
-        valeursSuspectes: suspectes,
-      });
-      return;
-    }
-
-    await executerTelechargement();
-  }, [texteRestauré, fichierDocx, extension, mapping, executerTelechargement]);
-
   const estPret = texteRestauré !== null;
+  const nomFichierBase = fichierDocx?.name.replace(/\.(docx|txt|md)$/i, '') ?? 'document';
+  const ext = extension ?? 'docx';
 
   // Phase upload
   if (etape === 'upload') {
@@ -113,43 +87,44 @@ export function EcranRestauration({ onEtapeChange }: EcranRestaurationProps) {
   }
 
   // Phase revue
-  return (
-    <>
+  if (etape === 'revue') {
+    return (
       <EcranRestaurationRevue
         texteAvecTags={texteAvecTags ?? ''}
         texteRestauré={texteRestauré ?? ''}
         mapping={mapping ?? {}}
-        onValider={handleTelecharger}
+        onValider={handleValiderRevue}
         onRetour={reinitialiser}
+        onAjouterValeur={ajouterValeur}
+        onRetirerValeur={retirerValeur}
+        onDeplacerValeur={deplacerValeur}
+        onReordonnerValeurs={reordonnerValeurs}
+        onRenommerTag={renommerTag}
+        onSupprimerTag={supprimerTag}
+        onAjouterTag={ajouterTag}
       />
+    );
+  }
 
-      {warningNom && (
-        <Modal
-          ouvert={!!warningNom}
-          titre={t('app.warning.titre')}
-          onFermer={() => setWarningNom(null)}
-          pied={
-            <>
-              <Bouton variante="secondaire" onClick={() => setWarningNom(null)}>
-                {t('app.warning.annuler')}
-              </Bouton>
-              <Bouton
-                variante="danger"
-                onClick={() => {
-                  setWarningNom(null);
-                  executerTelechargement();
-                }}
-              >
-                {t('app.warning.confirmer')}
-              </Bouton>
-            </>
-          }
-        >
-          <p className="text-sm leading-relaxed text-brume-500" style={{ whiteSpace: 'pre-wrap' }}>
-            {t('app.warning.message', warningNom.valeursSuspectes.join(', '), warningNom.nomFichier)}
-          </p>
-        </Modal>
-      )}
-    </>
+  // Phase telechargement
+  return (
+    <EcranTelechargement
+      contenuDocument={texteRestauré ?? ''}
+      mappingFinal={mapping ?? {}}
+      nomFichierBase={nomFichierBase}
+      extension={ext}
+      onRetour={handleLancerRestauration}
+      suffixeDocument="-restauré"
+      titre={t('restaurationTelechargement.titre')}
+      sousTitre={t('restaurationTelechargement.sousTitre')}
+      libelleDocument={t('restaurationTelechargement.document')}
+      libelleCle={t('restaurationTelechargement.cle')}
+      boutonDocument={t('restaurationTelechargement.bouton.document')}
+      boutonCle={t('restaurationTelechargement.bouton.cle')}
+      succesDocument={t('restaurationTelechargement.succes.document')}
+      succesCle={t('restaurationTelechargement.succes.cle')}
+      boutonRetour={t('restaurationTelechargement.bouton.retour')}
+      verifierNomSensible={false}
+    />
   );
 }

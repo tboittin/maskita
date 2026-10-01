@@ -26,7 +26,7 @@ function AppInterieur() {
   const [messageSucces, setMessageSucces] = useState<string | null>(null);
   const {
     fichier, extension, texte, chargement, erreur,
-    cle, erreurCle, nomFichierCle,
+    cle, erreurCle, messageCle, nomFichierCle,
     uploader, uploaderCle, reinitialiser,
   } = useFileUpload();
 
@@ -199,7 +199,7 @@ function AppInterieur() {
               { id: 'verifier', libelle: t('app.jalon.verifier') },
               { id: 'recuperer', libelle: t('app.jalon.recuperer') },
             ]}
-            active={onglet === 'pseudonymiser' ? (etape === 'upload' ? 'deposer' : etape === 'revue' ? 'verifier' : 'recuperer') : (etapeRestauration === 'upload' ? 'deposer' : 'verifier')}
+            active={onglet === 'pseudonymiser' ? (etape === 'upload' ? 'deposer' : etape === 'revue' ? 'verifier' : 'recuperer') : (etapeRestauration === 'upload' ? 'deposer' : etapeRestauration === 'revue' ? 'verifier' : 'recuperer')}
             onSelect={(id) => {
               if (id === 'deposer') {
                 setOnglet('pseudonymiser');
@@ -240,6 +240,22 @@ function AppInterieur() {
                   accept=".json"
                   libelle=".key.json"
                 />
+                {messageCle && (
+                  <div
+                    role="alert"
+                    style={{
+                      marginTop: 'var(--espacement-sm)',
+                      padding: 'var(--espacement-sm) var(--espacement-md)',
+                      background: 'var(--couleur-surface-avertissement, #fef3cd)',
+                      border: '1px solid var(--couleur-bordure-avertissement, #f59e0b)',
+                      borderRadius: 'var(--rayon, 0.5rem)',
+                      fontSize: '0.875rem',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {messageCle}
+                  </div>
+                )}
               </div>
             </Panneau>
             {analysePrete && (
@@ -270,11 +286,22 @@ function AppInterieur() {
         {onglet === 'pseudonymiser' && etape === 'telechargement' && mappingFinal && textePseudonymise && (
           <section>
             <EcranTelechargement
-              textePseudonymise={textePseudonymise}
+              contenuDocument={textePseudonymise}
               mappingFinal={mappingFinal}
               nomFichierBase={nomFichierBase}
               extension={ext}
               onRetour={handleRetourTelechargement}
+              suffixeDocument="-pseudonymise"
+              titre={t('telechargement.titre')}
+              sousTitre={t('telechargement.sousTitre')}
+              libelleDocument={t('telechargement.document')}
+              libelleCle={t('telechargement.cle')}
+              boutonDocument={t('telechargement.bouton.document')}
+              boutonCle={t('telechargement.bouton.cle')}
+              succesDocument={t('telechargement.succes.document')}
+              succesCle={t('telechargement.succes.cle')}
+              boutonRetour={t('telechargement.bouton.retour')}
+              verifierNomSensible
             />
           </section>
         )}

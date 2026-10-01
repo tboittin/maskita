@@ -33,21 +33,65 @@ export function genererMapping(
   return mapping;
 }
 
+interface Correspondance {
+  debut: number;
+  fin: number;
+  tag: string;
+}
+
 export function appliquerMapping(texte: string, mapping: Mapping): string {
-  let resultat = texte;
+  // Étape 1 : trouver toutes les correspondances dans le texte ORIGINAL
+  const correspondances: Correspondance[] = [];
 
   for (const [tag, valeurs] of Object.entries(mapping)) {
     // Trier par longueur décroissante : les plus longues d'abord
-    // pour éviter les remplacements partiels (B08)
     const valeursTriees = [...valeurs].sort((a, b) => b.length - a.length);
 
     for (const valeur of valeursTriees) {
-      // Échapper les caractères regex dans la valeur
       const echapee = valeur.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Word boundaries (\b) pour que 'Tom' ne soit pas remplacé dans 'Tommy'
       const regex = new RegExp(`\\b${echapee}\\b`, 'gi');
-      resultat = resultat.replace(regex, tag);
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(texte)) !== null) {
+        correspondances.push({
+          debut: match.index,
+          fin: match.index + match[0].length,
+          tag,
+        });
+        // Éviter les boucles infinies sur les chaînes vides
+        if (match.index === regex.lastIndex) {
+          regex.lastIndex++;
+        }
+      }
     }
+  }
+
+  // Étape 2 : en cas de chevauchement, garder la correspondance la PLUS LONGUE
+  // Trier par début, puis par longueur décroissante
+  correspondances.sort((a, b) => a.debut - b.debut || (b.fin - b.debut) - (a.fin - a.debut));
+
+  const filtrees: Correspondance[] = [];
+  for (const corr of correspondances) {
+    if (filtrees.length === 0 || corr.debut >= filtrees[filtrees.length - 1].fin) {
+      // Pas de chevauchement : on garde
+      filtrees.push(corr);
+    } else {
+      // Chevauchement : la plus longue gagne
+      const derniere = filtrees[filtrees.length - 1];
+      const longueurPrecedente = derniere.fin - derniere.debut;
+      const longueurCourante = corr.fin - corr.debut;
+      if (longueurCourante > longueurPrecedente) {
+        filtrees[filtrees.length - 1] = corr;
+      }
+    }
+  }
+
+  // Étape 3 : trier par position décroissante (droite à gauche)
+  filtrees.sort((a, b) => b.debut - a.debut);
+
+  // Étape 4 : construire le résultat en une seule passe
+  let resultat = texte;
+  for (const corr of filtrees) {
+    resultat = resultat.slice(0, corr.debut) + corr.tag + resultat.slice(corr.fin);
   }
 
   return resultat;
@@ -70,15 +114,65 @@ export function genererCleJson(mapping: Mapping): string {
   return JSON.stringify(mapping, null, 2);
 }
 
-export function chargerCleJson(contenu: string): Mapping {
-  return JSON.parse(contenu);
+export interface ValeurRetiree {
+  tag: string;
+  valeur: string;
+}
+
+export interface ChargementCleResult {
+  mapping: Mapping;
+  valeursRetirees: ValeurRetiree[];
+}
+
+/**
+ * Charge un mapping depuis une chaîne JSON et assainit les valeurs.
+ * Les valeurs invalides (contenant des crochets) sont filtrées via
+ * estValeurValide. Les tags vidés de toutes leurs valeurs sont conservés
+ * avec un tableau vide. Retourne le mapping nettoyé et la liste des
+ * valeurs retirées.
+ */
+export function chargerCleJson(contenu: string): ChargementCleResult {
+  const brut = JSON.parse(contenu) as Mapping;
+  const valeursRetirees: ValeurRetiree[] = [];
+  const mapping: Mapping = {};
+
+  for (const [tag, valeurs] of Object.entries(brut)) {
+    const valides = valeurs.filter(v => {
+      if (!estValeurValide(v)) {
+        valeursRetirees.push({ tag, valeur: v });
+        return false;
+      }
+      return true;
+    });
+    mapping[tag] = valides;
+  }
+
+  return { mapping, valeursRetirees };
 }
 
 /**
  * Vérifie si un nom de fichier (sans extension) contient des valeurs
  * ou des tags issus du mapping (données sensibles). Retourne la liste
- * des éléments détectés, ou une liste vide si le nom est sûr.
+ * des éléments détectés (valeur ou tag complet), ou une liste vide si
+ * le nom est sûr.
+ *
+ * DET-02 — Détection par tokens : chaque valeur est découpée en tokens
+ * sur les espaces ET les tirets (ex: "M. Lefevre" → ["M.", "Lefevre"],
+ * "Jean-Paul" → ["Jean", "Paul"]). Une valeur est DÉTECTÉE dès qu'AU
+ * MOINS UN de ses tokens est présent dans le nom du fichier. On retourne
+ * toujours la VALEUR COMPLÈTE détectée (et non le token seul), afin de
+ * préserver le format de retour existant et d'afficher la donnée sensible
+ * correspondante dans le warning.
+ *
+ * Les tokens trop courts (< 2 caractères, ex: l'initiale "M" seule) sont
+ * ignorés pour limiter les faux positifs. On conserve en revanche les
+ * tokens de 2 caractères comme "M." — souhaité pour détecter l'invocation
+ * et l'initiale dans le titre (ex: "Docteur M. Smith").
  */
+export function estValeurValide(valeur: string): boolean {
+  return !valeur.includes('[') && !valeur.includes(']');
+}
+
 export function nomContientValeursMapping(
   nomFichier: string,
   mapping: Mapping,
@@ -87,9 +181,17 @@ export function nomContientValeursMapping(
   const detectees: string[] = [];
 
   // Vérifier les valeurs du mapping (ex: "Sophie Lambert")
+  const valeurPresente = (valeur: string): boolean => {
+    const tokens = valeur
+      .split(/[\s-]+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length >= 2);
+    return tokens.some((token) => nomMinuscule.includes(token.toLowerCase()));
+  };
+
   for (const valeurs of Object.values(mapping)) {
     for (const valeur of valeurs) {
-      if (valeur.length > 0 && nomMinuscule.includes(valeur.toLowerCase())) {
+      if (valeur.length > 0 && valeurPresente(valeur)) {
         if (!detectees.includes(valeur)) {
           detectees.push(valeur);
         }

@@ -8,6 +8,7 @@ import {
   genererCleJson,
   chargerCleJson,
   nomContientValeursMapping,
+  estValeurValide,
 } from './mapping';
 
 describe('genererTag', () => {
@@ -82,6 +83,51 @@ describe('appliquerMapping', () => {
     expect(resultat).not.toMatch(/\[ADOLESCENT\]\w/);
     expect(resultat).toBe('[ADOLESCENT] a discuté avec [ADOLESCENT] et [ADOLESCENT]');
   });
+
+  // CORR-02 — Tag imbriqué : ne pas pseudonymiser dans un tag déjà posé
+  it("ne pseudonymise pas dans un tag déjà posé (CORR-02)", () => {
+    const mapping = {
+      '[MON PATIENT]': ['MON PATIENT'],
+      '[PERSONNE]': ['PATIENT'],
+    };
+
+    const texte = 'MON PATIENT est malade. PATIENT va bien.';
+    const resultat = appliquerMapping(texte, mapping);
+
+    // "MON PATIENT" doit être remplacé par [MON PATIENT] (plus longue correspondance)
+    // "PATIENT" seul (deuxième occurrence) doit être remplacé par [PERSONNE]
+    // Mais le PATIENT dans [MON PATIENT] NE doit PAS être remplacé
+    expect(resultat).not.toMatch(/\[MON \[PERSONNE\]\]/);
+    expect(resultat).toBe('[MON PATIENT] est malade. [PERSONNE] va bien.');
+  });
+
+  // CORR-02 — Chevauchement : la plus longue correspondance gagne
+  it("en cas de chevauchement, garde la correspondance la plus longue (CORR-02)", () => {
+    const mapping = {
+      '[LIEU]': ['Saint-Jean-de-Luz'],
+      '[VILLE]': ['Jean'],
+    };
+
+    const texte = 'Saint-Jean-de-Luz est une belle ville. Jean est mon ami.';
+    const resultat = appliquerMapping(texte, mapping);
+
+    // "Saint-Jean-de-Luz" complet → [LIEU] (plus long)
+    // "Jean" seul (deuxième occurrence) → [VILLE]
+    // Mais "Jean" dans "Saint-Jean-de-Luz" ne doit pas être remplacé
+    expect(resultat).toBe('[LIEU] est une belle ville. [VILLE] est mon ami.');
+  });
+
+  // CORR-02 — Occurrence isolée bien remplacée (tag non présent)
+  it("remplace les occurrences isolées d'une valeur (CORR-02)", () => {
+    const mapping = {
+      '[PERSONNE]': ['Dupont'],
+    };
+
+    const texte = 'Dupont est ici, et Dupont aussi.';
+    const resultat = appliquerMapping(texte, mapping);
+
+    expect(resultat).toBe('[PERSONNE] est ici, et [PERSONNE] aussi.');
+  });
 });
 
 describe('restaurerTexte', () => {
@@ -96,13 +142,67 @@ describe('restaurerTexte', () => {
 });
 
 describe('genererCleJson / chargerCleJson', () => {
-  it('fait un round-trip JSON', () => {
+  it('fait un round-trip JSON (valeurs valides seulement)', () => {
     const mapping = { '[EMAIL]': ['test@exemple.fr'] };
 
     const json = genererCleJson(mapping);
-    const reloaded = chargerCleJson(json);
+    const { mapping: reloaded, valeursRetirees } = chargerCleJson(json);
 
     expect(reloaded).toEqual(mapping);
+    expect(valeursRetirees).toEqual([]);
+  });
+
+  it('filtre les valeurs contenant des crochets', () => {
+    const json = JSON.stringify({
+      '[PERSONNE]': ['Tom', '[ADRESSE]', 'Jean [Dupont]'],
+    });
+
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping['[PERSONNE]']).toEqual(['Tom']);
+    expect(valeursRetirees).toEqual([
+      { tag: '[PERSONNE]', valeur: '[ADRESSE]' },
+      { tag: '[PERSONNE]', valeur: 'Jean [Dupont]' },
+    ]);
+  });
+
+  it('conserve un tag vidé de toutes ses valeurs', () => {
+    const json = JSON.stringify({
+      '[PERSONNE]': ['[ADRESSE]', '[PERS'],
+    });
+
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping['[PERSONNE]']).toEqual([]);
+    expect(valeursRetirees).toHaveLength(2);
+  });
+
+  it('ne modifie pas un entièrement valide', () => {
+    const original = {
+      '[EMAIL]': ['test@exemple.fr'],
+      '[TEL]': ['0612345678'],
+    };
+
+    const json = genererCleJson(original);
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping).toEqual(original);
+    expect(valeursRetirees).toEqual([]);
+  });
+
+  it('laisse les autres tags intacts quand un tag a des invalides', () => {
+    const json = JSON.stringify({
+      '[PERSONNE]': ['Tom', '[ADRESSE]'],
+      '[EMAIL]': ['test@exemple.fr'],
+    });
+
+    const { mapping, valeursRetirees } = chargerCleJson(json);
+
+    expect(mapping['[PERSONNE]']).toEqual(['Tom']);
+    expect(mapping['[EMAIL]']).toEqual(['test@exemple.fr']);
+    expect(valeursRetirees).toEqual([
+      { tag: '[PERSONNE]', valeur: '[ADRESSE]' },
+    ]);
   });
 });
 
@@ -165,5 +265,71 @@ describe('nomContientValeursMapping', () => {
     expect(nomContientValeursMapping('rapport [personne]', mapping)).toEqual([
       '[PERSONNE]',
     ]);
+  });
+
+  // ── DET-02 — Détection par tokens (espaces / tirets) ─────────────────
+  it('détecte une valeur quand un seul de ses tokens est présent dans le titre (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    // Le titre ne contient PAS la chaîne complète "M. Lefevre", mais le token "Lefevre"
+    expect(nomContientValeursMapping('Henri Lefevre', mapping)).toEqual([
+      'M. Lefevre',
+    ]);
+  });
+
+  it('détecte grâce au token "M." (initiale conservée, 2 caractères) (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    expect(nomContientValeursMapping('Docteur M. Smith', mapping)).toEqual([
+      'M. Lefevre',
+    ]);
+  });
+
+  it('découpe les valeurs sur les tirets (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['Jean-Paul'] };
+    expect(nomContientValeursMapping('Contact Paul', mapping)).toEqual([
+      'Jean-Paul',
+    ]);
+    expect(nomContientValeursMapping('Contact Jean', mapping)).toEqual([
+      'Jean-Paul',
+    ]);
+  });
+
+  it('reste insensible à la casse après tokenisation (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    expect(nomContientValeursMapping('HENRI LEFEVRE', mapping)).toEqual([
+      'M. Lefevre',
+    ]);
+  });
+
+  it('ignore les tokens trop courts (< 2 caractères) pour éviter les faux positifs (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['J Martin'] };
+    // L'initiale "J" (1 caractère) seule ne doit pas déclencher la détection
+    expect(nomContientValeursMapping('rapport J', mapping)).toEqual([]);
+    // mais "Martin" doit déclencher la détection de la valeur complète
+    expect(nomContientValeursMapping('rapport Martin', mapping)).toEqual([
+      'J Martin',
+    ]);
+  });
+
+  it('ne détecte pas un nom sûr quand aucun token ne correspond (DET-02)', () => {
+    const mapping = { '[PERSONNE]': ['M. Lefevre'] };
+    expect(nomContientValeursMapping('compte-rendu patient', mapping)).toEqual(
+      [],
+    );
+  });
+});
+
+describe('estValeurValide', () => {
+  it.each([
+    ['[ADRESSE]', false],
+    ['[PERS', false],
+    ['PERS]', false],
+    ['6, [ADRESSE], Paris', false],
+    ['Jean [Dupont]', false],
+    ['Tom', true],
+    ['Jean-Paul', true],
+    ['6, rue de Paris', true],
+    ['Émilie', true],
+  ])('retourne %s pour %s', (valeur, attendu) => {
+    expect(estValeurValide(valeur)).toBe(attendu);
   });
 });

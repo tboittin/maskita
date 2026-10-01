@@ -85,6 +85,17 @@ export const en: Dictionnaire = {
   'telechargement.succes.cle': 'Key downloaded ✓',
   'telechargement.bouton.retour': '← Modify pseudos',
 
+  /* EcranTelechargement — Restoration */
+  'restaurationTelechargement.titre': 'Download restored files',
+  'restaurationTelechargement.sousTitre': 'Download each file independently.',
+  'restaurationTelechargement.document': 'Restored document',
+  'restaurationTelechargement.bouton.document': 'Download restored document',
+  'restaurationTelechargement.cle': '.key.json key',
+  'restaurationTelechargement.bouton.cle': 'Download key',
+  'restaurationTelechargement.succes.document': 'Restored document downloaded ✓',
+  'restaurationTelechargement.succes.cle': 'Key downloaded ✓',
+  'restaurationTelechargement.bouton.retour': '← Modify pseudos',
+
   /* EcranRestauration */
   'restauration.titre.rapport': 'Modified report (with pseudos)',
   'restauration.titre.cle': 'Corresponding .key.json key',

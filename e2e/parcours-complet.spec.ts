@@ -107,13 +107,24 @@ test.describe('Parcours complet Maskita', () => {
     await expect(page.getByText(/Pseudonymised document/i)).toBeVisible();
     await expect(page.getByText(/\.key\.json key/i)).toBeVisible();
 
-    // Vérifier les noms de fichiers et les boutons de téléchargement
-    await expect(page.getByText('test-rapport-pseudonymise.docx')).toBeVisible();
-    await expect(page.getByText('test-rapport.key.json')).toBeVisible();
+    // Vérifier les noms de fichiers dans les champs texte et les boutons de téléchargement
+    await expect(page.getByRole('textbox', { name: 'Pseudonymised document' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: '.key.json key' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Download document/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Download key/i })).toBeVisible();
 
-    // 8. Revenir à l'écran de revue via "← Modify pseudos"
+    // 8. Modifier le nom du fichier avant téléchargement
+    const champDoc = page.getByRole('textbox', { name: 'Pseudonymised document' });
+    await expect(champDoc).toHaveValue('test-rapport-pseudonymise.docx');
+    await champDoc.fill('mon-rapport-final.docx');
+    await expect(champDoc).toHaveValue('mon-rapport-final.docx');
+
+    const champCle = page.getByRole('textbox', { name: '.key.json key' });
+    await expect(champCle).toHaveValue('test-rapport.key.json');
+    await champCle.fill('ma-cle.key.json');
+    await expect(champCle).toHaveValue('ma-cle.key.json');
+
+    // 9. Revenir à l'écran de revue via "← Modify pseudos"
     const boutonRetour = page.getByRole('button', { name: /Modify pseudos/i });
     await expect(boutonRetour).toBeVisible();
     await boutonRetour.click();
@@ -178,8 +189,8 @@ test.describe('Parcours complet Maskita', () => {
     // 7. Vérifier que le jalon est sur "Review"
     await expect(page.getByText('Review').first()).toBeVisible();
 
-    // 8. Vérifier le bouton "Validate and download"
-    await expect(page.getByRole('button', { name: /Validate and download/i })).toBeVisible();
+    // 8. Vérifier le bouton "Validate and continue"
+    await expect(page.getByRole('button', { name: /Validate and continue/i })).toBeVisible();
 
     // 9. Revenir à l'étape d'upload
     const boutonRecommencer = page.getByRole('button', { name: /Start over/i });
@@ -189,5 +200,77 @@ test.describe('Parcours complet Maskita', () => {
     // Vérifier qu'on est bien revenu à l'étape d'upload
     await expect(page.getByRole('button', { name: /Run restoration/i })).not.toBeVisible();
     await expect(page.getByRole('button', { name: /Drag & drop/ }).first()).toBeVisible();
+  });
+});
+
+test.describe('Warning données sensibles inline (MessageErreur) — Pseudonymisation', () => {
+  let fichierDocx: Uint8Array;
+
+  test.beforeAll(async () => {
+    fichierDocx = await creerDocxTest();
+  });
+
+  test("affiche le warning inline quand le nom contient une donnée sensible, disparaît après correction, et permet le téléchargement", async ({ page }) => {
+    await page.goto('/');
+
+    // 1. Uploader le fichier .docx
+    const fileChooserPromise = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: /Drag & drop/ }).first().click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: 'Sophie Lambert.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: Buffer.from(fichierDocx),
+    });
+
+    // 2. Uploader une clé .key.json contenant "Sophie Lambert" comme valeur
+    //    Ainsi le mappingFinal contiendra cette valeur → warning dans le nom
+    const cleJson = JSON.stringify({ '[PERSONNE]': ['Sophie Lambert'] });
+    await page.locator('input[type=\"file\"]').nth(1).setInputFiles({
+      name: 'rapport.key.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(cleJson),
+    });
+
+    // 3. Lancer l'analyse
+    const boutonAnalyser = page.getByRole('button', { name: /Run analysis/i });
+    await expect(boutonAnalyser).toBeVisible({ timeout: 15000 });
+    await boutonAnalyser.click();
+
+    // 4. Valider la revue → écran téléchargement
+    await expect(page.getByRole('button', { name: /Validate and continue/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('button', { name: /Validate and continue/i }).click();
+
+    // 5. Vérifier l'écran de téléchargement
+    await expect(page.getByText(/Download files/i)).toBeVisible({ timeout: 10000 });
+    const champDoc = page.getByRole('textbox', { name: 'Pseudonymised document' });
+    await expect(champDoc).toHaveValue('Sophie Lambert-pseudonymise.docx');
+
+    // 6. Le warning inline MessageErreur (role="alert") est visible
+    //    "Sophie Lambert" est dans le mapping via la clé ET dans le nom du fichier
+    const alertWarning = page.getByRole('alert');
+    await expect(alertWarning).toBeVisible();
+    await expect(alertWarning).toContainText(/sensitive data|Sophie Lambert/i);
+
+    // 7. Vérifier qu'aucune Modal ne s'affiche (pas d'ancien comportement popup)
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    // 8. Le téléchargement est bloqué — cliquer ne fait rien
+    await expect(champDoc).toHaveAttribute('aria-invalid', 'true');
+    await page.getByRole('button', { name: /Download document/i }).click();
+    await expect(page.getByRole('button', { name: /Download document/i })).toBeVisible();
+    await expect(page.getByText(/Document downloaded/i)).not.toBeVisible();
+
+    // 9. Corriger le nom : enlever la donnée sensible
+    await champDoc.fill('rapport-propre.docx');
+    await expect(champDoc).toHaveValue('rapport-propre.docx');
+
+    // 10. Le warning inline a disparu
+    await expect(page.getByRole('alert')).not.toBeVisible();
+    await expect(champDoc).toHaveAttribute('aria-invalid', 'false');
+
+    // 11. Le téléchargement fonctionne maintenant
+    await page.getByRole('button', { name: /Download document/i }).click();
+    await expect(page.getByText(/Document downloaded/i)).toBeVisible({ timeout: 10000 });
   });
 });

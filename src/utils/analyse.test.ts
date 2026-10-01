@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant } from './analyse';
 import { reinitialiserCompteurs } from './mapping';
+import type { Detection } from './regex';
 
 describe('analyserTexte', () => {
   it('detecte des PII dans un texte', () => {
@@ -116,5 +117,43 @@ describe('fusionnerAvecMappingExistant', () => {
 
     expect(mapping['[EMAIL]']).toContain('ancien@exemple.fr');
     expect(mapping['[EMAIL]']).toContain('nouveau@exemple.fr');
+  });
+
+  // DET-01 — Détection insensible à la casse
+  it('regroupe Lefevre et lefevre dans une seule entrée avec la valeur canonique minuscule', () => {
+    const detections: Detection[] = [
+      { valeur: 'Lefevre', type: 'PERSONNE' as any, position: 0, longueur: 7 },
+      { valeur: 'lefevre', type: 'PERSONNE' as any, position: 10, longueur: 7 },
+    ];
+
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+
+    expect(Object.keys(mapping)).toHaveLength(1);
+    expect(mapping['[PERSONNE]']).toEqual(['lefevre']);
+  });
+
+  it('regroupe "Henri Lefevre" et "henri lefevre" dans une seule entrée', () => {
+    const detections: Detection[] = [
+      { valeur: 'Henri Lefevre', type: 'PERSONNE' as any, position: 0, longueur: 13 },
+      { valeur: 'henri lefevre', type: 'PERSONNE' as any, position: 25, longueur: 13 },
+    ];
+
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+
+    expect(Object.keys(mapping)).toHaveLength(1);
+    expect(mapping['[PERSONNE]']).toEqual(['henri lefevre']);
+  });
+
+  it('même pseudo pour deux variantes de casse (insensibilité à la casse)', () => {
+    const detections: Detection[] = [
+      { valeur: 'Lefevre', type: 'PERSONNE' as any, position: 0, longueur: 7 },
+      { valeur: 'lefevre', type: 'PERSONNE' as any, position: 10, longueur: 7 },
+    ];
+
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+    const pseudo = Object.keys(mapping)[0];
+
+    // Les deux variantes aboutissent à la même valeur de pseudo
+    expect(mapping[pseudo]).toEqual(['lefevre']);
   });
 });

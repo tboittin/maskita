@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { buildDocument } from '../utils/buildDocument';
 import { declencherTelechargement } from '../utils/telechargement';
 import { genererCleJson, nomContientValeursMapping } from '../utils/mapping';
@@ -6,75 +6,108 @@ import { useLangue } from '../i18n/context';
 import type { Mapping } from '../utils/mapping';
 import {
   Bouton,
-  Modal,
+  MessageErreur,
   Panneau,
   TelechargerIcon,
   ValiderIcon,
 } from '@khaleeno/maskita-design-system';
 
 interface EcranTelechargementProps {
-  textePseudonymise: string;
+  contenuDocument: string;
   mappingFinal: Mapping;
   nomFichierBase: string;
   extension: string;
   onRetour: () => void;
+  /** Suffixe ajouté au nom du document (ex: "-pseudonymisé" ou "-restauré") */
+  suffixeDocument: string;
+  /** Titre de l'écran */
+  titre: string;
+  /** Sous-titre de l'écran */
+  sousTitre: string;
+  /** Libellé du panneau document */
+  libelleDocument: string;
+  /** Libellé du panneau clé */
+  libelleCle: string;
+  /** Texte du bouton de téléchargement du document */
+  boutonDocument: string;
+  /** Texte du bouton de téléchargement de la clé */
+  boutonCle: string;
+  /** Texte de succès après téléchargement du document */
+  succesDocument: string;
+  /** Texte de succès après téléchargement de la clé */
+  succesCle: string;
+  /** Texte du bouton retour */
+  boutonRetour: string;
+  /** Active la vérification du nom du fichier pour les données sensibles (pseudonymisation uniquement) */
+  verifierNomSensible?: boolean;
 }
 
 export function EcranTelechargement({
-  textePseudonymise,
+  contenuDocument,
   mappingFinal,
   nomFichierBase,
   extension,
   onRetour,
+  suffixeDocument,
+  titre,
+  sousTitre,
+  libelleDocument,
+  libelleCle,
+  boutonDocument,
+  boutonCle,
+  succesDocument,
+  succesCle,
+  boutonRetour,
+  verifierNomSensible = true,
 }: EcranTelechargementProps) {
   const { t } = useLangue();
   const [docTelecharge, setDocTelecharge] = useState(false);
   const [cleTelechargee, setCleTelechargee] = useState(false);
-  const [warningNom, setWarningNom] = useState<{
-    mappingFinal: Mapping;
-    nomFichier: string;
-    valeursSuspectes: string[];
-  } | null>(null);
 
-  const nomDoc = `${nomFichierBase}-pseudonymise.${extension}`;
-  const nomCle = `${nomFichierBase}.key.json`;
+  const nomDocInitial = `${nomFichierBase}${suffixeDocument}.${extension}`;
+  const nomCleInitial = `${nomFichierBase}.key.json`;
+
+  const [nomDocEdite, setNomDocEdite] = useState(nomDocInitial);
+  const [nomCleEdite, setNomCleEdite] = useState(nomCleInitial);
+
+  // Réévaluation en direct : le warning dépend du nom édité courant
+  const valeursSuspectes = useMemo(
+    () =>
+      verifierNomSensible
+        ? nomContientValeursMapping(nomDocEdite, mappingFinal)
+        : [],
+    [verifierNomSensible, nomDocEdite, mappingFinal],
+  );
 
   const handleTelechargerDocument = useCallback(async () => {
-    const suspectes = nomContientValeursMapping(nomFichierBase, mappingFinal);
-    if (suspectes.length > 0) {
-      setWarningNom({
-        mappingFinal,
-        nomFichier: nomDoc,
-        valeursSuspectes: suspectes,
-      });
-      return;
-    }
+    // Bloqué tant que le nom contient des données sensibles
+    if (valeursSuspectes.length > 0) return;
 
-    const blobDoc = await buildDocument(textePseudonymise, extension as 'docx' | 'txt' | 'md');
-    declencherTelechargement(blobDoc, nomDoc);
+    const blobDoc = await buildDocument(contenuDocument, extension as 'docx' | 'txt' | 'md');
+    declencherTelechargement(blobDoc, nomDocEdite);
     setDocTelecharge(true);
-  }, [textePseudonymise, mappingFinal, nomFichierBase, nomDoc, extension]);
+  }, [contenuDocument, extension, nomDocEdite, valeursSuspectes]);
 
   const handleTelechargerCle = useCallback(async () => {
     const contenuCle = genererCleJson(mappingFinal);
     const blobCle = new Blob([contenuCle], { type: 'application/json' });
-    declencherTelechargement(blobCle, nomCle);
+    declencherTelechargement(blobCle, nomCleEdite);
     setCleTelechargee(true);
-  }, [mappingFinal, nomCle]);
+  }, [mappingFinal, nomCleEdite]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
       <div style={{ textAlign: 'center' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--couleur-texte)' }}>
-          {t('telechargement.titre')}
+          {titre}
         </h2>
         <p style={{ color: 'var(--couleur-texte-secondaire)', marginTop: 'var(--espacement-xs)' }}>
-          {t('telechargement.sousTitre')}
+          {sousTitre}
         </p>
       </div>
 
-      {/* Ligne 1 : Document pseudonymisé */}
-      <Panneau title={t('telechargement.document')}>
+      {/* Ligne 1 : Document */}
+      <Panneau title={libelleDocument}>
         <div
           style={{
             padding: 'var(--espacement-md)',
@@ -83,35 +116,46 @@ export function EcranTelechargement({
             gap: 'var(--espacement-md)',
           }}
         >
-          <span
+          <input
+            type="text"
+            value={nomDocEdite}
+            onChange={(e) => setNomDocEdite(e.target.value)}
+            aria-label={libelleDocument}
+            aria-invalid={valeursSuspectes.length > 0}
             style={{
               flex: 1,
               fontSize: '0.875rem',
               color: 'var(--couleur-texte)',
               fontFamily: 'var(--police-donnees, monospace)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              background: 'transparent',
+              border: '1px solid var(--couleur-bord, #ccc)',
+              borderRadius: '4px',
+              padding: '4px 8px',
+              outline: 'none',
             }}
-          >
-            {nomDoc}
-          </span>
+          />
           <Bouton
             variante={docTelecharge ? 'secondaire' : 'primaire'}
             taille="md"
             onClick={handleTelechargerDocument}
             iconeDroite={docTelecharge ? <ValiderIcon className="size-5" /> : <TelechargerIcon className="size-5" />}
-            disabled={docTelecharge}
           >
-            {docTelecharge
-              ? t('telechargement.succes.document')
-              : t('telechargement.bouton.document')}
+            {docTelecharge ? succesDocument : boutonDocument}
           </Bouton>
         </div>
+
+        {/* Warning inline : nom de fichier sensible */}
+        {valeursSuspectes.length > 0 && (
+          <div style={{ padding: '0 var(--espacement-md) var(--espacement-md)' }}>
+            <MessageErreur>
+              {t('app.warning.message', valeursSuspectes.join(', '), nomDocEdite)}
+            </MessageErreur>
+          </div>
+        )}
       </Panneau>
 
       {/* Ligne 2 : Clé .key.json */}
-      <Panneau title={t('telechargement.cle')}>
+      <Panneau title={libelleCle}>
         <div
           style={{
             padding: 'var(--espacement-md)',
@@ -120,29 +164,30 @@ export function EcranTelechargement({
             gap: 'var(--espacement-md)',
           }}
         >
-          <span
+          <input
+            type="text"
+            value={nomCleEdite}
+            onChange={(e) => setNomCleEdite(e.target.value)}
+            aria-label={libelleCle}
             style={{
               flex: 1,
               fontSize: '0.875rem',
               color: 'var(--couleur-texte)',
               fontFamily: 'var(--police-donnees, monospace)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              background: 'transparent',
+              border: '1px solid var(--couleur-bord, #ccc)',
+              borderRadius: '4px',
+              padding: '4px 8px',
+              outline: 'none',
             }}
-          >
-            {nomCle}
-          </span>
+          />
           <Bouton
             variante={cleTelechargee ? 'secondaire' : 'primaire'}
             taille="md"
             onClick={handleTelechargerCle}
             iconeDroite={cleTelechargee ? <ValiderIcon className="size-5" /> : <TelechargerIcon className="size-5" />}
-            disabled={cleTelechargee}
           >
-            {cleTelechargee
-              ? t('telechargement.succes.cle')
-              : t('telechargement.bouton.cle')}
+            {cleTelechargee ? succesCle : boutonCle}
           </Bouton>
         </div>
       </Panneau>
@@ -150,41 +195,9 @@ export function EcranTelechargement({
       {/* Bouton retour */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <Bouton variante="secondaire" onClick={onRetour}>
-          {t('telechargement.bouton.retour')}
+          {boutonRetour}
         </Bouton>
       </div>
-
-      {/* Warning nom de fichier sensible */}
-      {warningNom && (
-        <Modal
-          ouvert={!!warningNom}
-          titre={t('app.warning.titre')}
-          onFermer={() => setWarningNom(null)}
-          pied={
-            <>
-              <Bouton variante="secondaire" onClick={() => setWarningNom(null)}>
-                {t('app.warning.annuler')}
-              </Bouton>
-              <Bouton
-                variante="danger"
-                onClick={async () => {
-                  const w = warningNom;
-                  setWarningNom(null);
-                  const blobDoc = await buildDocument(textePseudonymise, extension as 'docx' | 'txt' | 'md');
-                  declencherTelechargement(blobDoc, w.nomFichier);
-                  setDocTelecharge(true);
-                }}
-              >
-                {t('app.warning.confirmer')}
-              </Bouton>
-            </>
-          }
-        >
-          <p className="text-sm leading-relaxed text-brume-500" style={{ whiteSpace: 'pre-wrap' }}>
-            {t('app.warning.message', warningNom.valeursSuspectes.join(', '), warningNom.nomFichier)}
-          </p>
-        </Modal>
-      )}
     </div>
   );
 }
