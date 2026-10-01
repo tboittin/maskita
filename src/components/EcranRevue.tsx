@@ -31,10 +31,6 @@ export function EcranRevue({
   const occurrenceIdx = useRef<Record<string, number>>({});
 
   const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
-  const [montrerAjoutClassique, setMontrerAjoutClassique] = useState(false);
-  // Flag réservé à l'US-SUG-B : le formulaire complet d'ajout classique
-  // n'est pas encore rendu. On lit la valeur pour éviter un dead code (TS6133).
-  void montrerAjoutClassique;
 
   const ajout = useAjoutRapide({
     onAjouterPseudo: revue.ajouterTag,
@@ -191,10 +187,8 @@ export function EcranRevue({
     <BarreAjoutSelection
       onNouveauPseudo={ajout.nouveauPseudo}
       onNouvelleValeur={ajout.nouvelleValeur}
-      onAjoutClassique={() => setMontrerAjoutClassique(true)}
       libelleNouveauPseudo={t('revue.bouton.nouveauTag')}
       libelleNouvelleValeur={t('revue.bouton.nouvelleValeur')}
-      libelleAjoutClassique={t('revue.bouton.ajoutClassique')}
     />
   );
 
