@@ -135,10 +135,8 @@ export function EcranRestaurationRevue({
     <BarreAjoutSelection
       onNouveauPseudo={ajout.nouveauPseudo}
       onNouvelleValeur={ajout.nouvelleValeur}
-      onAjoutClassique={ajout.ouvrirAjoutClassique}
       libelleNouveauPseudo={t('revue.bouton.nouveauTag')}
       libelleNouvelleValeur={t('revue.bouton.nouvelleValeur')}
-      libelleAjoutClassique={t('revue.bouton.ajoutClassique')}
     />
   );
 
@@ -158,6 +156,7 @@ export function EcranRestaurationRevue({
           onRenommerTag={onRenommerTag}
           onSupprimerTag={onSupprimerTag}
           onAjouterTag={onAjouterTag}
+          onAjoutPseudoExterne={ajout.ouvrirAjoutClassique}
           refTableau={refTableau}
         />
 

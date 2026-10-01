@@ -194,10 +194,8 @@ export function EcranRevue({
     <BarreAjoutSelection
       onNouveauPseudo={ajout.nouveauPseudo}
       onNouvelleValeur={ajout.nouvelleValeur}
-      onAjoutClassique={ajout.ouvrirAjoutClassique}
       libelleNouveauPseudo={t('revue.bouton.nouveauTag')}
       libelleNouvelleValeur={t('revue.bouton.nouvelleValeur')}
-      libelleAjoutClassique={t('revue.bouton.ajoutClassique')}
     />
   );
 
@@ -218,6 +216,7 @@ export function EcranRevue({
           onSupprimerTag={revue.supprimerTag}
           onAjouterTag={revue.ajouterTag}
           onConflitVoir={handleConflitVoir}
+          onAjoutPseudoExterne={ajout.ouvrirAjoutClassique}
           construireLigne={construireLigne}
           refTableau={refTableau}
         />

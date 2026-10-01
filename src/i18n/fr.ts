@@ -24,7 +24,6 @@ export const fr = {
   'revue.titre.lisible': 'Texte lisible',
   'revue.bouton.nouveauTag': 'Nouveau pseudo',
   'revue.bouton.nouvelleValeur': 'Nouvelle valeur',
-  'revue.bouton.ajoutClassique': 'Ajouter un pseudo…',
   'revue.ajoutClassique.titre': 'Ajouter un pseudo',
   'revue.picker.titre.deplacer': (v: string) => `Déplacer « ${v} » vers quel pseudo ?`,
   'revue.picker.titre.ajouter': 'Ajouter à quel pseudo ?',
@@ -64,7 +63,7 @@ export const fr = {
   'tableau.placeholder.valeur': 'Valeur',
   'tableau.bouton.ajouter': 'Ajouter',
   'tableau.bouton.annuler': 'Annuler',
-  'tableau.bouton.ajouterPseudo': '+ Ajouter un pseudo',
+  'tableau.bouton.ajouterPseudoClassique': '+ Ajouter un pseudo',
 
   /* FileDropZone */
   'dropzone.chargement': 'Extraction en cours…',

@@ -20,6 +20,11 @@ interface PanneauTableauPseudosProps {
   /** Lien « voir » d'un conflit (sync-scroll vers l'aperçu) — pseudonymisation. */
   onConflitVoir?: (tag: string) => void;
   /**
+   * Callback externe pour le bouton « + Ajouter un pseudo » du tableau.
+   * Quand défini, remplace la modale d'ajout manuel interne.
+   */
+  onAjoutPseudoExterne?: () => void;
+  /**
    * Enrichit une ligne du tableau (ex: statut, message de conflit, « nouveau »)
    * propre à chaque parcours. La valeur par défaut marque « vide » ou « existant ».
    */
@@ -51,6 +56,7 @@ export function PanneauTableauPseudos({
   onSupprimerTag,
   onAjouterTag,
   onConflitVoir,
+  onAjoutPseudoExterne,
   construireLigne = STATUT_PARDEFAUT,
   refTableau,
 }: PanneauTableauPseudosProps) {
@@ -109,7 +115,7 @@ export function PanneauTableauPseudos({
         libelleAucun={t('tableau.aucun')}
         libelleVoir={t('tableau.voir')}
         libelleValeursVides={t('tableau.vide')}
-        onAjouterPseudo={() => setShowAjoutManuel(true)}
+        onAjouterPseudo={onAjoutPseudoExterne ?? (() => setShowAjoutManuel(true))}
         onDeplacerValeur={onDeplacerValeur}
         onReordonnerValeurs={onReordonnerValeurs}
         onRenommer={onRenommerTag}
@@ -117,7 +123,7 @@ export function PanneauTableauPseudos({
         onViderTag={(tag) => setSupprimerTag(tag)}
         onAjouterValeur={onAjouterValeur}
         onConflitVoir={onConflitVoir ? (tag) => onConflitVoir(tag) : undefined}
-        libelleAjouter={t('tableau.bouton.ajouterPseudo')}
+        libelleAjouter={t('tableau.bouton.ajouterPseudoClassique')}
         libelleAjouterValeur={t('tableau.tooltip.ajouterValeur')}
         libelleRetirerValeur={(v) => t('tableau.retirerValeur', v)}
         libelleViderTag={t('tableau.tooltip.supprimer')}
