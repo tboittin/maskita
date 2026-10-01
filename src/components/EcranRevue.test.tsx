@@ -142,7 +142,7 @@ describe('EcranRevue — interactions', () => {
     expect(recentrer.checked).toBe(false);
   });
 
-  it('crée un nouveau pseudo depuis une sélection taguée', () => {
+  it('INT-1 : bloque la sélection d\'un tag avec crochets dans le volet pseudonymisé', () => {
     const onValider = vi.fn();
     simulerSelection('[PERSONNE]');
     renderAvecI18n(
@@ -153,13 +153,20 @@ describe('EcranRevue — interactions', () => {
       />,
     );
 
+    // Le premier span [PERSONNE] est dans le volet haut (pseudonymisé) :
+    // la sélection contient des crochets → INT-1 bloque l'affichage
     fireEvent.mouseUp(spanParTexte('[PERSONNE]'));
-    fireEvent.click(screen.getByText('Nouveau pseudo'));
 
+    // Aucune barre d'action ne doit apparaître
+    expect(screen.queryByText('Nouveau pseudo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nouvelle valeur')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ajout classique')).not.toBeInTheDocument();
+
+    // Le mapping reste inchangé
     fireEvent.click(screen.getByText('Valider et continuer'));
     expect(onValider).toHaveBeenCalledWith(
-      expect.objectContaining({ '[PERSONNE]': ['[PERSONNE]'] }),
-      expect.stringContaining('[PERSONNE]'),
+      expect.objectContaining({ '[EMAIL]': ['[PERSONNE]'] }),
+      expect.any(String),
     );
   });
 
@@ -282,12 +289,12 @@ describe('EcranRevue — interactions', () => {
     expect(screen.getByText('voir')).toBeInTheDocument();
   });
 
-  it('sélectionne depuis le volet pseudonymisé et ouvre le picker', () => {
+  it('sélectionne depuis le volet pseudonymisé (valeur sans crochets) et ouvre le picker', () => {
     const onValider = vi.fn();
-    simulerSelection('[EMAIL]');
+    simulerSelection('0612345678');
     renderAvecI18n(<EcranRevue texteOriginal={TEXTE} mappingInitial={MAPPING} onValider={onValider} />);
 
-    fireEvent.mouseUp(spanParTexte('[EMAIL]'));
+    fireEvent.mouseUp(spanParTexte(/0612345678/));
     fireEvent.click(screen.getByText('Nouvelle valeur'));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
