@@ -125,3 +125,75 @@ test.describe('SUG-B — Ajout classique depuis le tableau', () => {
     await expect(boutonAjouter).not.toBeDisabled();
   });
 });
+
+test.describe('SUG-C — Autocomplétion du champ Valeur dans la modale', () => {
+  test('affiche des suggestions en saisissant un préfixe et choisir par clic', async ({ page }) => {
+    const fichier = await creerDocxPii();
+    await page.goto('/');
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: 'pii.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: Buffer.from(fichier),
+    });
+    await page.getByRole('button', { name: /Run analysis/i }).click({ timeout: 15000 });
+    await expect(page.getByText('Validate and continue')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Pseudos? \(2\)/)).toBeVisible();
+
+    // Ouvrir la modale d'ajout classique
+    await page.getByRole('button', { name: /Add a pseudo/i }).click();
+    const dialogue = page.getByRole('dialog', { name: /Add a pseudo/i });
+    await expect(dialogue).toBeVisible({ timeout: 5000 });
+
+    // Saisir un préfixe dans le champ Valeur → suggestions visibles
+    const inputValeur = page.getByPlaceholder('Value');
+    await inputValeur.click();
+    await inputValeur.pressSequentially('06');
+
+    // La liste de suggestions doit apparaître
+    const suggestionBox = page.getByRole('listbox');
+    await expect(suggestionBox).toBeVisible({ timeout: 3000 });
+
+    // Cliquer sur la suggestion "0612345678"
+    const suggestion = page.getByRole('option', { name: '0612345678' });
+    await expect(suggestion).toBeVisible();
+    await suggestion.click();
+
+    // Le champ Valeur doit être rempli avec la suggestion
+    await expect(inputValeur).toHaveValue('0612345678');
+
+    // La liste de suggestions doit être fermée
+    await expect(page.getByRole('listbox')).not.toBeVisible();
+
+    // NON-RÉGRESSION : on peut toujours valider
+    const selectType = page.getByRole('combobox');
+    await selectType.selectOption('EMAIL');
+    await dialogue.getByRole('button', { name: 'Add' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+  });
+
+  test("n'affiche pas de suggestions si le champ contient un mot exact du texte", async ({ page }) => {
+    const fichier = await creerDocxPii();
+    await page.goto('/');
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: 'pii.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: Buffer.from(fichier),
+    });
+    await page.getByRole('button', { name: /Run analysis/i }).click({ timeout: 15000 });
+    await expect(page.getByText('Validate and continue')).toBeVisible({ timeout: 10000 });
+
+    // Ouvrir la modale
+    await page.getByRole('button', { name: /Add a pseudo/i }).click();
+    const dialogue = page.getByRole('dialog', { name: /Add a pseudo/i });
+    await expect(dialogue).toBeVisible({ timeout: 5000 });
+
+    // Saisir "Contact" qui existe exactement dans le texte
+    const inputValeur = page.getByPlaceholder('Value');
+    await inputValeur.click();
+    await inputValeur.fill('Contact');
+
+    // Aucune suggestion ne doit apparaître
+    await page.waitForTimeout(500);
+    await expect(page.getByRole('listbox')).not.toBeVisible();
+  });
+});

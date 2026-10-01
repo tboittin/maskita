@@ -289,6 +289,7 @@ export function EcranRevue({
       <ModalAjoutClassique
         ouvert={ajout.showAjoutClassique}
         valeurInitiale={ajout.valeurAjoutClassique}
+        texteOriginal={texteOriginal}
         onValider={handleAjoutClassiqueValider}
         onAnnuler={ajout.annulerAjoutClassique}
         titre={t('revue.ajoutClassique.titre')}
