@@ -86,4 +86,42 @@ test.describe('SUG-B — Ajout classique depuis le tableau', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible();
     await expect(page.getByText(/Pseudos? \(3\)/)).toBeVisible({ timeout: 5000 });
   });
+
+  test('saisir une valeur avec crochets desactive le bouton Ajouter et affiche une alerte', async ({ page }) => {
+    const fichier = await creerDocxPii();
+    await page.goto('/');
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: 'pii.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: Buffer.from(fichier),
+    });
+    await page.getByRole('button', { name: /Run analysis/i }).click({ timeout: 15000 });
+    await expect(page.getByText('Validate and continue')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Pseudos? \(2\)/)).toBeVisible();
+
+    // Ouvrir la modale d'ajout classique sans sélection
+    await page.getByRole('button', { name: /Add a pseudo/i }).click();
+    const dialogue = page.getByRole('dialog', { name: /Add a pseudo/i });
+    await expect(dialogue).toBeVisible({ timeout: 5000 });
+
+    // Saisir une valeur avec crochets
+    const inputValeur = page.getByPlaceholder('Value');
+    await inputValeur.fill('[ADRESSE]');
+
+    // Choisir un type pour que le bouton soit potentiellement actif
+    const selectType = page.getByRole('combobox');
+    await selectType.selectOption('EMAIL');
+
+    // Le bouton Ajouter doit être désactivé
+    const boutonAjouter = dialogue.getByRole('button', { name: 'Add' });
+    await expect(boutonAjouter).toBeDisabled();
+
+    // L'alerte doit être visible
+    await expect(dialogue.getByText(/cannot contain brackets/i)).toBeVisible();
+
+    // Corriger la valeur
+    await inputValeur.fill('test@exemple.fr');
+    await expect(dialogue.getByText(/cannot contain brackets/i)).not.toBeVisible();
+    await expect(boutonAjouter).not.toBeDisabled();
+  });
 });

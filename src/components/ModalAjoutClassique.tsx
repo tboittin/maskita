@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bouton, Modal } from '@khaleeno/maskita-design-system';
+import { estValeurValide } from '../utils/mapping';
 
 interface ModalAjoutClassiqueProps {
   ouvert: boolean;
@@ -15,6 +16,7 @@ interface ModalAjoutClassiqueProps {
   libelleAnnuler: string;
   placeholderType: string;
   placeholderValeur: string;
+  alerteCrochet: string;
 }
 
 const TYPES_SUGGERES = [
@@ -47,6 +49,7 @@ export function ModalAjoutClassique({
   libelleAnnuler,
   placeholderType,
   placeholderValeur,
+  alerteCrochet,
 }: ModalAjoutClassiqueProps) {
   const [type, setType] = useState('');
   const [valeur, setValeur] = useState('');
@@ -74,7 +77,8 @@ export function ModalAjoutClassique({
     }
   }, [ouvert]);
 
-  const peutValider = type.trim() !== '' && valeur.trim() !== '';
+  const valeurEstInvalide = valeur.trim() !== '' && !estValeurValide(valeur);
+  const peutValider = type.trim() !== '' && valeur.trim() !== '' && !valeurEstInvalide;
 
   const handleValider = () => {
     if (!peutValider) return;
@@ -146,6 +150,11 @@ export function ModalAjoutClassique({
             placeholder={placeholderValeur}
             style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
           />
+          {valeurEstInvalide && (
+            <span style={{ color: 'var(--couleur-erreur, #d32f2f)', fontSize: '0.8rem', marginTop: 'var(--espacement-xs)' }}>
+              {alerteCrochet}
+            </span>
+          )}
         </label>
       </div>
     </Modal>

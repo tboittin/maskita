@@ -300,6 +300,7 @@ export function EcranRevue({
         libelleAnnuler={t('tableau.bouton.annuler')}
         placeholderType={t('tableau.placeholder.type')}
         placeholderValeur={t('tableau.placeholder.valeur')}
+        alerteCrochet={t('revue.ajoutClassique.alerteCrochet')}
       />
     </div>
   );
