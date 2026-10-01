@@ -92,15 +92,27 @@ export function ModalAjoutClassique({
     }
   }, [ouvert]);
 
-  /** Met à jour les suggestions d'autocomplétion selon la valeur saisie. */
+  /** Récupère le dernier mot saisi (après le dernier espace). */
+  function dernierMotSaisi(v: string): string {
+    const dernierEspace = v.lastIndexOf(' ');
+    return dernierEspace >= 0 ? v.substring(dernierEspace + 1) : v;
+  }
+
+  /** Met à jour les suggestions d'autocomplétion selon le mot courant. */
   function mettreAJourSuggestions(v: string) {
-    const trimmed = v.trim();
-    if (trimmed === '' || mots.length === 0) {
+    if (mots.length === 0) {
       setSuggestions([]);
       return;
     }
 
-    // ⚠️ Si le texte tapé correspond exactement à un mot du texte,
+    const motCourant = dernierMotSaisi(v);
+    const trimmed = motCourant.trim();
+    if (trimmed === '') {
+      setSuggestions([]);
+      return;
+    }
+
+    // ⚠️ Si le mot courant correspond exactement à un mot du texte,
     // les suggestions ne sont pas utiles.
     if (existeCorrespondanceExacte(mots, trimmed)) {
       setSuggestions([]);
@@ -111,9 +123,14 @@ export function ModalAjoutClassique({
     setSuggestions(filtrees);
   }
 
-  /** Sélectionne une suggestion et ferme la liste. */
+  /** Sélectionne une suggestion et ferme la liste.
+   *  Remplace uniquement le dernier mot par la suggestion choisie. */
   function choisirSuggestion(s: string) {
-    setValeur(s);
+    const dernierEspace = valeur.lastIndexOf(' ');
+    const nouvelleValeur = dernierEspace >= 0
+      ? valeur.substring(0, dernierEspace + 1) + s
+      : s;
+    setValeur(nouvelleValeur);
     setSuggestions([]);
   }
 

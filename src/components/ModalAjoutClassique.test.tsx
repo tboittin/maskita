@@ -108,6 +108,27 @@ describe('SUG-C — Autocomplétion du champ Valeur', () => {
     expect(options[0]).toHaveTextContent('Paris');
   });
 
+  it('suggère des mots à partir du dernier mot quand il y a plusieurs mots', () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    // "Henri le" → le dernier mot est "le" → doit suggérer "Lefevre"
+    fireEvent.change(input, { target: { value: 'Henri le' } });
+    const suggestions = screen.getByRole('listbox');
+    const options = suggestions.querySelectorAll('[role="option"]');
+    expect(options[0]).toHaveTextContent('Lefevre');
+    expect(options.length).toBe(1);
+  });
+
+  it("remplace seulement le dernier mot quand on choisit une suggestion dans un texte multi-mots", () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Henri le' } });
+    const suggestion = screen.getByRole('option', { name: 'Lefevre' });
+    fireEvent.click(suggestion);
+    // Le premier mot "Henri" doit être conservé, seul "le" remplacé par "Lefevre"
+    expect(input.value).toBe('Henri Lefevre');
+  });
+
   it('préremplit toujours la valeur depuis valeurInitiale (SUG-B)', () => {
     rendu({ valeurInitiale: 'Sophie Lambert' });
     const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
