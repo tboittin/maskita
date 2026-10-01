@@ -13,6 +13,7 @@ interface UseFileUploadReturn {
   chargement: boolean;
   erreur: string | null;
   erreurCle: string | null;
+  messageCle: string | null;
   cle: Mapping | null;
   nomFichierCle: string | null;
   uploader: (file: File) => Promise<void>;
@@ -29,6 +30,7 @@ export function useFileUpload(): UseFileUploadReturn {
   const [cle, setCle] = useState<Mapping | null>(null);
   const [nomFichierCle, setNomFichierCle] = useState<string | null>(null);
   const [erreurCle, setErreurCle] = useState<string | null>(null);
+  const [messageCle, setMessageCle] = useState<string | null>(null);
 
   const reinitialiser = useCallback(() => {
     setFichier(null);
@@ -39,6 +41,7 @@ export function useFileUpload(): UseFileUploadReturn {
     setCle(null);
     setNomFichierCle(null);
     setErreurCle(null);
+    setMessageCle(null);
   }, []);
 
   const uploader = useCallback(async (file: File) => {
@@ -81,6 +84,7 @@ export function useFileUpload(): UseFileUploadReturn {
 
   const uploaderCle = useCallback(async (file: File) => {
     setErreurCle(null);
+    setMessageCle(null);
 
     if (!file.name.toLowerCase().endsWith('.json')) {
       setErreurCle('La clé doit être au format .json');
@@ -89,9 +93,13 @@ export function useFileUpload(): UseFileUploadReturn {
 
     try {
       const contenu = await file.text();
-      const mapping = chargerCleJson(contenu);
+      const { mapping, valeursRetirees } = chargerCleJson(contenu);
       setCle(mapping);
       setNomFichierCle(file.name);
+      if (valeursRetirees.length > 0) {
+        const lignes = valeursRetirees.map(r => `${r.tag} : ${r.valeur}`);
+        setMessageCle(`Valeurs invalides retirées de la clé importée :\n${lignes.join('\n')}`);
+      }
     } catch {
       setErreurCle('Fichier .key.json invalide ou corrompu');
     }
@@ -99,7 +107,7 @@ export function useFileUpload(): UseFileUploadReturn {
 
   return {
     fichier, extension, texte, chargement, erreur,
-    cle, nomFichierCle, erreurCle,
+    cle, nomFichierCle, erreurCle, messageCle,
     uploader, uploaderCle, reinitialiser,
   };
 }

@@ -70,8 +70,49 @@ export function genererCleJson(mapping: Mapping): string {
   return JSON.stringify(mapping, null, 2);
 }
 
-export function chargerCleJson(contenu: string): Mapping {
-  return JSON.parse(contenu);
+export interface ValeurRetiree {
+  tag: string;
+  valeur: string;
+}
+
+export interface ChargementCleResult {
+  mapping: Mapping;
+  valeursRetirees: ValeurRetiree[];
+}
+
+/**
+ * Charge un mapping depuis une chaîne JSON et assainit les valeurs.
+ * Les valeurs invalides (contenant des crochets) sont filtrées via
+ * estValeurValide. Les tags vidés de toutes leurs valeurs sont conservés
+ * avec un tableau vide. Retourne le mapping nettoyé et la liste des
+ * valeurs retirées.
+ */
+export function chargerCleJson(contenu: string): ChargementCleResult {
+  const brut = JSON.parse(contenu) as Mapping;
+  const valeursRetirees: ValeurRetiree[] = [];
+  const mapping: Mapping = {};
+
+  for (const [tag, valeurs] of Object.entries(brut)) {
+    const valides = valeurs.filter(v => {
+      if (!estValeurValide(v)) {
+        valeursRetirees.push({ tag, valeur: v });
+        return false;
+      }
+      return true;
+    });
+    mapping[tag] = valides;
+  }
+
+  return { mapping, valeursRetirees };
+}
+
+/**
+ * Vérifie qu'une valeur sélectionnée ne contient pas de crochets (tags).
+ * INT-1 — Garde-fou à la sélection : si la sélection contient '[' ou ']',
+ * on est en train de sélectionner un tag existant, pas une valeur à pseudonymiser.
+ */
+export function estValeurValide(valeur: string): boolean {
+  return !valeur.includes('[') && !valeur.includes(']');
 }
 
 /**
@@ -93,6 +134,7 @@ export function chargerCleJson(contenu: string): Mapping {
  * tokens de 2 caractères comme "M." — souhaité pour détecter l'invocation
  * et l'initiale dans le titre (ex: "Docteur M. Smith").
  */
+
 export function nomContientValeursMapping(
   nomFichier: string,
   mapping: Mapping,

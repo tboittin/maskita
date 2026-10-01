@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { estValeurValide } from '../utils/mapping';
 
 export type SourceApercu = 'haut' | 'bas';
 
@@ -34,6 +35,9 @@ export function useAjoutRapide({
   const selectionRef = useRef('');
 
   const gererSelection = (source: SourceApercu) => (valeur: string) => {
+    // INT-1 : si la sélection vient du volet haut et contient des crochets,
+    // c'est un tag existant → ne pas afficher la barre d'ajout
+    if (source === 'haut' && !estValeurValide(valeur)) return;
     selectionRef.current = valeur;
     setSelection({ valeur, source });
   };

@@ -9,7 +9,7 @@ interface BarreAjoutSelectionProps {
 
 /**
  * Surcouche affichée au-dessus d'un aperçu texte quand on a surligné une valeur :
- * propose l'ajout rapide d'un nouveau pseudo ou l'ajout à un pseudo existant.
+ * propose l'ajout rapide d'un nouveau pseudo ou d'une nouvelle valeur.
  */
 export function BarreAjoutSelection({
   onNouveauPseudo,

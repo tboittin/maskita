@@ -96,7 +96,7 @@ export function useRestauration(): UseRestaurationReturn {
 
     try {
       const contenu = await file.text();
-      const mappingCharge = chargerCleJson(contenu);
+      const { mapping: mappingCharge } = chargerCleJson(contenu);
       setMapping(mappingCharge);
       setNomFichierCle(file.name);
     } catch {

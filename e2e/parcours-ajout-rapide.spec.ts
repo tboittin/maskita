@@ -26,11 +26,15 @@ async function creerDocxTags(): Promise<Uint8Array> {
   ]);
 }
 
-/** Sélectionne tout le texte du volet cible et déclenche mouseup (ajout rapide). */
+/** Sélectionne tout le texte du volet cible (bas/lisible, sans crochets) et déclenche mouseup. */
 async function surlignerVolet(page: Page, fragment: string) {
   const ok = await page.evaluate((frag) => {
     const containers = [...document.querySelectorAll<HTMLDivElement>('div[style*="max-height"]')];
-    const c = containers.find(el => (el.textContent || '').includes(frag));
+    // Éviter le volet haut (pseudonymisé avec tags [crochets]) : INT-1
+    const c = containers.find(el => {
+      const txt = el.textContent || '';
+      return txt.includes(frag) && !txt.includes('[');
+    });
     if (!c) return false;
     const range = document.createRange();
     range.selectNodeContents(c);
