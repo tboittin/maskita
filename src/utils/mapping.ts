@@ -116,6 +116,23 @@ export function estValeurValide(valeur: string): boolean {
 }
 
 /**
+ * CORR-1 — Vérifie si le début d'une sélection tombe à l'intérieur d'un tag.
+ * En remontant depuis le début de la sélection dans le texte, on vérifie le
+ * premier crochet rencontré : si c'est '[' (et qu'il n'a pas été refermé par
+ * un ']' avant), la sélection est dans un tag.
+ *
+ * @param texteAvantSelection — le contenu textuel complet avant le début de la sélection
+ * @returns true si le début de la sélection est à l'intérieur d'un tag
+ */
+export function estSelectionDansTag(texteAvantSelection: string): boolean {
+  for (let i = texteAvantSelection.length - 1; i >= 0; i--) {
+    if (texteAvantSelection[i] === '[') return true;
+    if (texteAvantSelection[i] === ']') return false;
+  }
+  return false;
+}
+
+/**
  * Vérifie si un nom de fichier (sans extension) contient des valeurs
  * ou des tags issus du mapping (données sensibles). Retourne la liste
  * des éléments détectés (valeur ou tag complet), ou une liste vide si

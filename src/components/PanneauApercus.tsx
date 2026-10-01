@@ -9,7 +9,7 @@ export interface ApercuConfig {
   surlignerValeurs?: boolean;
   onClicTag?: (tag: string) => void;
   onClicValeur?: (tag: string, valeur: string) => void;
-  onSelection?: (valeur: string) => void;
+  onSelection?: (valeur: string, estDansTag?: boolean) => void;
   /** Surcouche d'actions affichée au-dessus du volet (ex: sélection de texte). */
   toolbar?: ReactNode;
   /** Réf du conteneur scrollable du volet (optionnelle — interne sinon). */

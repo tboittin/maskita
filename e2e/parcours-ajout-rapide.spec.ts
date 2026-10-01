@@ -47,6 +47,38 @@ async function surlignerVolet(page: Page, fragment: string) {
   expect(ok, `volet contenant "${fragment}" introuvable`).toBeTruthy();
 }
 
+/** Sélectionne un fragment de texte à l'intérieur d'un tag dans le volet haut (pseudonymisé). */
+async function surlignerInterieurTag(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const containers = [...document.querySelectorAll<HTMLDivElement>('div[style*="max-height"]')];
+    // Volet haut = contient des crochets (tags)
+    const c = containers.find(el => el.textContent?.includes('['));
+    if (!c) return false;
+
+    // Trouver un span qui est un tag complet ex: [EMAIL] ou [TEL]
+    const spans = [...c.querySelectorAll('span')];
+    const tagSpan = spans.find(s => {
+      const t = s.textContent || '';
+      return t.startsWith('[') && t.endsWith(']') && t.length > 2;
+    });
+    if (!tagSpan || !tagSpan.firstChild) return false;
+
+    const textNode = tagSpan.firstChild;
+    const len = textNode.textContent?.length ?? 0;
+    if (len < 3) return false;
+
+    // Sélectionner le contenu INTERNE du tag (sans les crochets)
+    const range = document.createRange();
+    range.setStart(textNode, 1);
+    range.setEnd(textNode, len - 1);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    c.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    return true;
+  });
+}
+
 test.describe('Ajout rapide par surlignage (non-régression)', () => {
   test('Pseudonymisation — la sélection de texte affiche les boutons et crée un pseudo', async ({ page }) => {
     const fichier = await creerDocxPii();
@@ -68,6 +100,27 @@ test.describe('Ajout rapide par surlignage (non-régression)', () => {
     // Créer un nouveau pseudo → le compteur passe à 3
     await page.getByRole('button', { name: 'New pseudo' }).click();
     await expect(page.getByText(/Pseudos? \(3\)/)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Pseudonymisation — sélection INTERNE à un tag ne montre pas les boutons (CORR-1)', async ({ page }) => {
+    const fichier = await creerDocxPii();
+    await page.goto('/');
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: 'pii.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: Buffer.from(fichier),
+    });
+    await page.getByRole('button', { name: /Run analysis/i }).click({ timeout: 15000 });
+    await expect(page.getByText('Validate and continue')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Pseudos? \(2\)/)).toBeVisible();
+
+    // Sélectionner du texte À L'INTÉRIEUR d'un tag du volet haut
+    const ok = await surlignerInterieurTag(page);
+    expect(ok, 'volet haut avec tag introuvable').toBeTruthy();
+
+    // Les boutons d'ajout rapide ne doivent PAS apparaître
+    await expect(page.getByRole('button', { name: 'New pseudo' })).not.toBeVisible({ timeout: 3000 });
+    await expect(page.getByRole('button', { name: 'New value' })).not.toBeVisible({ timeout: 3000 });
   });
 
   test('Restauration — la sélection de texte affiche les boutons et crée un pseudo', async ({ page }) => {

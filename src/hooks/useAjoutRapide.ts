@@ -34,10 +34,11 @@ export function useAjoutRapide({
   const [showAjoutClassique, setShowAjoutClassique] = useState(false);
   const selectionRef = useRef('');
 
-  const gererSelection = (source: SourceApercu) => (valeur: string) => {
+  const gererSelection = (source: SourceApercu) => (valeur: string, estDansTag?: boolean) => {
     // INT-1 : si la sélection vient du volet haut et contient des crochets,
     // c'est un tag existant → ne pas afficher la barre d'ajout
-    if (source === 'haut' && !estValeurValide(valeur)) return;
+    // CORR-1 : si la sélection est à l'intérieur d'un tag, idem
+    if (source === 'haut' && (!estValeurValide(valeur) || estDansTag)) return;
     selectionRef.current = valeur;
     setSelection({ valeur, source });
   };
