@@ -83,6 +83,51 @@ describe('appliquerMapping', () => {
     expect(resultat).not.toMatch(/\[ADOLESCENT\]\w/);
     expect(resultat).toBe('[ADOLESCENT] a discuté avec [ADOLESCENT] et [ADOLESCENT]');
   });
+
+  // CORR-02 — Tag imbriqué : ne pas pseudonymiser dans un tag déjà posé
+  it("ne pseudonymise pas dans un tag déjà posé (CORR-02)", () => {
+    const mapping = {
+      '[MON PATIENT]': ['MON PATIENT'],
+      '[PERSONNE]': ['PATIENT'],
+    };
+
+    const texte = 'MON PATIENT est malade. PATIENT va bien.';
+    const resultat = appliquerMapping(texte, mapping);
+
+    // "MON PATIENT" doit être remplacé par [MON PATIENT] (plus longue correspondance)
+    // "PATIENT" seul (deuxième occurrence) doit être remplacé par [PERSONNE]
+    // Mais le PATIENT dans [MON PATIENT] NE doit PAS être remplacé
+    expect(resultat).not.toMatch(/\[MON \[PERSONNE\]\]/);
+    expect(resultat).toBe('[MON PATIENT] est malade. [PERSONNE] va bien.');
+  });
+
+  // CORR-02 — Chevauchement : la plus longue correspondance gagne
+  it("en cas de chevauchement, garde la correspondance la plus longue (CORR-02)", () => {
+    const mapping = {
+      '[LIEU]': ['Saint-Jean-de-Luz'],
+      '[VILLE]': ['Jean'],
+    };
+
+    const texte = 'Saint-Jean-de-Luz est une belle ville. Jean est mon ami.';
+    const resultat = appliquerMapping(texte, mapping);
+
+    // "Saint-Jean-de-Luz" complet → [LIEU] (plus long)
+    // "Jean" seul (deuxième occurrence) → [VILLE]
+    // Mais "Jean" dans "Saint-Jean-de-Luz" ne doit pas être remplacé
+    expect(resultat).toBe('[LIEU] est une belle ville. [VILLE] est mon ami.');
+  });
+
+  // CORR-02 — Occurrence isolée bien remplacée (tag non présent)
+  it("remplace les occurrences isolées d'une valeur (CORR-02)", () => {
+    const mapping = {
+      '[PERSONNE]': ['Dupont'],
+    };
+
+    const texte = 'Dupont est ici, et Dupont aussi.';
+    const resultat = appliquerMapping(texte, mapping);
+
+    expect(resultat).toBe('[PERSONNE] est ici, et [PERSONNE] aussi.');
+  });
 });
 
 describe('restaurerTexte', () => {

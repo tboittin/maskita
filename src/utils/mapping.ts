@@ -33,21 +33,65 @@ export function genererMapping(
   return mapping;
 }
 
+interface Correspondance {
+  debut: number;
+  fin: number;
+  tag: string;
+}
+
 export function appliquerMapping(texte: string, mapping: Mapping): string {
-  let resultat = texte;
+  // Étape 1 : trouver toutes les correspondances dans le texte ORIGINAL
+  const correspondances: Correspondance[] = [];
 
   for (const [tag, valeurs] of Object.entries(mapping)) {
     // Trier par longueur décroissante : les plus longues d'abord
-    // pour éviter les remplacements partiels (B08)
     const valeursTriees = [...valeurs].sort((a, b) => b.length - a.length);
 
     for (const valeur of valeursTriees) {
-      // Échapper les caractères regex dans la valeur
       const echapee = valeur.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Word boundaries (\b) pour que 'Tom' ne soit pas remplacé dans 'Tommy'
       const regex = new RegExp(`\\b${echapee}\\b`, 'gi');
-      resultat = resultat.replace(regex, tag);
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(texte)) !== null) {
+        correspondances.push({
+          debut: match.index,
+          fin: match.index + match[0].length,
+          tag,
+        });
+        // Éviter les boucles infinies sur les chaînes vides
+        if (match.index === regex.lastIndex) {
+          regex.lastIndex++;
+        }
+      }
     }
+  }
+
+  // Étape 2 : en cas de chevauchement, garder la correspondance la PLUS LONGUE
+  // Trier par début, puis par longueur décroissante
+  correspondances.sort((a, b) => a.debut - b.debut || (b.fin - b.debut) - (a.fin - a.debut));
+
+  const filtrees: Correspondance[] = [];
+  for (const corr of correspondances) {
+    if (filtrees.length === 0 || corr.debut >= filtrees[filtrees.length - 1].fin) {
+      // Pas de chevauchement : on garde
+      filtrees.push(corr);
+    } else {
+      // Chevauchement : la plus longue gagne
+      const derniere = filtrees[filtrees.length - 1];
+      const longueurPrecedente = derniere.fin - derniere.debut;
+      const longueurCourante = corr.fin - corr.debut;
+      if (longueurCourante > longueurPrecedente) {
+        filtrees[filtrees.length - 1] = corr;
+      }
+    }
+  }
+
+  // Étape 3 : trier par position décroissante (droite à gauche)
+  filtrees.sort((a, b) => b.debut - a.debut);
+
+  // Étape 4 : construire le résultat en une seule passe
+  let resultat = texte;
+  for (const corr of filtrees) {
+    resultat = resultat.slice(0, corr.debut) + corr.tag + resultat.slice(corr.fin);
   }
 
   return resultat;
