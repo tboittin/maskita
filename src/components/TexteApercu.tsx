@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from 'react';
+import { estSelectionDansTag } from '../utils/mapping';
 
 interface TexteApercuProps {
   titre: string;
@@ -12,7 +13,7 @@ interface TexteApercuProps {
   onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
   onTagClick?: (tag: string) => void;
   onValeurClick?: (tag: string, valeur: string) => void;
-  onSelection?: (valeur: string) => void;
+  onSelection?: (valeur: string, estDansTag?: boolean) => void;
 }
 
 export function TexteApercu({
@@ -41,12 +42,28 @@ export function TexteApercu({
 
   const handleMouseUp = useCallback(() => {
     if (!onSelection) return;
-    const selection = window.getSelection();
-    const selected = selection?.toString().trim();
+    const sel = window.getSelection();
+    const selected = sel?.toString().trim();
     if (selected && selected.length > 0) {
-      onSelection(selected);
+      // CORR-1 : détecter si le début de la sélection tombe dans un tag
+      let estDansTag = false;
+      if (sel && sel.rangeCount > 0 && containerRef) {
+        try {
+          const conteneur = (containerRef as React.RefObject<HTMLDivElement>).current;
+          if (conteneur) {
+            const range = sel.getRangeAt(0);
+            const beforeRange = document.createRange();
+            beforeRange.selectNodeContents(conteneur);
+            beforeRange.setEnd(range.startContainer, range.startOffset);
+            estDansTag = estSelectionDansTag(beforeRange.toString());
+          }
+        } catch (e) {
+          // DOM inaccessible (environnement de test, etc.) → comportement par défaut
+        }
+      }
+      onSelection(selected, estDansTag);
     }
-  }, [onSelection]);
+  }, [onSelection, containerRef]);
 
   return (
     <div>

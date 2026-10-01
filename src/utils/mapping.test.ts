@@ -9,6 +9,7 @@ import {
   chargerCleJson,
   nomContientValeursMapping,
   estValeurValide,
+  estSelectionDansTag,
 } from './mapping';
 
 describe('genererTag', () => {
@@ -270,6 +271,23 @@ describe('nomContientValeursMapping', () => {
     expect(nomContientValeursMapping('compte-rendu patient', mapping)).toEqual(
       [],
     );
+  });
+});
+
+describe('estSelectionDansTag', () => {
+  it.each([
+    // [texteAvant, attendu]
+    ['Contact : [PATIE', true],        // après '[' → dans le tag
+    ['Le patient [PATIENT] ', false],  // après ']' → hors du tag
+    ['Début du texte sans crochet', false], // pas de crochet → hors
+    ['[', true],                       // juste '[' → dans le tag
+    [']', false],                      // juste ']' → hors (le ']' ferme avant)
+    ['[TEL][PATIE', true],             // deuxième tag ouvert
+    ['[TEL] ', false],                 // après ']' → hors
+    ['Début [TEL] texte [PATIE', true], // après '[' du deuxième tag
+    ['Début [TEL] texte ', false],      // après ']' du deuxième tag
+  ])('retourne %s pour "%s"', (texteAvant, attendu) => {
+    expect(estSelectionDansTag(texteAvant!)).toBe(attendu);
   });
 });
 
