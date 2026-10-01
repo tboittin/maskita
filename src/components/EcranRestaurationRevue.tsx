@@ -223,6 +223,8 @@ export function EcranRestaurationRevue({
         onValider={handleAjoutClassiqueValider}
         onAnnuler={ajout.annulerAjoutClassique}
         titre={t('revue.ajoutClassique.titre')}
+        labelType={t('revue.ajoutClassique.labelType')}
+        labelValeur={t('revue.ajoutClassique.labelValeur')}
         libelleType={t('tableau.ajoutManuel.type.label')}
         libelleTypeCustom={t('tableau.ajoutManuel.type.custom')}
         libelleAjouter={t('tableau.bouton.ajouter')}

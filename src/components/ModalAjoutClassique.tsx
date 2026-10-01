@@ -7,6 +7,8 @@ interface ModalAjoutClassiqueProps {
   onValider: (type: string, valeur: string) => void;
   onAnnuler: () => void;
   titre: string;
+  labelType: string;
+  labelValeur: string;
   libelleType: string;
   libelleTypeCustom: string;
   libelleAjouter: string;
@@ -37,6 +39,8 @@ export function ModalAjoutClassique({
   onValider,
   onAnnuler,
   titre,
+  labelType,
+  labelValeur,
   libelleType,
   libelleTypeCustom,
   libelleAjouter,
@@ -108,32 +112,41 @@ export function ModalAjoutClassique({
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
-        <select
-          ref={refType}
-          value={showCustomType ? '__custom__' : type}
-          onChange={handleTypeChange}
-          style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
-        >
-          <option value="" disabled>{libelleType}</option>
-          {TYPES_SUGGERES.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-          <option value="__custom__">{libelleTypeCustom}</option>
-        </select>
+        <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)' }}>
+          <span>{labelType}</span>
+          <select
+            ref={refType}
+            value={showCustomType ? '__custom__' : type}
+            onChange={handleTypeChange}
+            style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+          >
+            <option value="" disabled>{libelleType}</option>
+            {TYPES_SUGGERES.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+            <option value="__custom__">{libelleTypeCustom}</option>
+          </select>
+        </label>
         {showCustomType && (
+          <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)' }}>
+            <span>{labelType}</span>
+            <input
+              value={type}
+              onChange={e => setType(e.target.value.toUpperCase())}
+              placeholder={placeholderType}
+              style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
+            />
+          </label>
+        )}
+        <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)' }}>
+          <span>{labelValeur}</span>
           <input
-            value={type}
-            onChange={e => setType(e.target.value.toUpperCase())}
-            placeholder={placeholderType}
+            value={valeur}
+            onChange={e => setValeur(e.target.value)}
+            placeholder={placeholderValeur}
             style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
           />
-        )}
-        <input
-          value={valeur}
-          onChange={e => setValeur(e.target.value)}
-          placeholder={placeholderValeur}
-          style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
-        />
+        </label>
       </div>
     </Modal>
   );

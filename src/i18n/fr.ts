@@ -25,6 +25,8 @@ export const fr = {
   'revue.bouton.nouveauTag': 'Nouveau pseudo',
   'revue.bouton.nouvelleValeur': 'Nouvelle valeur',
   'revue.ajoutClassique.titre': 'Ajouter un pseudo',
+  'revue.ajoutClassique.labelType': 'Pseudo',
+  'revue.ajoutClassique.labelValeur': 'Valeur',
   'revue.picker.titre.deplacer': (v: string) => `Déplacer « ${v} » vers quel pseudo ?`,
   'revue.picker.titre.ajouter': 'Ajouter à quel pseudo ?',
   'revue.picker.valeur': (v: string) => `Valeur : ${v}`,
