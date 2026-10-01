@@ -27,6 +27,7 @@ export const en: Dictionnaire = {
   'revue.bouton.nouveauTag': 'New pseudo',
   'revue.bouton.nouvelleValeur': 'New value',
   'revue.bouton.ajoutClassique': 'Add a pseudonym…',
+  'revue.ajoutClassique.titre': 'Add a pseudo',
   'revue.picker.titre.deplacer': (v: string) => `Move « ${v} » to which pseudo?`,
   'revue.picker.titre.ajouter': 'Add to which pseudo?',
   'revue.picker.valeur': (v: string) => `Value: ${v}`,

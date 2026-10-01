@@ -7,6 +7,7 @@ import { PanneauTableauPseudos } from './PanneauTableauPseudos';
 import { PanneauApercus } from './PanneauApercus';
 import { BarreAjoutSelection } from './BarreAjoutSelection';
 import { PickerAjoutValeur } from './PickerAjoutValeur';
+import { ModalAjoutClassique } from './ModalAjoutClassique';
 import type { Mapping } from '../utils/mapping';
 
 interface EcranRevueProps {
@@ -31,10 +32,6 @@ export function EcranRevue({
   const occurrenceIdx = useRef<Record<string, number>>({});
 
   const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
-  const [montrerAjoutClassique, setMontrerAjoutClassique] = useState(false);
-  // Flag réservé à l'US-SUG-B : le formulaire complet d'ajout classique
-  // n'est pas encore rendu. On lit la valeur pour éviter un dead code (TS6133).
-  void montrerAjoutClassique;
 
   const ajout = useAjoutRapide({
     onAjouterPseudo: revue.ajouterTag,
@@ -118,6 +115,12 @@ export function EcranRevue({
     }
   }, [ajout, revue, defilerTableauVers]);
 
+  const handleAjoutClassiqueValider = useCallback((type: string, valeur: string) => {
+    revue.ajouterTag(type, valeur);
+    ajout.effacerSelection();
+    ajout.annulerAjoutClassique();
+  }, [revue, ajout]);
+
   const handleClicValider = () => {
     onValider(revue.mappingFinal, revue.textePseudonymise);
   };
@@ -191,7 +194,7 @@ export function EcranRevue({
     <BarreAjoutSelection
       onNouveauPseudo={ajout.nouveauPseudo}
       onNouvelleValeur={ajout.nouvelleValeur}
-      onAjoutClassique={() => setMontrerAjoutClassique(true)}
+      onAjoutClassique={ajout.ouvrirAjoutClassique}
       libelleNouveauPseudo={t('revue.bouton.nouveauTag')}
       libelleNouvelleValeur={t('revue.bouton.nouvelleValeur')}
       libelleAjoutClassique={t('revue.bouton.ajoutClassique')}
@@ -282,6 +285,21 @@ export function EcranRevue({
           libelleAnnuler={t('revue.picker.annuler')}
         />
       )}
+
+      {/* Modale d'ajout classique (formulaire Type + Valeur prérempli) */}
+      <ModalAjoutClassique
+        ouvert={ajout.showAjoutClassique}
+        valeurInitiale={ajout.valeurAjoutClassique}
+        onValider={handleAjoutClassiqueValider}
+        onAnnuler={ajout.annulerAjoutClassique}
+        titre={t('revue.ajoutClassique.titre')}
+        libelleType={t('tableau.ajoutManuel.type.label')}
+        libelleTypeCustom={t('tableau.ajoutManuel.type.custom')}
+        libelleAjouter={t('tableau.bouton.ajouter')}
+        libelleAnnuler={t('tableau.bouton.annuler')}
+        placeholderType={t('tableau.placeholder.type')}
+        placeholderValeur={t('tableau.placeholder.valeur')}
+      />
     </div>
   );
 }
