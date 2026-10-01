@@ -10,6 +10,7 @@ function rendu(overrides: Partial<Parameters<typeof ModalAjoutClassique>[0]> = {
     <ModalAjoutClassique
       ouvert={true}
       valeurInitiale=""
+      texteOriginal="M. Lefevre est médecin. Lefevre habite à Paris."
       onValider={onValider}
       onAnnuler={onAnnuler}
       titre="Ajouter un pseudo"
@@ -28,6 +29,120 @@ function rendu(overrides: Partial<Parameters<typeof ModalAjoutClassique>[0]> = {
   return { onValider, onAnnuler, ...result };
 }
 
+describe('SUG-C — Autocomplétion du champ Valeur', () => {
+  it('affiche des suggestions quand on tape un préfixe', () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'L' } });
+    // "Lefevre" et "Lefevre" (dédoublonné) mais pas "M." ni "est" ni "médecin"
+    const suggestions = screen.getByRole('listbox');
+    expect(suggestions).toBeInTheDocument();
+    const options = suggestions.querySelectorAll('[role="option"]');
+    // options: "Lefevre" (1ère occurrence), "Lefevre" (dédupliquée → absente)
+    // After dedup in extraireMots, only one "Lefevre"
+    expect(options.length).toBe(1);
+    expect(options[0]).toHaveTextContent('Lefevre');
+  });
+
+  it("n'affiche pas de suggestions quand le champ est vide", () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '' } });
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it("n'affiche pas de suggestions quand la valeur tapée existe exactement dans le texte", () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    // "Lefevre" existe exactement dans le texte original
+    fireEvent.change(input, { target: { value: 'Lefevre' } });
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('remplit la valeur au clic sur une suggestion', () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'L' } });
+    const suggestion = screen.getByRole('option', { name: 'Lefevre' });
+    fireEvent.click(suggestion);
+    expect(input.value).toBe('Lefevre');
+    // La liste est fermée après sélection
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('sélectionne la première suggestion avec Tab', () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'L' } });
+    // Tab avec suggestions visibles
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.value).toBe('Lefevre');
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('ferme les suggestions avec Escape', () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'L' } });
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(screen.queryByRole('listbox')).toBeNull();
+    // La valeur saisie est conservée
+    expect(input.value).toBe('L');
+  });
+
+  it("n'affiche pas de suggestions quand texteOriginal est vide", () => {
+    rendu({ texteOriginal: '' });
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'L' } });
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('suggère des mots insensibles à la casse', () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'PAR' } });
+    const suggestions = screen.getByRole('listbox');
+    const options = suggestions.querySelectorAll('[role="option"]');
+    expect(options.length).toBeGreaterThanOrEqual(1);
+    expect(options[0]).toHaveTextContent('Paris');
+  });
+
+  it('suggère des mots à partir du dernier mot quand il y a plusieurs mots', () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    // "Henri le" → le dernier mot est "le" → doit suggérer "Lefevre"
+    fireEvent.change(input, { target: { value: 'Henri le' } });
+    const suggestions = screen.getByRole('listbox');
+    const options = suggestions.querySelectorAll('[role="option"]');
+    expect(options[0]).toHaveTextContent('Lefevre');
+    expect(options.length).toBe(1);
+  });
+
+  it("remplace seulement le dernier mot quand on choisit une suggestion dans un texte multi-mots", () => {
+    rendu();
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Henri le' } });
+    const suggestion = screen.getByRole('option', { name: 'Lefevre' });
+    fireEvent.click(suggestion);
+    // Le premier mot "Henri" doit être conservé, seul "le" remplacé par "Lefevre"
+    expect(input.value).toBe('Henri Lefevre');
+  });
+
+  it('préremplit toujours la valeur depuis valeurInitiale (SUG-B)', () => {
+    rendu({ valeurInitiale: 'Sophie Lambert' });
+    const input = screen.getByPlaceholderText('Valeur') as HTMLInputElement;
+    expect(input.value).toBe('Sophie Lambert');
+  });
+
+  it("désactive le bouton si la valeur contient des crochets (INT-2)", () => {
+    rendu({ valeurInitiale: '[TEST]' });
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'PERSONNE' } });
+    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeDisabled();
+    expect(screen.getByText('Alerte crochet')).toBeInTheDocument();
+  });
+});
 describe('ModalAjoutClassique', () => {
   it('affiche la modale avec le titre et les champs', () => {
     rendu();

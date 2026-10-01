@@ -1,10 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Bouton, Modal } from '@khaleeno/maskita-design-system';
 import { estValeurValide } from '../utils/mapping';
+import {
+  extraireMots,
+  filtrerParPrefixe,
+  existeCorrespondanceExacte,
+} from '../utils/tokenisation';
 
 interface ModalAjoutClassiqueProps {
   ouvert: boolean;
   valeurInitiale: string;
+  /** Texte lisible original du document, pour les suggestions d'autocomplétion */
+  texteOriginal?: string;
   onValider: (type: string, valeur: string) => void;
   onAnnuler: () => void;
   titre: string;
@@ -34,10 +41,13 @@ const TYPES_SUGGERES = [
  * Modale d'ajout classique d'un pseudo (type + valeur), ouverte depuis la
  * BarreAjoutSelection quand l'utilisateur a surligné du texte.
  * La valeur est préremplie depuis la sélection ; le type n'est pas présélectionné.
+ *
+ * SUG-C — Autocomplétion du champ Valeur à partir des mots du texte original.
  */
 export function ModalAjoutClassique({
   ouvert,
   valeurInitiale,
+  texteOriginal,
   onValider,
   onAnnuler,
   titre,
@@ -54,7 +64,11 @@ export function ModalAjoutClassique({
   const [type, setType] = useState('');
   const [valeur, setValeur] = useState('');
   const [showCustomType, setShowCustomType] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const refType = useRef<HTMLSelectElement>(null);
+
+  // Mots du texte original, calculés une fois
+  const mots = useMemo(() => (texteOriginal ? extraireMots(texteOriginal) : []), [texteOriginal]);
 
   // Réinitialiser les champs à l'ouverture avec la valeurInitiale
   useEffect(() => {
@@ -62,6 +76,7 @@ export function ModalAjoutClassique({
       setType('');
       setValeur(valeurInitiale);
       setShowCustomType(false);
+      setSuggestions([]);
     }
   }, [ouvert, valeurInitiale]);
 
@@ -76,6 +91,48 @@ export function ModalAjoutClassique({
       return () => cancelAnimationFrame(raf);
     }
   }, [ouvert]);
+
+  /** Récupère le dernier mot saisi (après le dernier espace). */
+  function dernierMotSaisi(v: string): string {
+    const dernierEspace = v.lastIndexOf(' ');
+    return dernierEspace >= 0 ? v.substring(dernierEspace + 1) : v;
+  }
+
+  /** Met à jour les suggestions d'autocomplétion selon le mot courant. */
+  function mettreAJourSuggestions(v: string) {
+    if (mots.length === 0) {
+      setSuggestions([]);
+      return;
+    }
+
+    const motCourant = dernierMotSaisi(v);
+    const trimmed = motCourant.trim();
+    if (trimmed === '') {
+      setSuggestions([]);
+      return;
+    }
+
+    // ⚠️ Si le mot courant correspond exactement à un mot du texte,
+    // les suggestions ne sont pas utiles.
+    if (existeCorrespondanceExacte(mots, trimmed)) {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtrees = filtrerParPrefixe(mots, trimmed, 8);
+    setSuggestions(filtrees);
+  }
+
+  /** Sélectionne une suggestion et ferme la liste.
+   *  Remplace uniquement le dernier mot par la suggestion choisie. */
+  function choisirSuggestion(s: string) {
+    const dernierEspace = valeur.lastIndexOf(' ');
+    const nouvelleValeur = dernierEspace >= 0
+      ? valeur.substring(0, dernierEspace + 1) + s
+      : s;
+    setValeur(nouvelleValeur);
+    setSuggestions([]);
+  }
 
   const valeurEstInvalide = valeur.trim() !== '' && !estValeurValide(valeur);
   const peutValider = type.trim() !== '' && valeur.trim() !== '' && !valeurEstInvalide;
@@ -92,6 +149,26 @@ export function ModalAjoutClassique({
     } else {
       setShowCustomType(false);
       setType(e.target.value);
+    }
+  };
+
+  const handleValeurChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nouvelleValeur = e.target.value;
+    setValeur(nouvelleValeur);
+    mettreAJourSuggestions(nouvelleValeur);
+  };
+
+  const handleValeurKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Tab quand des suggestions sont visibles → sélectionner la première
+    if (e.key === 'Tab' && suggestions.length > 0) {
+      e.preventDefault();
+      choisirSuggestion(suggestions[0]);
+    }
+
+    // Escape → fermer la liste de suggestions
+    if (e.key === 'Escape' && suggestions.length > 0) {
+      e.preventDefault();
+      setSuggestions([]);
     }
   };
 
@@ -142,14 +219,56 @@ export function ModalAjoutClassique({
             />
           </label>
         )}
-        <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)' }}>
+        <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', flexDirection: 'column', gap: 'var(--espacement-xs)', position: 'relative' }}>
           <span>{labelValeur}</span>
           <input
             value={valeur}
-            onChange={e => setValeur(e.target.value)}
+            onChange={handleValeurChange}
+            onKeyDown={handleValeurKeyDown}
             placeholder={placeholderValeur}
+            autoComplete="off"
             style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
           />
+          {suggestions.length > 0 && (
+            <div
+              role="listbox"
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                zIndex: 10,
+                maxHeight: '200px',
+                overflowY: 'auto',
+                background: 'var(--couleur-surface, #fff)',
+                border: '1px solid var(--couleur-bordure, #ccc)',
+                borderRadius: 'var(--rayon, 0.375rem)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                marginTop: '2px',
+              }}
+            >
+              {suggestions.map((s) => (
+                <div
+                  key={s}
+                  role="option"
+                  onClick={() => choisirSuggestion(s)}
+                  style={{
+                    padding: 'var(--espacement-xs) var(--espacement-sm)',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLDivElement).style.background = 'var(--couleur-surface-survol, #f0f0f0)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLDivElement).style.background = '';
+                  }}
+                >
+                  {s}
+                </div>
+              ))}
+            </div>
+          )}
           {valeurEstInvalide && (
             <span style={{ color: 'var(--couleur-erreur, #d32f2f)', fontSize: '0.8rem', marginTop: 'var(--espacement-xs)' }}>
               {alerteCrochet}
