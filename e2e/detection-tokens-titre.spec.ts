@@ -48,11 +48,28 @@ test.describe('Détection par tokens du titre (DET-02)', () => {
     //    "releve-12" alors que la chaîne complète "06 12 34 56 78" n'y est pas
     await page.getByRole('button', { name: /Download document/i }).click();
 
-    // Une modale de warning de nom sensible doit s'afficher
-    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: /Download anyway/i })).toBeVisible();
+    // Le warning inline (MessageErreur avec role="alert") est visible sous le champ
+    // (l'ancien comportement Modal a été remplacé par un affichage inline)
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('alert')).toContainText(/12|sensitive data/i);
 
-    // Le document n'est PAS téléchargé tant que le warning n'est pas confirmé
+    // Vérifier qu'aucune Modal ne s'affiche (non-régression : plus d'ancienne popup)
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    // Le champ a aria-invalid="true" et le clic n'a pas téléchargé
+    await expect(champDoc).toHaveAttribute('aria-invalid', 'true');
     await expect(page.getByText('Document downloaded ✓')).toHaveCount(0);
+
+    // Corriger le nom : enlever le token sensible "12"
+    await champDoc.fill('releve-nettoye.txt');
+    await expect(champDoc).toHaveValue('releve-nettoye.txt');
+
+    // Le warning inline a disparu et aria-invalid="false"
+    await expect(page.getByRole('alert')).not.toBeVisible();
+    await expect(champDoc).toHaveAttribute('aria-invalid', 'false');
+
+    // Le téléchargement fonctionne maintenant
+    await page.getByRole('button', { name: /Download document/i }).click();
+    await expect(page.getByText('Document downloaded ✓')).toBeVisible({ timeout: 10000 });
   });
 });

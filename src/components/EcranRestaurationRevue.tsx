@@ -5,6 +5,7 @@ import { PanneauTableauPseudos } from './PanneauTableauPseudos';
 import { PanneauApercus } from './PanneauApercus';
 import { BarreAjoutSelection } from './BarreAjoutSelection';
 import { PickerAjoutValeur } from './PickerAjoutValeur';
+import { ModalAjoutClassique } from './ModalAjoutClassique';
 import { useAjoutRapide } from '../hooks/useAjoutRapide';
 import type { Mapping } from '../utils/mapping';
 
@@ -124,6 +125,12 @@ export function EcranRestaurationRevue({
     defilerTableauVers(tag);
   }, [ajout, defilerTableauVers]);
 
+  const handleAjoutClassiqueValider = useCallback((type: string, valeur: string) => {
+    onAjouterTag(type, valeur);
+    ajout.effacerSelection();
+    ajout.annulerAjoutClassique();
+  }, [onAjouterTag, ajout]);
+
   const barreAjout = () => (
     <BarreAjoutSelection
       onNouveauPseudo={ajout.nouveauPseudo}
@@ -149,6 +156,7 @@ export function EcranRestaurationRevue({
           onRenommerTag={onRenommerTag}
           onSupprimerTag={onSupprimerTag}
           onAjouterTag={onAjouterTag}
+          onAjoutPseudoExterne={ajout.ouvrirAjoutClassique}
           refTableau={refTableau}
         />
 
@@ -207,6 +215,24 @@ export function EcranRestaurationRevue({
           libelleAnnuler={t('revue.picker.annuler')}
         />
       )}
+
+      {/* Modale d'ajout classique (formulaire Type + Valeur prérempli) */}
+      <ModalAjoutClassique
+        ouvert={ajout.showAjoutClassique}
+        valeurInitiale={ajout.valeurAjoutClassique}
+        onValider={handleAjoutClassiqueValider}
+        onAnnuler={ajout.annulerAjoutClassique}
+        titre={t('revue.ajoutClassique.titre')}
+        labelType={t('revue.ajoutClassique.labelType')}
+        labelValeur={t('revue.ajoutClassique.labelValeur')}
+        libelleType={t('tableau.ajoutManuel.type.label')}
+        libelleTypeCustom={t('tableau.ajoutManuel.type.custom')}
+        libelleAjouter={t('tableau.bouton.ajouter')}
+        libelleAnnuler={t('tableau.bouton.annuler')}
+        placeholderType={t('tableau.placeholder.type')}
+        placeholderValeur={t('tableau.placeholder.valeur')}
+        alerteCrochet={t('revue.ajoutClassique.alerteCrochet')}
+      />
     </div>
   );
 }

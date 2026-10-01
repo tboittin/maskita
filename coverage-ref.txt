@@ -1,4 +1,4 @@
-statements=86.97
-lines=88.09
-functions=85.89
-branches=76.48
+statements=87.83
+lines=88.4
+functions=90.32
+branches=78.63

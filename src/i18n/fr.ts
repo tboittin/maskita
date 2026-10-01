@@ -24,6 +24,10 @@ export const fr = {
   'revue.titre.lisible': 'Texte lisible',
   'revue.bouton.nouveauTag': 'Nouveau pseudo',
   'revue.bouton.nouvelleValeur': 'Nouvelle valeur',
+  'revue.ajoutClassique.titre': 'Ajouter un pseudo',
+  'revue.ajoutClassique.labelType': 'Pseudo',
+  'revue.ajoutClassique.labelValeur': 'Valeur',
+  'revue.ajoutClassique.alerteCrochet': 'La valeur ne peut pas contenir de crochets « [ » ou « ] »',
   'revue.picker.titre.deplacer': (v: string) => `Déplacer « ${v} » vers quel pseudo ?`,
   'revue.picker.titre.ajouter': 'Ajouter à quel pseudo ?',
   'revue.picker.valeur': (v: string) => `Valeur : ${v}`,
@@ -62,7 +66,7 @@ export const fr = {
   'tableau.placeholder.valeur': 'Valeur',
   'tableau.bouton.ajouter': 'Ajouter',
   'tableau.bouton.annuler': 'Annuler',
-  'tableau.bouton.ajouterPseudo': '+ Ajouter un pseudo',
+  'tableau.bouton.ajouterPseudoClassique': '+ Ajouter un pseudo',
 
   /* FileDropZone */
   'dropzone.chargement': 'Extraction en cours…',

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { estValeurValide } from '../utils/mapping';
 
 export type SourceApercu = 'haut' | 'bas';
 
@@ -29,9 +30,15 @@ export function useAjoutRapide({
 }: OptionsAjoutRapide) {
   const [selection, setSelection] = useState<SelectionApercu | null>(null);
   const [picker, setPicker] = useState<{ valeur: string; tagSource?: string } | null>(null);
+  const [valeurAjoutClassique, setValeurAjoutClassique] = useState('');
+  const [showAjoutClassique, setShowAjoutClassique] = useState(false);
   const selectionRef = useRef('');
 
-  const gererSelection = (source: SourceApercu) => (valeur: string) => {
+  const gererSelection = (source: SourceApercu) => (valeur: string, estDansTag?: boolean) => {
+    // INT-1 : si la sélection vient du volet haut et contient des crochets,
+    // c'est un tag existant → ne pas afficher la barre d'ajout
+    // CORR-1 : si la sélection est à l'intérieur d'un tag, idem
+    if (source === 'haut' && (!estValeurValide(valeur) || estDansTag)) return;
     selectionRef.current = valeur;
     setSelection({ valeur, source });
   };
@@ -76,6 +83,16 @@ export function useAjoutRapide({
     selectionRef.current = '';
   };
 
+  const ouvrirAjoutClassique = () => {
+    setValeurAjoutClassique(selectionRef.current);
+    setShowAjoutClassique(true);
+  };
+
+  const annulerAjoutClassique = () => {
+    setValeurAjoutClassique('');
+    setShowAjoutClassique(false);
+  };
+
   return {
     selection,
     gererSelection,
@@ -86,5 +103,9 @@ export function useAjoutRapide({
     annulerPicker,
     effacerSelection,
     picker,
+    valeurAjoutClassique,
+    ouvrirAjoutClassique,
+    annulerAjoutClassique,
+    showAjoutClassique,
   };
 }
