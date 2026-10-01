@@ -272,6 +272,46 @@ describe('nomContientValeursMapping', () => {
       [],
     );
   });
+
+  // ── Scénario utilisateur : token partiel d'une valeur multi-mot ──────────
+  it("détecte une valeur multi-mot quand un seul token est dans le nom (ex: 'Lefevre' de 'Henri Lefevre')", () => {
+    const mapping = { '[PERSONNE]': ['Henri Lefevre'] };
+    // Le nom ne contient QUE "Lefevre", pas "Henri"
+    expect(
+      nomContientValeursMapping('rapport Lefevre-pseudonymise.docx', mapping),
+    ).toEqual(['Henri Lefevre']);
+  });
+
+  it('détecte une valeur multi-mot quand le nom complet est présent', () => {
+    const mapping = { '[PERSONNE]': ['Henri Lefevre'] };
+    expect(
+      nomContientValeursMapping(
+        'rapport Henri Lefevre-pseudonymise.docx',
+        mapping,
+      ),
+    ).toEqual(['Henri Lefevre']);
+  });
+
+  it('détecte parmi plusieurs tags quand un seul token correspond', () => {
+    const mapping = {
+      '[PERSONNE]': ['Henri Lefevre', 'Sophie Lambert'],
+      '[EMAIL]': ['test@exemple.fr'],
+    };
+    const resultat = nomContientValeursMapping(
+      'rapport Lefevre-pseudonymise.docx',
+      mapping,
+    );
+    expect(resultat).toContain('Henri Lefevre');
+    expect(resultat).not.toContain('Sophie Lambert');
+    expect(resultat).not.toContain('test@exemple.fr');
+  });
+
+  it("détecte une valeur canonique (minuscule) quand le token est présent", () => {
+    const mapping = { '[PERSONNE]': ['henri lefevre'] };
+    expect(
+      nomContientValeursMapping('rapport Lefevre-pseudonymise.docx', mapping),
+    ).toEqual(['henri lefevre']);
+  });
 });
 
 describe('estSelectionDansTag', () => {
