@@ -134,73 +134,90 @@ describe('EcranTelechargement', () => {
       expect(boutonDocAfter).not.toBeDisabled();
     });
 
-    it('affiche une modale de warning quand le nom contient des valeurs sensibles', async () => {
+    it('affiche un warning inline quand le nom contient des valeurs sensibles et bloque le téléchargement', async () => {
       nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
 
       renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
 
+      // Le message d'erreur inline est visible
+      const alert = screen.getByRole('alert');
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveTextContent(/Jean Dupont/);
+
+      // Aucun dialog/modal de warning
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      // Le téléchargement est bloqué
       fireEvent.click(screen.getByText('Télécharger le document'));
-
-      await waitFor(() => {
-        expect(screen.getByRole('dialog')).toBeInTheDocument();
-        expect(screen.getByText('Télécharger quand même')).toBeInTheDocument();
-        expect(screen.getByText('Annuler')).toBeInTheDocument();
-      });
-
-      // buildDocument ne doit PAS être appelé (bloqué par le warning)
-      expect(buildDocumentMock).not.toHaveBeenCalled();
-    });
-
-    it('télécharge quand même après avoir confirmé le warning', async () => {
-      nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
-
-      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
-
-      // Premier clic → warning
-      fireEvent.click(screen.getByText('Télécharger le document'));
-
-      await waitFor(() => {
-        expect(screen.getByText('Télécharger quand même')).toBeInTheDocument();
-      });
-
-      // Confirmer
-      fireEvent.click(screen.getByText('Télécharger quand même'));
-
-      await waitFor(() => {
-        expect(buildDocumentMock).toHaveBeenCalledTimes(1);
-        expect(declencherTelechargementMock).toHaveBeenCalledTimes(1);
-        expect(screen.getByText('Document téléchargé ✓')).toBeInTheDocument();
-      });
-    });
-
-    it('annule le warning et ne télécharge pas', async () => {
-      nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
-
-      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
-
-      fireEvent.click(screen.getByText('Télécharger le document'));
-
-      await waitFor(() => {
-        expect(screen.getByText('Annuler')).toBeInTheDocument();
-      });
-
-      fireEvent.click(screen.getByText('Annuler'));
-
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-      });
-
       expect(buildDocumentMock).not.toHaveBeenCalled();
       expect(declencherTelechargementMock).not.toHaveBeenCalled();
     });
 
-    it('ne vérifie pas le nom sensible quand verifierNomSensible=false et télécharge directement', async () => {
+    it("met aria-invalid sur l'input du document quand des valeurs sensibles sont détectées", () => {
+      nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
+
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+
+      const inputDoc = screen.getByDisplayValue('mon-rapport-pseudonymise.docx');
+      expect(inputDoc).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('le warning inline disparaît quand le nom est corrigé', async () => {
+      nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
+
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+
+      // Le warning est visible
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+
+      // Simuler un retour à un nom sain
+      nomContientValeursMappingMock.mockReturnValue([]);
+      const inputDoc = screen.getByDisplayValue('mon-rapport-pseudonymise.docx');
+      fireEvent.change(inputDoc, { target: { value: 'rapport-safe.docx' } });
+
+      // Le warning a disparu
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+      // aria-invalid est retiré
+      expect(inputDoc).toHaveAttribute('aria-invalid', 'false');
+    });
+
+    it('permet de télécharger une fois le nom corrigé', async () => {
+      // D'abord, le nom est sensible
+      nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
+
+      renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
+
+      // Tenter de télécharger → bloqué
+      fireEvent.click(screen.getByText('Télécharger le document'));
+      expect(buildDocumentMock).not.toHaveBeenCalled();
+
+      // Corriger le nom
+      nomContientValeursMappingMock.mockReturnValue([]);
+      const inputDoc = screen.getByDisplayValue('mon-rapport-pseudonymise.docx');
+      fireEvent.change(inputDoc, { target: { value: 'rapport-propre.docx' } });
+
+      // Maintenant le téléchargement fonctionne
+      fireEvent.click(screen.getByText('Télécharger le document'));
+      await waitFor(() => {
+        expect(buildDocumentMock).toHaveBeenCalledTimes(1);
+        expect(declencherTelechargementMock).toHaveBeenCalledWith(
+          expect.any(Blob),
+          'rapport-propre.docx',
+        );
+      });
+    });
+
+    it('ne montre pas de warning quand verifierNomSensible=false et télécharge directement', async () => {
       nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
 
       renderAvecI18n(
         <EcranTelechargement {...PROPS_DEFAUT} verifierNomSensible={false} />,
       );
 
+      // Aucun warning inline
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
       fireEvent.click(screen.getByText('Télécharger le document'));
 
       await waitFor(() => {
@@ -209,7 +226,7 @@ describe('EcranTelechargement', () => {
         expect(screen.getByText('Document téléchargé ✓')).toBeInTheDocument();
       });
 
-      // Aucune modale de warning ne doit s'afficher
+      // Aucune modale de warning non plus
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(screen.queryByText('Télécharger quand même')).not.toBeInTheDocument();
     });
