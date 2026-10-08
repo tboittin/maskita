@@ -148,8 +148,8 @@ export function FooterLegal() {
                 aria-label={t('footer.afficherCoordonnees')}
               >
                 <p>{t('footer.telephone')} : {decodedPhone}</p>
-                <p>{decodedEmail}</p>
-                <p>{decodedAdresse}</p>
+                <p>{t('footer.email')} : {decodedEmail}</p>
+                <p>{t('footer.adresse')} : {decodedAdresse}</p>
               </div>
             )}
           </section>

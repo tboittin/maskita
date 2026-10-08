@@ -124,6 +124,8 @@ export const fr = {
   'footer.ei': 'Entrepreneur individuel',
   'footer.siren': 'SIREN',
   'footer.telephone': 'Téléphone',
+  'footer.email': 'E-mail',
+  'footer.adresse': 'Adresse de domiciliation',
   'footer.fermer': 'Fermer',
 
   /* errors courants */

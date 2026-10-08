@@ -126,6 +126,8 @@ export const en: Dictionnaire = {
   'footer.ei': 'Sole proprietor (EI)',
   'footer.siren': 'SIREN',
   'footer.telephone': 'Phone',
+  'footer.email': 'Email',
+  'footer.adresse': 'Registered office address',
   'footer.fermer': 'Close',
 
   /* errors courants */
