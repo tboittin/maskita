@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import legal from '../legal.json';
 import { useLangue } from '../i18n/context';
 import { Bouton, BouclierIcon, Modal } from '@khaleeno/maskita-design-system';
@@ -9,9 +9,34 @@ const styleFooter: React.CSSProperties = {
   textAlign: 'center',
 };
 
+const styleCoordonnees: React.CSSProperties = {
+  marginTop: 'var(--espacement-sm)',
+  padding: 'var(--espacement-sm)',
+  background: 'var(--couleur-surface-secondaire, #f5f5f5)',
+  borderRadius: 'var(--rayon, 6px)',
+  fontSize: '0.875rem',
+  lineHeight: 1.7,
+};
+
 export function FooterLegal() {
   const { t } = useLangue();
   const [ouvert, setOuvert] = useState(false);
+  const [coordonneesVisibles, setCoordonneesVisibles] = useState(false);
+  const blocCoordonneesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (coordonneesVisibles && blocCoordonneesRef.current) {
+      blocCoordonneesRef.current.focus();
+    }
+  }, [coordonneesVisibles]);
+
+  const handleAfficherCoordonnees = () => {
+    setCoordonneesVisibles(true);
+  };
+
+  const decodedPhone = coordonneesVisibles ? atob(legal.phone) : '';
+  const decodedEmail = coordonneesVisibles ? atob(legal.email) : '';
+  const decodedAdresse = coordonneesVisibles ? atob(legal.adresseDeDomiciliation) : '';
 
   return (
     <>
@@ -24,9 +49,15 @@ export function FooterLegal() {
       <Modal
         ouvert={ouvert}
         titre={t('footer.titre')}
-        onFermer={() => setOuvert(false)}
+        onFermer={() => {
+          setOuvert(false);
+          setCoordonneesVisibles(false);
+        }}
         pied={
-          <Bouton variante="secondaire" onClick={() => setOuvert(false)}>
+          <Bouton variante="secondaire" onClick={() => {
+            setOuvert(false);
+            setCoordonneesVisibles(false);
+          }}>
             {t('footer.fermer')}
           </Bouton>
         }
@@ -46,8 +77,9 @@ export function FooterLegal() {
               {t('footer.editeur')}
             </h4>
             <p>{legal.editorName}</p>
+            <p>{t('footer.siren')} : {legal.siren}</p>
+            <p>{legal.eiMention}</p>
             <p>{legal.adress}</p>
-            <p>{legal.email}</p>
           </section>
 
           <section>
@@ -93,6 +125,32 @@ export function FooterLegal() {
               {t('footer.responsabilite')}
             </h4>
             <p>{legal.liability}</p>
+          </section>
+
+          <section>
+            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
+              {t('footer.ei')}
+            </h4>
+            <p>{legal.editorName}</p>
+            <p>{t('footer.siren')} : {legal.siren}</p>
+            {!coordonneesVisibles && (
+              <Bouton variante="secondaire" taille="sm" onClick={handleAfficherCoordonnees}>
+                {t('footer.afficherCoordonnees')}
+              </Bouton>
+            )}
+            {coordonneesVisibles && (
+              <div
+                ref={blocCoordonneesRef}
+                tabIndex={-1}
+                style={styleCoordonnees}
+                role="region"
+                aria-label={t('footer.afficherCoordonnees')}
+              >
+                <p>{t('footer.telephone')} : {decodedPhone}</p>
+                <p>{decodedEmail}</p>
+                <p>{decodedAdresse}</p>
+              </div>
+            )}
           </section>
         </div>
       </Modal>

@@ -122,6 +122,10 @@ export const en: Dictionnaire = {
   'footer.donnees': 'Data protection',
   'footer.propriete': 'Intellectual property',
   'footer.responsabilite': 'Liability',
+  'footer.afficherCoordonnees': 'Show contact details',
+  'footer.ei': 'Sole proprietor (EI)',
+  'footer.siren': 'SIREN',
+  'footer.telephone': 'Phone',
   'footer.fermer': 'Close',
 
   /* errors courants */

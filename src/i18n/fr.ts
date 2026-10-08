@@ -120,6 +120,10 @@ export const fr = {
   'footer.donnees': 'Protection des données',
   'footer.propriete': 'Propriété intellectuelle',
   'footer.responsabilite': 'Responsabilité',
+  'footer.afficherCoordonnees': 'Afficher les coordonnées',
+  'footer.ei': 'Entrepreneur individuel',
+  'footer.siren': 'SIREN',
+  'footer.telephone': 'Téléphone',
   'footer.fermer': 'Fermer',
 
   /* errors courants */
