@@ -24,8 +24,8 @@ describe('FooterLegal', () => {
       expect(screen.getByText('Protection des données')).toBeInTheDocument();
       expect(screen.getByText('Propriété intellectuelle')).toBeInTheDocument();
       expect(screen.getByText('Responsabilité')).toBeInTheDocument();
-      // Le nom apparaît dans les sections Éditeur et EI
-      expect(screen.getAllByText(/Thomas Fleuriel Boittin/).length).toBe(2);
+      // Le nom apparaît dans la section Éditeur
+      expect(screen.getAllByText(/Thomas Fleuriel Boittin/).length).toBe(1);
       expect(screen.getByText(/licence MIT/)).toBeInTheDocument();
     });
 
@@ -53,10 +53,10 @@ describe('FooterLegal', () => {
     renderAvecI18n(<FooterLegal />);
     fireEvent.click(screen.getByText('Mentions légales'));
 
-    // SIREN apparaît dans les sections Éditeur et EI
-    expect(screen.getAllByText(/^SIREN/).length).toBe(2);
-    // Entrepreneur individuel apparaît comme contenu et comme titre de section
-    expect(screen.getAllByText('Entrepreneur individuel').length).toBe(2);
+    // SIREN apparaît dans la section Éditeur uniquement
+    expect(screen.getAllByText(/^SIREN/).length).toBe(1);
+    // Entrepreneur individuel apparaît comme mention (plus de section dédiée)
+    expect(screen.getAllByText('Entrepreneur individuel').length).toBe(1);
   });
 
   it('affiche le bouton "Afficher les coordonnées" dans la popup', () => {
@@ -81,11 +81,9 @@ describe('FooterLegal', () => {
 
     fireEvent.click(screen.getByText('Afficher les coordonnées'));
 
-    // Le téléphone n'apparaît que dans la section EI (pas dans Éditeur)
-    expect(screen.getByText(/0623397978/)).toBeInTheDocument();
-    // L'email décodé n'apparaît que dans la section EI
+    // L'email décodé apparaît dans la section Éditeur
     expect(screen.getByText(/tboittin\.pro@gmail\.com/)).toBeInTheDocument();
-    // L'adresse décodée n'apparaît que dans la section EI
+    // L'adresse décodée apparaît dans la section Éditeur
     expect(screen.getByText(/200, impasse des cerisiers/)).toBeInTheDocument();
     expect(screen.queryByText('Afficher les coordonnées')).not.toBeInTheDocument();
   });

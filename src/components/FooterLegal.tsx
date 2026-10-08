@@ -34,9 +34,8 @@ export function FooterLegal() {
     setCoordonneesVisibles(true);
   };
 
-  const decodedPhone = coordonneesVisibles ? atob(legal.phone) : '';
   const decodedEmail = coordonneesVisibles ? atob(legal.email) : '';
-  const decodedAdresse = coordonneesVisibles ? atob(legal.adresseDeDomiciliation) : '';
+  const decodedAdresse = coordonneesVisibles ? atob(legal.adresse) : '';
 
   return (
     <>
@@ -81,6 +80,23 @@ export function FooterLegal() {
             <p>{legal.editorName}</p>
             <p>{t('footer.siren')} : {legal.siren}</p>
             <p>{t('footer.eiMention')}</p>
+            {!coordonneesVisibles && (
+              <Bouton variante="secondaire" taille="sm" onClick={handleAfficherCoordonnees}>
+                {t('footer.afficherCoordonnees')}
+              </Bouton>
+            )}
+            {coordonneesVisibles && (
+              <div
+                ref={blocCoordonneesRef}
+                tabIndex={-1}
+                style={styleCoordonnees}
+                role="region"
+                aria-label={t('footer.afficherCoordonnees')}
+              >
+                <p>{t('footer.email')} : {decodedEmail}</p>
+                <p>{t('footer.adresse')} : {decodedAdresse}</p>
+              </div>
+            )}
           </section>
 
           <section>
@@ -128,31 +144,6 @@ export function FooterLegal() {
             <p>{t('footer.liability')}</p>
           </section>
 
-          <section>
-            <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
-              {t('footer.ei')}
-            </h4>
-            <p>{legal.editorName}</p>
-            <p>{t('footer.siren')} : {legal.siren}</p>
-            {!coordonneesVisibles && (
-              <Bouton variante="secondaire" taille="sm" onClick={handleAfficherCoordonnees}>
-                {t('footer.afficherCoordonnees')}
-              </Bouton>
-            )}
-            {coordonneesVisibles && (
-              <div
-                ref={blocCoordonneesRef}
-                tabIndex={-1}
-                style={styleCoordonnees}
-                role="region"
-                aria-label={t('footer.afficherCoordonnees')}
-              >
-                <p>{t('footer.telephone')} : {decodedPhone}</p>
-                <p>{t('footer.email')} : {decodedEmail}</p>
-                <p>{t('footer.adresse')} : {decodedAdresse}</p>
-              </div>
-            )}
-          </section>
         </div>
       </Modal>
     </>
