@@ -70,6 +70,8 @@ export function FooterLegal() {
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--espacement-md)',
+            maxHeight: '60vh',
+            overflowY: 'auto',
           }}
         >
           <section>
