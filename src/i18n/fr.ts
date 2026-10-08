@@ -121,11 +121,9 @@ export const fr = {
   'footer.propriete': 'Propriété intellectuelle',
   'footer.responsabilite': 'Responsabilité',
   'footer.afficherCoordonnees': 'Afficher les coordonnées',
-  'footer.ei': 'Entrepreneur individuel',
   'footer.siren': 'SIREN',
-  'footer.telephone': 'Téléphone',
   'footer.email': 'E-mail',
-  'footer.adresse': 'Adresse de domiciliation',
+  'footer.adresse': 'Adresse',
   'footer.fermer': 'Fermer',
 
   /* contenu des mentions légales */
