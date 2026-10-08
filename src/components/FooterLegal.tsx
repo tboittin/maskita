@@ -80,7 +80,7 @@ export function FooterLegal() {
             </h4>
             <p>{legal.editorName}</p>
             <p>{t('footer.siren')} : {legal.siren}</p>
-            <p>{legal.eiMention}</p>
+            <p>{t('footer.eiMention')}</p>
           </section>
 
           <section>
@@ -94,14 +94,14 @@ export function FooterLegal() {
             <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
               {t('footer.donnees')}
             </h4>
-            <p>{legal.privacy}</p>
+            <p>{t('footer.privacy')}</p>
           </section>
 
           <section>
             <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
               {t('footer.propriete')}
             </h4>
-            <p>{legal.intellectualProperty}</p>
+            <p>{t('footer.intellectualProperty')}</p>
           </section>
 
           <section>
@@ -125,7 +125,7 @@ export function FooterLegal() {
             <h4 style={{ fontWeight: 600, marginBottom: 'var(--espacement-xs)', color: 'var(--couleur-texte)' }}>
               {t('footer.responsabilite')}
             </h4>
-            <p>{legal.liability}</p>
+            <p>{t('footer.liability')}</p>
           </section>
 
           <section>
