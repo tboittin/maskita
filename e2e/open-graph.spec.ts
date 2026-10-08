@@ -5,7 +5,7 @@ const OG_TAGS: { selector: string; attr: string; expected: string }[] = [
     selector: 'meta[name="description"]',
     attr: 'content',
     expected:
-      'Pseudonymisez vos rapports Word directement dans le navigateur avant de les confier à ChatGPT ou Claude, puis restaurez-les. Aucun serveur, aucune donnée qui sort, open source.',
+      'Pseudonymisation et restauration de documents .docx, .md et .txt dans le navigateur. Aucun serveur, open source.',
   },
   { selector: 'meta[property="og:type"]', attr: 'content', expected: 'website' },
   {
@@ -17,18 +17,23 @@ const OG_TAGS: { selector: string; attr: string; expected: string }[] = [
     selector: 'meta[property="og:title"]',
     attr: 'content',
     expected:
-      'Maskita — Pseudonymisez vos documents avant de les confier à une IA',
+      'Maskita — Pseudonymisez vos documents localement avant de les confier à une IA',
   },
   {
     selector: 'meta[property="og:description"]',
     attr: 'content',
     expected:
-      'Pseudonymisation de documents .docx 100 % dans le navigateur. Aucun serveur, open source.',
+      'Pseudonymisation et restauration de documents .docx, .md et .txt dans le navigateur. Aucun serveur, open source.',
   },
   {
     selector: 'meta[property="og:image"]',
     attr: 'content',
-    expected: '/og-image.png',
+    expected: 'https://maskita.vercel.app/og-image.png',
+  },
+  {
+    selector: 'meta[property="og:site_name"]',
+    attr: 'content',
+    expected: 'Maskita',
   },
   {
     selector: 'meta[property="og:image:width"]',
