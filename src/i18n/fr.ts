@@ -120,7 +120,19 @@ export const fr = {
   'footer.donnees': 'Protection des données',
   'footer.propriete': 'Propriété intellectuelle',
   'footer.responsabilite': 'Responsabilité',
+  'footer.afficherCoordonnees': 'Afficher les coordonnées',
+  'footer.ei': 'Entrepreneur individuel',
+  'footer.siren': 'SIREN',
+  'footer.telephone': 'Téléphone',
+  'footer.email': 'E-mail',
+  'footer.adresse': 'Adresse de domiciliation',
   'footer.fermer': 'Fermer',
+
+  /* contenu des mentions légales */
+  'footer.eiMention': 'Entrepreneur individuel',
+  'footer.privacy': 'Cette application traite vos documents exclusivement dans votre navigateur. Aucune donnée personnelle, aucun document, aucune information identifiante n\'est transmise, stockée ou traitée sur un serveur externe. L\'ensemble du traitement (extraction, analyse, pseudonymisation, reconstruction) est effectué localement, en mémoire, sans persistance. Aucun cookie, traceur ou outil d\'analyse n\'est utilisé. Vous conservez le contrôle total de vos données à chaque étape.',
+  'footer.intellectualProperty': 'Maskita est un logiciel libre distribué sous licence MIT. Le code source est disponible sur GitHub. Les icônes et emojis utilisés dans l\'interface sont fournis à titre indicatif et ne font pas l\'objet de droits d\'auteur spécifiques.',
+  'footer.liability': 'Ce logiciel est fourni « en l\'état », sans garantie d\'aucune sorte, expresse ou implicite. L\'utilisateur est seul responsable de l\'utilisation qu\'il fait des documents pseudonymisés et restaurés. Il lui incombe de vérifier l\'exhaustivité de la pseudonymisation avant de transmettre les documents à un tiers. L\'auteur ne saurait être tenu responsable d\'une fuite de données résultant d\'une mauvaise utilisation du logiciel.',
 
   /* errors courants */
   'erreur.generique': 'Une erreur est survenue.',

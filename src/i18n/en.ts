@@ -122,7 +122,19 @@ export const en: Dictionnaire = {
   'footer.donnees': 'Data protection',
   'footer.propriete': 'Intellectual property',
   'footer.responsabilite': 'Liability',
+  'footer.afficherCoordonnees': 'Show contact details',
+  'footer.ei': 'Sole proprietor (EI)',
+  'footer.siren': 'SIREN',
+  'footer.telephone': 'Phone',
+  'footer.email': 'Email',
+  'footer.adresse': 'Registered office address',
   'footer.fermer': 'Close',
+
+  /* legal notice content */
+  'footer.eiMention': 'Sole proprietor (EI)',
+  'footer.privacy': 'This application processes your documents exclusively in your browser. No personal data, documents, or identifying information is transmitted, stored, or processed on an external server. All processing (extraction, analysis, pseudonymisation, reconstruction) is performed locally, in memory, without persistence. No cookies, trackers, or analytics tools are used. You retain full control of your data at every step.',
+  'footer.intellectualProperty': 'Maskita is free software distributed under the MIT license. The source code is available on GitHub. The icons and emojis used in the interface are provided for informational purposes and are not subject to specific copyright.',
+  'footer.liability': 'This software is provided "as is", without warranty of any kind, express or implied. The user is solely responsible for their use of pseudonymised and restored documents. It is their responsibility to verify the completeness of pseudonymisation before transmitting documents to a third party. The author shall not be held liable for any data breach resulting from misuse of the software.',
 
   /* errors courants */
   'erreur.generique': 'An error occurred.',
