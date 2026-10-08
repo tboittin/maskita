@@ -31,8 +31,7 @@ test.describe('US-ML-01 — Mentions légales et coordonnées EI', () => {
     // Cliquer pour afficher les coordonnées
     await page.getByText('Afficher les coordonnées').click();
 
-    // Vérifier que les valeurs décodées sont visibles
-    await expect(page.getByText('0623397978')).toBeVisible();
+    // Vérifier que les valeurs décodées sont visibles (pas de téléphone — champ supprimé)
     await expect(page.getByText('tboittin.pro@gmail.com')).toBeVisible();
     await expect(
       page.getByText('200, impasse des cerisiers, 83560 Ginasservis, France'),

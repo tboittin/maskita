@@ -123,11 +123,9 @@ export const en: Dictionnaire = {
   'footer.propriete': 'Intellectual property',
   'footer.responsabilite': 'Liability',
   'footer.afficherCoordonnees': 'Show contact details',
-  'footer.ei': 'Sole proprietor (EI)',
   'footer.siren': 'SIREN',
-  'footer.telephone': 'Phone',
   'footer.email': 'Email',
-  'footer.adresse': 'Registered office address',
+  'footer.adresse': 'Address',
   'footer.fermer': 'Close',
 
   /* legal notice content */
