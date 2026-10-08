@@ -85,8 +85,8 @@ describe('FooterLegal', () => {
     expect(screen.getByText(/06 12 34 56 78/)).toBeInTheDocument();
     // L'email décodé n'apparaît que dans la section EI
     expect(screen.getByText(/tboittin@gmail\.com/)).toBeInTheDocument();
-    // L'adresse apparaît dans les sections Éditeur ET EI
-    expect(screen.getAllByText(/200, impasse des cerisiers/).length).toBe(2);
+    // L'adresse décodée n'apparaît que dans la section EI
+    expect(screen.getByText(/200, impasse des cerisiers/)).toBeInTheDocument();
     expect(screen.queryByText('Afficher les coordonnées')).not.toBeInTheDocument();
   });
 });

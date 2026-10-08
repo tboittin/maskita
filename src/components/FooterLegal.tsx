@@ -79,7 +79,6 @@ export function FooterLegal() {
             <p>{legal.editorName}</p>
             <p>{t('footer.siren')} : {legal.siren}</p>
             <p>{legal.eiMention}</p>
-            <p>{legal.adress}</p>
           </section>
 
           <section>
