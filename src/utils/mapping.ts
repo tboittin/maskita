@@ -42,10 +42,18 @@ export function appliquerMapping(texte: string, mapping: Mapping): string {
     const valeursTriees = [...valeurs].sort((a, b) => b.length - a.length);
 
     for (const valeur of valeursTriees) {
+      // INT-1 — Garde-fou : une valeur contenant des crochets est un tag,
+      // pas une valeur à pseudonymiser. Les lookarounds (?<!\p{L})/(?!\p{L})
+      // matcheraient '[' / ']' (non-lettres) là où \b ne le faisait pas,
+      // donc on filtre explicitement pour préserver le comportement.
+      if (!estValeurValide(valeur)) continue;
       // Échapper les caractères regex dans la valeur
       const echapee = valeur.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Word boundaries (\b) pour que 'Tom' ne soit pas remplacé dans 'Tommy'
-      const regex = new RegExp(`\\b${echapee}\\b`, 'gi');
+      // Word boundaries Unicode-aware (REGEX-01) : `\b` ne reconnaît que
+      // [a-zA-Z0-9_] sans le flag `u`, donc 'Chloé' n'était pas remplacé.
+      // (?<!\p{L}) / (?!\p{L}) exigent que la valeur ne soit pas entourée
+      // de lettres (é, è, ê... incluses via \p{L}).
+      const regex = new RegExp(`(?<!\\p{L})${echapee}(?!\\p{L})`, 'giu');
       resultat = resultat.replace(regex, tag);
     }
   }
