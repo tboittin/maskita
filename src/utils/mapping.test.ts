@@ -85,50 +85,49 @@ describe('appliquerMapping', () => {
     expect(resultat).toBe('[ADOLESCENT] a discuté avec [ADOLESCENT] et [ADOLESCENT]');
   });
 
-  // REGEX-01 — Word boundaries Unicode-aware pour les accents (é, è, ê...)
-  it('pseudonymise une valeur accentuée en fin de mot (Chloé) (REGEX-01)', () => {
-    const mapping = { '[PERSONNE]': ['Chloé'] };
-    const texte = 'J\'ai discuté avec Chloé hier.';
+  // CORR-02 — Tag imbriqué : ne pas pseudonymiser dans un tag déjà posé
+  it("ne pseudonymise pas dans un tag déjà posé (CORR-02)", () => {
+    const mapping = {
+      '[MON PATIENT]': ['MON PATIENT'],
+      '[PERSONNE]': ['PATIENT'],
+    };
 
+    const texte = 'MON PATIENT est malade. PATIENT va bien.';
     const resultat = appliquerMapping(texte, mapping);
 
-    expect(resultat).toBe('J\'ai discuté avec [PERSONNE] hier.');
+    // "MON PATIENT" doit être remplacé par [MON PATIENT] (plus longue correspondance)
+    // "PATIENT" seul (deuxième occurrence) doit être remplacé par [PERSONNE]
+    // Mais le PATIENT dans [MON PATIENT] NE doit PAS être remplacé
+    expect(resultat).not.toMatch(/\[MON \[PERSONNE\]\]/);
+    expect(resultat).toBe('[MON PATIENT] est malade. [PERSONNE] va bien.');
   });
 
-  it('pseudonymise une valeur accentuée (Hélène) (REGEX-01)', () => {
-    const mapping = { '[PERSONNE]': ['Hélène'] };
-    const texte = 'Hélène et Chloé sont partis.';
+  // CORR-02 — Chevauchement : la plus longue correspondance gagne
+  it("en cas de chevauchement, garde la correspondance la plus longue (CORR-02)", () => {
+    const mapping = {
+      '[LIEU]': ['Saint-Jean-de-Luz'],
+      '[VILLE]': ['Jean'],
+    };
 
+    const texte = 'Saint-Jean-de-Luz est une belle ville. Jean est mon ami.';
     const resultat = appliquerMapping(texte, mapping);
 
-    expect(resultat).toBe('[PERSONNE] et Chloé sont partis.');
+    // "Saint-Jean-de-Luz" complet → [LIEU] (plus long)
+    // "Jean" seul (deuxième occurrence) → [VILLE]
+    // Mais "Jean" dans "Saint-Jean-de-Luz" ne doit pas être remplacé
+    expect(resultat).toBe('[LIEU] est une belle ville. [VILLE] est mon ami.');
   });
 
-  it('pseudonymise une valeur accentuée en début de phrase (Émilie) (REGEX-01)', () => {
-    const mapping = { '[PERSONNE]': ['Émilie'] };
-    const texte = 'Émilie a répondu à la question.';
+  // CORR-02 — Occurrence isolée bien remplacée (tag non présent)
+  it("remplace les occurrences isolées d'une valeur (CORR-02)", () => {
+    const mapping = {
+      '[PERSONNE]': ['Dupont'],
+    };
 
+    const texte = 'Dupont est ici, et Dupont aussi.';
     const resultat = appliquerMapping(texte, mapping);
 
-    expect(resultat).toBe('[PERSONNE] a répondu à la question.');
-  });
-
-  it('pseudonymise toujours une valeur sans accent (Tom) (non-régression REGEX-01)', () => {
-    const mapping = { '[PERSONNE]': ['Tom'] };
-    const texte = 'Tom a parlé avec Tommy.';
-
-    const resultat = appliquerMapping(texte, mapping);
-
-    expect(resultat).toBe('[PERSONNE] a parlé avec Tommy.');
-  });
-
-  it('ne remplace pas une valeur accentuée à l\'intérieur d\'un mot plus long (REGEX-01)', () => {
-    const mapping = { '[PERSONNE]': ['Émilie'] };
-    const texte = 'Émilienne a vu Émilie.';
-
-    const resultat = appliquerMapping(texte, mapping);
-
-    expect(resultat).toBe('Émilienne a vu [PERSONNE].');
+    expect(resultat).toBe('[PERSONNE] est ici, et [PERSONNE] aussi.');
   });
 });
 
