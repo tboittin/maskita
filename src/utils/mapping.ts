@@ -48,8 +48,11 @@ export function appliquerMapping(texte: string, mapping: Mapping): string {
     const valeursTriees = [...valeurs].sort((a, b) => b.length - a.length);
 
     for (const valeur of valeursTriees) {
+      // INT-1 — garde : une valeur contenant des crochets n'est pas pseudonymisable
+      if (!estValeurValide(valeur)) continue;
       const echapee = valeur.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${echapee}\\b`, 'gi');
+      // REGEX-01 : lookarounds Unicode (accents é, è, ê... via \p{L}), flag u
+      const regex = new RegExp(`(?<!\\p{L})${echapee}(?!\\p{L})`, 'giu');
       let match: RegExpExecArray | null;
       while ((match = regex.exec(texte)) !== null) {
         correspondances.push({

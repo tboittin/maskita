@@ -129,6 +129,38 @@ describe('appliquerMapping', () => {
 
     expect(resultat).toBe('[PERSONNE] est ici, et [PERSONNE] aussi.');
   });
+
+  // ── REGEX-01 — Accents (Unicode lookarounds \p{L}) ─────────────
+
+  it("pseudonymise Chloé (accent en fin)", () => {
+    const mapping = { '[PERSONNE]': ['Chloé'] };
+    expect(appliquerMapping('Chloé est venue.', mapping)).toBe('[PERSONNE] est venue.');
+  });
+
+  it('pseudonymise Hélène', () => {
+    const mapping = { '[PERSONNE]': ['Hélène'] };
+    expect(appliquerMapping('Hélène est là.', mapping)).toBe('[PERSONNE] est là.');
+  });
+
+  it('pseudonymise Émilie en début de phrase', () => {
+    const mapping = { '[PERSONNE]': ['Émilie'] };
+    expect(appliquerMapping('Émilie est partie.', mapping)).toBe('[PERSONNE] est partie.');
+  });
+
+  it('pseudonymise Tom (non-régression boundary)', () => {
+    const mapping = { '[PERSONNE]': ['Tom'] };
+    expect(appliquerMapping('Tom est là.', mapping)).toBe('[PERSONNE] est là.');
+  });
+
+  it("ne pseudonymise pas Tom dans Tommy (boundary)", () => {
+    const mapping = { '[PERSONNE]': ['Tom'] };
+    expect(appliquerMapping('Tommy est là.', mapping)).toBe('Tommy est là.');
+  });
+
+  it("ne pseudonymise pas Émilie dans Émilienne (boundary avec accent)", () => {
+    const mapping = { '[PERSONNE]': ['Émilie'] };
+    expect(appliquerMapping('Émilienne est là.', mapping)).toBe('Émilienne est là.');
+  });
 });
 
 describe('restaurerTexte', () => {
