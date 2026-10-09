@@ -84,6 +84,52 @@ describe('appliquerMapping', () => {
     expect(resultat).not.toMatch(/\[ADOLESCENT\]\w/);
     expect(resultat).toBe('[ADOLESCENT] a discuté avec [ADOLESCENT] et [ADOLESCENT]');
   });
+
+  // REGEX-01 — Word boundaries Unicode-aware pour les accents (é, è, ê...)
+  it('pseudonymise une valeur accentuée en fin de mot (Chloé) (REGEX-01)', () => {
+    const mapping = { '[PERSONNE]': ['Chloé'] };
+    const texte = 'J\'ai discuté avec Chloé hier.';
+
+    const resultat = appliquerMapping(texte, mapping);
+
+    expect(resultat).toBe('J\'ai discuté avec [PERSONNE] hier.');
+  });
+
+  it('pseudonymise une valeur accentuée (Hélène) (REGEX-01)', () => {
+    const mapping = { '[PERSONNE]': ['Hélène'] };
+    const texte = 'Hélène et Chloé sont partis.';
+
+    const resultat = appliquerMapping(texte, mapping);
+
+    expect(resultat).toBe('[PERSONNE] et Chloé sont partis.');
+  });
+
+  it('pseudonymise une valeur accentuée en début de phrase (Émilie) (REGEX-01)', () => {
+    const mapping = { '[PERSONNE]': ['Émilie'] };
+    const texte = 'Émilie a répondu à la question.';
+
+    const resultat = appliquerMapping(texte, mapping);
+
+    expect(resultat).toBe('[PERSONNE] a répondu à la question.');
+  });
+
+  it('pseudonymise toujours une valeur sans accent (Tom) (non-régression REGEX-01)', () => {
+    const mapping = { '[PERSONNE]': ['Tom'] };
+    const texte = 'Tom a parlé avec Tommy.';
+
+    const resultat = appliquerMapping(texte, mapping);
+
+    expect(resultat).toBe('[PERSONNE] a parlé avec Tommy.');
+  });
+
+  it('ne remplace pas une valeur accentuée à l\'intérieur d\'un mot plus long (REGEX-01)', () => {
+    const mapping = { '[PERSONNE]': ['Émilie'] };
+    const texte = 'Émilienne a vu Émilie.';
+
+    const resultat = appliquerMapping(texte, mapping);
+
+    expect(resultat).toBe('Émilienne a vu [PERSONNE].');
+  });
 });
 
 describe('restaurerTexte', () => {
