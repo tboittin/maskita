@@ -186,3 +186,55 @@ describe('useAjoutRapide — CORR-1 sélection interne à un tag', () => {
     expect(result.current.selection).toEqual({ valeur: 'ATI', source: 'bas' });
   });
 });
+
+describe('useAjoutRapide — REGEX-02 (tags accentués)', () => {
+  const creer = (onAjouterPseudo: (type: string, valeur: string) => void) =>
+    renderHook(() =>
+      useAjoutRapide({
+        onAjouterPseudo,
+        onAjouterValeur: vi.fn(),
+      }),
+    );
+
+  it('un tag [ÉLÈVE] est reconnu (type ÉLÈVE)', () => {
+    const onAjouterPseudo = vi.fn();
+    const { result } = creer(onAjouterPseudo);
+
+    act(() => {
+      result.current.gererSelection('bas')('[ÉLÈVE]');
+    });
+    act(() => {
+      result.current.nouveauPseudo();
+    });
+
+    expect(onAjouterPseudo).toHaveBeenCalledWith('ÉLÈVE', '[ÉLÈVE]');
+  });
+
+  it('NON-RÉGRESSION : [PERSONNE] → type PERSONNE', () => {
+    const onAjouterPseudo = vi.fn();
+    const { result } = creer(onAjouterPseudo);
+
+    act(() => {
+      result.current.gererSelection('bas')('[PERSONNE]');
+    });
+    act(() => {
+      result.current.nouveauPseudo();
+    });
+
+    expect(onAjouterPseudo).toHaveBeenCalledWith('PERSONNE', '[PERSONNE]');
+  });
+
+  it('NON-RÉGRESSION : [PERSONNE_2] → type PERSONNE_2', () => {
+    const onAjouterPseudo = vi.fn();
+    const { result } = creer(onAjouterPseudo);
+
+    act(() => {
+      result.current.gererSelection('bas')('[PERSONNE_2]');
+    });
+    act(() => {
+      result.current.nouveauPseudo();
+    });
+
+    expect(onAjouterPseudo).toHaveBeenCalledWith('PERSONNE_2', '[PERSONNE_2]');
+  });
+});
