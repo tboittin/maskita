@@ -18,7 +18,9 @@ if [ ! -f "$SCRIPT" ]; then
 fi
 
 # Crée un dépôt jetable, commit initial comme origin/main, et le rend actif.
-# Usage : new_repo -> écho le chemin
+# Usage : new_repo [fichiers déjà présents à la base] -> écho le chemin
+#   Les fichiers optionnels sont créés dans le commit initial (= base),
+#   ce qui permet de tester ensuite leur MODIFICATION (et non un ajout).
 new_repo() {
   local dir
   dir="$(mktemp -d)"
@@ -29,6 +31,10 @@ new_repo() {
     git config user.name "test"
     git checkout -q -b main
     echo "init" > Readme.md
+    for f in "$@"; do
+      mkdir -p "$(dirname "$f")"
+      echo "version initiale $f" > "$f"
+    done
     git add -A
     git commit -q -m "init"
     # simule origin/main = commit initial
@@ -108,6 +114,23 @@ R="$(new_repo)"
 commit_files "$R" scripts/outil.sh .github/workflows/ci.yml
 OUT="$(cd "$R" && bash "$SCRIPT" 2>&1)"; RC=$?
 check_case "Cas 4 : scripts/ + .github/ uniquement → exit 0" 0 "$RC" "$OUT"
+rm -rf "$R"
+
+# --- Cas 5 : e2e MODIFIÉ (pas ajouté) + src/ → exit 0 ------------------------
+# Le fichier e2e existe déjà à la base (= origin/main) : il n'est donc pas
+# nouvellement ajouté, seulement modifié. `git diff --name-only` (sans option
+# de filtre de statut) liste indifféremment les fichiers ajoutés ET modifiés,
+# et le grep '^e2e/' les attrape dans les deux cas.
+R="$(new_repo e2e/parcours.spec.ts)"
+commit_files "$R" src/app.ts
+(
+  cd "$R"
+  echo "mise à jour du test e2e" >> e2e/parcours.spec.ts
+  git add -A
+  git commit -q -m "maj e2e existant (modification, pas ajout)"
+)
+OUT="$(cd "$R" && bash "$SCRIPT" 2>&1)"; RC=$?
+check_case "Cas 5 : e2e MODIFIÉ (pas ajouté) + src/ → exit 0" 0 "$RC" "$OUT"
 rm -rf "$R"
 
 # --- Bilan -------------------------------------------------------------------

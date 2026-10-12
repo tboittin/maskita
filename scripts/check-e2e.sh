@@ -6,9 +6,10 @@
 # doit venir avec un test e2e (e2e/) ».
 #
 # Règle :
-#   - Aucun fichier de production modifié            → exit 0 (e2e non requis)
-#   - Fichiers de production modifiés + un e2e       → exit 0
-#   - Fichiers de production modifiés, AUCUN e2e     → exit 1
+#   - Aucun fichier de production modifié                    → exit 0 (e2e non requis)
+#   - Fichiers de production modifiés + un e2e (ajouté ou
+#     mis à jour — les deux comptent)                        → exit 0
+#   - Fichiers de production modifiés, AUCUN e2e             → exit 1
 #     (sauf échappatoire explicite, voir plus bas)
 #
 # Échappatoire « sans-e2e » (déclarée par le lead, jamais par le subagent) :
@@ -67,7 +68,9 @@ fi
 # --- 3. Classification -------------------------------------------------------
 # Fichiers de production : sous src/, hors fichiers de test (*.test.ts[x]).
 PROD_FILES="$(printf '%s\n' "$CHANGED" | grep -E '^src/' | grep -Ev '\.test\.tsx?$' || true)"
-# Fichiers e2e : sous e2e/.
+# Fichiers e2e : sous e2e/. `git diff --name-only` ne filtre PAS par statut :
+# il liste aussi bien les fichiers ajoutés (A) que modifiés (M), donc un test
+# e2e simplement mis à jour est bien compté ici.
 E2E_FILES="$(printf '%s\n' "$CHANGED" | grep -E '^e2e/' || true)"
 
 echo "🔍 check-e2e : base=$BASE"
@@ -81,7 +84,7 @@ if [ -z "$PROD_FILES" ]; then
 fi
 
 if [ -n "$E2E_FILES" ]; then
-  echo "✅ Changement src/ accompagné d'un e2e : OK."
+  echo "✅ Changement src/ accompagné d'un test e2e (ajouté ou mis à jour) : OK."
   exit 0
 fi
 
