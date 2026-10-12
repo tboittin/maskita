@@ -5,8 +5,7 @@ on:
     types: [opened, edited, closed, labeled]
   issue_comment:
     types: [created]
-  # push sur main : un merge de PR vers main produit un push, exécuté depuis la
-  # branche par défaut (contenu déjà mergé) → sûr.
+  # push sur main : un merge de PR produit un push exécuté depuis la branche par défaut (sûr).
   push:
     branches: [main]
 
