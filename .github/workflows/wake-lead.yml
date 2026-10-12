@@ -5,13 +5,15 @@ on:
     types: [opened, edited, closed, labeled]
   issue_comment:
     types: [created]
-  # pull_request_target : le workflow s'exécute depuis la branche de BASE, pas depuis
-  # le merge commit de la PR → impossible d'exécuter du code tiers via une PR de fork.
-  pull_request_target:
-    types: [opened, closed, review_requested]
-  # pull_request_review volontairement ABSENT : ce trigger s'exécute depuis le merge
-  # commit de la PR et n'est pas sécurisable. Le réveil sur remarque passe par
+  # push sur main : un merge de PR vers main produit un push, et ce trigger s'exécute
+  # depuis la branche par défaut (contenu déjà mergé) → sûr.
+  # ⚠️ L'ancien trigger PR-target a été RETIRÉ : GitHub bloque ce trigger par défaut
+  # sur les dépôts publics → il ne se déclenchait jamais, plus aucune notification de merge.
+  # Les triggers de review/PR restent volontairement ABSENTS : ils s'exécutent depuis le
+  # merge commit de la PR et ne sont pas sécurisables. Le réveil sur remarque passe par
   # issue_comment (un commentaire de PR est un issue_comment, exécuté depuis main).
+  push:
+    branches: [main]
 
 permissions:
   issues: read
@@ -37,6 +39,8 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body }}
           LABEL_NAME: ${{ github.event.label.name }}
           REVIEW_STATE: ${{ github.event.review.state }}
+          PUSH_MESSAGE: ${{ github.event.head_commit.message }}
+          PUSH_REF: ${{ github.ref_name }}
         run: |
           echo "Message du workflow :"
           echo "  event=$EVENT_NAME/$EVENT_ACTION par @$ACTOR"
@@ -44,6 +48,7 @@ jobs:
           echo "  pr=$PR_NUM title='$PR_TITLE'"
           if [ -n "$COMMENT_BODY" ]; then echo "  comment: present"; else echo "  comment: absent"; fi
           echo "  label=$LABEL_NAME review=$REVIEW_STATE"
+          if [ -n "$PUSH_MESSAGE" ]; then echo "  push=$PUSH_REF commit: present"; else echo "  push: absent"; fi
 
       - name: Réveiller le lead agent
         shell: bash
@@ -58,6 +63,8 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body }}
           LABEL_NAME: ${{ github.event.label.name }}
           REVIEW_STATE: ${{ github.event.review.state }}
+          PUSH_MESSAGE: ${{ github.event.head_commit.message }}
+          PUSH_REF: ${{ github.ref_name }}
         run: |
           # Ignorer si le commentaire contient /no-wakeup
           # (seul usage de COMMENT_BODY : un test de filtre, jamais injecté dans le prompt)
@@ -70,6 +77,11 @@ jobs:
           # Le corps du commentaire (texte potentiellement non fiable) n'est JAMAIS
           # inclus dans le prompt. Le lead lira le commentaire via `gh api` s'il en a besoin.
           MSG="🔔 GitHub: $EVENT_NAME/$EVENT_ACTION par @$ACTOR"
+          if [ "$EVENT_NAME" = "push" ]; then
+            # Métadonnée uniquement : 1re ligne du message de commit, tronquée à ~150 chars.
+            FIRST_LINE=$(printf '%s' "$PUSH_MESSAGE" | head -n 1 | cut -c1-150)
+            MSG="🔔 GitHub: push sur main — $FIRST_LINE"
+          fi
           if [ -n "$ISSUE_NUM" ]; then MSG="$MSG — issue #$ISSUE_NUM ($ISSUE_TITLE)"; fi
           if [ -n "$PR_NUM" ]; then MSG="$MSG — PR #$PR_NUM ($PR_TITLE)"; fi
           if [ -n "$LABEL_NAME" ]; then MSG="$MSG — label: $LABEL_NAME"; fi
