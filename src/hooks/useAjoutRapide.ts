@@ -46,7 +46,9 @@ export function useAjoutRapide({
   const nouveauPseudo = () => {
     const v = selectionRef.current;
     if (!v) return;
-    const m = v.match(/^\[(\w+(?:_\d+)?)\]$/);
+    // REGEX-02 : `\w` est ASCII-only sans flag `u` → un tag renommé avec accent
+    // (ex. `[ÉLÈVE]`) n'était pas reconnu. On utilise `\p{L}\p{N}` + flag `u`.
+    const m = v.match(/^\[([\p{L}\p{N}_]+(?:_\d+)?)\]$/u);
     const type = m ? m[1] : 'NOUVELLE_VALEUR';
     onAjouterPseudo(type, v);
     onFocusNouveauPseudo?.(`[${type}]`);
