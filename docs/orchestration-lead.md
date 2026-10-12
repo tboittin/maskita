@@ -142,7 +142,18 @@ herdr agent read fix-b08 --source recent-unwrapped --lines 100
 
 ### Étape 6 : Pull Request
 
-Pour chaque worktree terminé par un sous-agent, créer une PR :
+Pour chaque worktree terminé par un sous-agent, créer une PR.
+
+**Avant `gh pr create`, exécuter impérativement le gate e2e** — il refuse la PR (exit 1)
+si du code de `src/` a changé sans qu'un fichier `e2e/` soit ajouté :
+
+```bash
+bash scripts/check-e2e.sh        # exit 0 = e2e OK ou non requis ; exit 1 = e2e manquant
+```
+
+L'échappatoire `sans-e2e` est **réservée au lead** (jamais au subagent) :
+`SKIP_E2E=1 bash scripts/check-e2e.sh` ou `bash scripts/check-e2e.sh --sans-e2e`
+→ exit 0 avec un log explicite de contournement.
 
 ```bash
 gh pr create --base main --head fix/ma-branche \

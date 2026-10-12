@@ -54,6 +54,7 @@ de `main`, car il pilote tous les subagents.
 
 - couverture de test maximale. Chaque composant, fonction utilitaire doit avoir des tests unitaires associés
 - les tests e2e (Playwright) dans `e2e/` doivent être mis à jour pour couvrir les nouveaux comportements
+- `scripts/check-e2e.sh` est **OBLIGATOIRE** avant `gh pr create` : il refuse (exit 1) toute PR dont les changements de `src/` (hors `*.test.ts[x]`) ne sont pas accompagnés d'au moins un fichier `e2e/`. Échappatoire réservée au lead : `SKIP_E2E=1 bash scripts/check-e2e.sh` ou `bash scripts/check-e2e.sh --sans-e2e` (log explicite « e2e contourné explicitement (sans-e2e) »).
 - `npm test` doit passer avant chaque commit
 - `tsc --noEmit` doit passer avant chaque commit
 - Les bugs signalés par l'utilisateur sont prioritaires sur les nouvelles
