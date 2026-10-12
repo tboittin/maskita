@@ -5,13 +5,8 @@ on:
     types: [opened, edited, closed, labeled]
   issue_comment:
     types: [created]
-  # push sur main : un merge de PR vers main produit un push, et ce trigger s'exécute
-  # depuis la branche par défaut (contenu déjà mergé) → sûr.
-  # ⚠️ L'ancien trigger PR-target a été RETIRÉ : GitHub bloque ce trigger par défaut
-  # sur les dépôts publics → il ne se déclenchait jamais, plus aucune notification de merge.
-  # Les triggers de review/PR restent volontairement ABSENTS : ils s'exécutent depuis le
-  # merge commit de la PR et ne sont pas sécurisables. Le réveil sur remarque passe par
-  # issue_comment (un commentaire de PR est un issue_comment, exécuté depuis main).
+  # push sur main : un merge de PR vers main produit un push, exécuté depuis la
+  # branche par défaut (contenu déjà mergé) → sûr.
   push:
     branches: [main]
 
