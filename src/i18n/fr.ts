@@ -109,6 +109,10 @@ export const fr = {
 
   /* EcranRestaurationRevue */
   'restaurationRevue.titre.restaure': 'Aperçu restauré',
+  'restaurationRevue.tagsInconnus': (nb: number, tags: string) =>
+    nb > 1
+      ? `${nb} pseudos du texte ne figurent pas dans la clé et ne seront pas restaurés : ${tags}. L'IA les a peut-être modifiés ou inventés. Vous pouvez les ajouter à la clé dans le tableau ci-dessous.`
+      : `Un pseudo du texte ne figure pas dans la clé et ne sera pas restauré : ${tags}. L'IA l'a peut-être modifié ou inventé. Vous pouvez l'ajouter à la clé dans le tableau ci-dessous.`,
 
   /* FooterLegal */
   'footer.mentions': 'Mentions légales',

@@ -1,13 +1,13 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useLangue } from '../i18n/context';
-import { Bouton, TelechargerIcon } from '@khaleeno/maskita-design-system';
+import { Bouton, MessageErreur, TelechargerIcon } from '@khaleeno/maskita-design-system';
 import { PanneauTableauPseudos } from './PanneauTableauPseudos';
 import { PanneauApercus } from './PanneauApercus';
 import { BarreAjoutSelection } from './BarreAjoutSelection';
 import { PickerAjoutValeur } from './PickerAjoutValeur';
 import { ModalAjoutClassique } from './ModalAjoutClassique';
 import { useAjoutRapide } from '../hooks/useAjoutRapide';
-import type { Mapping } from '../utils/mapping';
+import { tagsInconnus, type Mapping } from '../utils/mapping';
 
 interface EcranRestaurationRevueProps {
   texteAvecTags: string;
@@ -46,6 +46,9 @@ export function EcranRestaurationRevue({
   const [recentrer, setRecentrer] = useState(true);
 
   const refTableau = useRef<HTMLDivElement>(null);
+
+  // Tags du texte absents de la clé : ils ne seront pas restaurés
+  const inconnus = useMemo(() => tagsInconnus(texteAvecTags, mapping), [texteAvecTags, mapping]);
 
   const [focusNouveauTag, setFocusNouveauTag] = useState<string | null>(null);
 
@@ -142,6 +145,11 @@ export function EcranRestaurationRevue({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
+      {inconnus.length > 0 && (
+        <MessageErreur>
+          {t('restaurationRevue.tagsInconnus', inconnus.length, inconnus.join(', '))}
+        </MessageErreur>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espacement-md)' }}>
         {/* Volet gauche : tableau des pseudos (composant neutre partagé) */}
         <PanneauTableauPseudos

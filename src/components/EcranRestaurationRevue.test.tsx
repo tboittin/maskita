@@ -47,6 +47,18 @@ function rendu(overrides: Partial<Parameters<typeof EcranRestaurationRevue>[0]> 
 }
 
 describe('EcranRestaurationRevue', () => {
+  it("n'affiche pas d'alerte quand tous les pseudos du texte sont dans la clé", () => {
+    rendu({ mapping: { ...MAPPING, '[EMAIL]': ['a@b.fr'] } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('alerte sur les pseudos du texte absents de la clé', () => {
+    rendu({ texteAvecTags: 'Rapport pour [PERSONNE] à [LIEU] et [Personne_2]' });
+    const alerte = screen.getByRole('alert');
+    expect(alerte).toHaveTextContent('2 pseudos du texte ne figurent pas dans la clé');
+    expect(alerte).toHaveTextContent('[LIEU], [Personne_2]');
+  });
+
   it('affiche le tableau de mapping avec les tags', () => {
     rendu();
     expect(screen.getByText('Pseudos (1)')).toBeInTheDocument();

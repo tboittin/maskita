@@ -5,6 +5,8 @@ import {
   genererMapping,
   appliquerMapping,
   restaurerTexte,
+  normaliserTag,
+  tagsInconnus,
   genererCleJson,
   chargerCleJson,
   nomContientValeursMapping,
@@ -171,6 +173,86 @@ describe('restaurerTexte', () => {
     const resultat = restaurerTexte(texte, mapping);
 
     expect(resultat).toBe('Contact : test@exemple.fr');
+  });
+
+  it('restaure un tag dont la casse a été modifiée', () => {
+    const mapping = { '[NOM_2]': ['Sophie'] };
+    expect(restaurerTexte('Bonjour [Nom_2] et [nom_2].', mapping)).toBe('Bonjour Sophie et Sophie.');
+  });
+
+  it("restaure un tag où l'espace ou le tiret remplace le _", () => {
+    const mapping = { '[NOM_2]': ['Sophie'] };
+    expect(restaurerTexte('[NOM 2], [NOM-2], [ NOM_2 ]', mapping)).toBe('Sophie, Sophie, Sophie');
+  });
+
+  it('ne confond pas [NOM] et [NOM_2]', () => {
+    const mapping = { '[NOM]': ['Tom'], '[NOM_2]': ['Sophie'] };
+    expect(restaurerTexte('[nom] et [Nom 2]', mapping)).toBe('Tom et Sophie');
+  });
+
+  it('laisse intact un tag absent de la clé', () => {
+    const mapping = { '[NOM]': ['Tom'] };
+    expect(restaurerTexte('[NOM] et [LIEU]', mapping)).toBe('Tom et [LIEU]');
+  });
+
+  it('laisse intacts les crochets ordinaires', () => {
+    const mapping = { '[NOM]': ['Tom'] };
+    expect(restaurerTexte('[NOM] a dit [sic] [1] [...]', mapping)).toBe('Tom a dit [sic] [1] [...]');
+  });
+
+  it('privilégie la correspondance exacte quand deux tags se normalisent pareil', () => {
+    const mapping = { '[Nom]': ['Tom'], '[NOM]': ['Sophie'] };
+    expect(restaurerTexte('[Nom] / [NOM] / [nom]', mapping)).toBe('Tom / Sophie / [nom]');
+  });
+
+  it('ne réinjecte pas une valeur contenant un tag (passe unique)', () => {
+    const mapping = { '[A]': ['voir [B]'], '[B]': ['x'] };
+    expect(restaurerTexte('[A]', mapping)).toBe('voir [B]');
+  });
+
+  it('ne remplace pas un tag dont la liste de valeurs est vide', () => {
+    expect(restaurerTexte('[NOM]', { '[NOM]': [] })).toBe('[NOM]');
+  });
+
+  it('remplace encore une clé sans crochets (rétrocompatibilité)', () => {
+    expect(restaurerTexte('Bonjour PERSONNE', { PERSONNE: ['Tom'] })).toBe('Bonjour Tom');
+  });
+});
+
+describe('normaliserTag', () => {
+  it('ignore la casse, les espaces et le séparateur', () => {
+    expect(normaliserTag('[ Nom 2 ]')).toBe('NOM_2');
+    expect(normaliserTag('[nom-2]')).toBe('NOM_2');
+    expect(normaliserTag('[NOM_2]')).toBe('NOM_2');
+    expect(normaliserTag('[NOM  PATIENT]')).toBe('NOM_PATIENT');
+  });
+});
+
+describe('tagsInconnus', () => {
+  const mapping = { '[NOM]': ['Tom'], '[NOM_2]': ['Sophie'], '[EMAIL]': ['a@b.fr'] };
+
+  it('ne signale rien quand tous les tags du texte sont dans la clé', () => {
+    expect(tagsInconnus('[NOM], [Nom 2] et [email]', mapping)).toEqual([]);
+  });
+
+  it('ne signale pas les tags de la clé absents du texte', () => {
+    expect(tagsInconnus('Seulement [NOM].', mapping)).toEqual([]);
+  });
+
+  it('signale un tag Maskita absent de la clé', () => {
+    expect(tagsInconnus('[NOM] habite [LIEU].', mapping)).toEqual(['[LIEU]']);
+  });
+
+  it("signale un tag d'un type connu mais au numéro inconnu, quelle que soit la casse", () => {
+    expect(tagsInconnus('[Nom_3] et [NOM_4]', mapping)).toEqual(['[Nom_3]', '[NOM_4]']);
+  });
+
+  it('ignore les crochets ordinaires', () => {
+    expect(tagsInconnus('Il a dit [sic], voir [1], coupé [...], [ ]', mapping)).toEqual([]);
+  });
+
+  it('ne signale chaque tag inconnu qu\'une fois', () => {
+    expect(tagsInconnus('[LIEU] puis [LIEU]', mapping)).toEqual(['[LIEU]']);
   });
 });
 

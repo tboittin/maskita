@@ -111,6 +111,10 @@ export const en: Dictionnaire = {
 
   /* EcranRestaurationRevue */
   'restaurationRevue.titre.restaure': 'Restored preview',
+  'restaurationRevue.tagsInconnus': (nb: number, tags: string) =>
+    nb > 1
+      ? `${nb} pseudos in the text are not in the key and will not be restored: ${tags}. The AI may have altered or invented them. You can add them to the key in the table below.`
+      : `One pseudo in the text is not in the key and will not be restored: ${tags}. The AI may have altered or invented it. You can add it to the key in the table below.`,
 
   /* FooterLegal */
   'footer.mentions': 'Legal notice',
