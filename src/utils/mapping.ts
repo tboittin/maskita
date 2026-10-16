@@ -100,17 +100,106 @@ export function appliquerMapping(texte: string, mapping: Mapping): string {
   return resultat;
 }
 
-export function restaurerTexte(texte: string, mapping: Mapping): string {
-  let resultat = texte;
+// Toute séquence entre crochets susceptible d'être un tag (une seule ligne, sans crochet imbriqué)
+const REGEX_CANDIDAT_TAG = /\[([^[\]\n]{1,80})\]/g;
 
+/**
+ * Forme canonique d'un tag, pour tolérer les altérations courantes d'un LLM :
+ * casse, espaces dans les crochets, espace ou tiret à la place du "_".
+ * "[ Nom 2 ]", "[nom-2]" et "[NOM_2]" donnent tous "NOM_2".
+ */
+export function normaliserTag(tag: string): string {
+  return tag
+    .replace(/^\[/, '')
+    .replace(/\]$/, '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s_-]+/g, '_');
+}
+
+/** Type d'un tag sans son numéro : "[NOM_2]" → "NOM". */
+function baseTag(tagNormalise: string): string {
+  return tagNormalise.replace(/_\d+$/, '');
+}
+
+/**
+ * Index tag normalisé → tag de la clé. Un tag normalisé partagé par
+ * plusieurs tags de la clé (ex: "[Nom]" et "[NOM]") est ambigu : il est
+ * exclu, seule la correspondance exacte s'applique alors.
+ */
+function indexerTags(mapping: Mapping): Map<string, string> {
+  const index = new Map<string, string>();
+  const ambigus = new Set<string>();
+  for (const tag of Object.keys(mapping)) {
+    const cle = normaliserTag(tag);
+    if (index.has(cle)) ambigus.add(cle);
+    else index.set(cle, tag);
+  }
+  for (const cle of ambigus) index.delete(cle);
+  return index;
+}
+
+/** Retrouve le tag de la clé correspondant à un tag lu dans le texte. */
+function resoudreTag(
+  tagTexte: string,
+  mapping: Mapping,
+  index: Map<string, string>,
+): string | undefined {
+  if (Object.prototype.hasOwnProperty.call(mapping, tagTexte)) return tagTexte;
+  return index.get(normaliserTag(tagTexte));
+}
+
+export function restaurerTexte(texte: string, mapping: Mapping): string {
+  const index = indexerTags(mapping);
+
+  // Passe unique sur les tags entre crochets : correspondance exacte, puis tolérante
+  let resultat = texte.replace(REGEX_CANDIDAT_TAG, (candidat) => {
+    const tag = resoudreTag(candidat, mapping, index);
+    const valeurs = tag !== undefined ? mapping[tag] : undefined;
+    return valeurs && valeurs.length > 0 ? valeurs[0] : candidat;
+  });
+
+  // Rétrocompatibilité : clés chargées sans crochets, remplacées telles quelles
   for (const [tag, valeurs] of Object.entries(mapping)) {
-    if (valeurs.length > 0) {
+    if (!tag.startsWith('[') && tag.length > 0 && valeurs.length > 0) {
       const regex = new RegExp(tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
       resultat = resultat.replace(regex, valeurs[0]);
     }
   }
 
   return resultat;
+}
+
+/**
+ * Tags présents dans le texte mais absents de la clé : ils ne pourront pas
+ * être restaurés (tag inventé ou trop altéré par l'IA). Les tags de la clé
+ * absents du texte ne sont pas signalés : la clé peut venir d'un document
+ * connexe.
+ *
+ * Pour ne pas signaler les crochets ordinaires ("[sic]", "[1]", "[...]"),
+ * un candidat n'est retenu que s'il a la forme d'un tag Maskita
+ * (MAJUSCULES, chiffres, "_") ou s'il partage le type d'un tag de la clé
+ * (ex: "[Nom_3]" quand la clé contient "[NOM]").
+ */
+export function tagsInconnus(texte: string, mapping: Mapping): string[] {
+  const index = indexerTags(mapping);
+  const basesConnues = new Set(Object.keys(mapping).map(t => baseTag(normaliserTag(t))));
+  const inconnus: string[] = [];
+
+  for (const match of texte.matchAll(REGEX_CANDIDAT_TAG)) {
+    const candidat = match[0];
+    const contenu = match[1].trim();
+    if (!/^[\p{L}\d][\p{L}\d\s_-]*$/u.test(contenu) || !/\p{L}/u.test(contenu)) continue;
+    if (resoudreTag(candidat, mapping, index) !== undefined) continue;
+
+    const formeMaskita = /^[A-Z][A-Z0-9_]*$/.test(contenu);
+    const typeConnu = basesConnues.has(baseTag(normaliserTag(candidat)));
+    if ((formeMaskita || typeConnu) && !inconnus.includes(candidat)) {
+      inconnus.push(candidat);
+    }
+  }
+
+  return inconnus;
 }
 
 export function genererCleJson(mapping: Mapping): string {
