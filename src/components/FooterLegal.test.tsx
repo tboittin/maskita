@@ -4,6 +4,12 @@ import { FooterLegal } from './FooterLegal';
 import { renderAvecI18n } from '../test/renderAvecI18n';
 
 describe('FooterLegal', () => {
+  it('ouvre les précautions IA depuis le lien "Utiliser une IA"', () => {
+    renderAvecI18n(<FooterLegal />);
+    fireEvent.click(screen.getByText('Utiliser une IA'));
+    expect(screen.getByRole('dialog', { name: "Précautions avant d'utiliser une IA" })).toBeInTheDocument();
+  });
+
   it('affiche le bouton "Mentions légales"', () => {
     renderAvecI18n(<FooterLegal />);
     expect(screen.getByText('Mentions légales')).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { buildDocument } from '../utils/buildDocument';
 import { declencherTelechargement } from '../utils/telechargement';
 import { genererCleJson, nomContientValeursMapping } from '../utils/mapping';
@@ -40,6 +40,8 @@ interface EcranTelechargementProps {
   boutonRetour: string;
   /** Active la vérification du nom du fichier pour les données sensibles (pseudonymisation uniquement) */
   verifierNomSensible?: boolean;
+  /** Contenu affiché sous les téléchargements, avant le bouton retour */
+  complement?: ReactNode;
 }
 
 export function EcranTelechargement({
@@ -59,6 +61,7 @@ export function EcranTelechargement({
   succesCle,
   boutonRetour,
   verifierNomSensible = true,
+  complement,
 }: EcranTelechargementProps) {
   const { t } = useLangue();
   const [docTelecharge, setDocTelecharge] = useState(false);
@@ -193,6 +196,8 @@ export function EcranTelechargement({
           </Bouton>
         </div>
       </Panneau>
+
+      {complement}
 
       {/* Bouton retour */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
