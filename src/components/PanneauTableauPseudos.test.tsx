@@ -80,4 +80,13 @@ describe('PanneauTableauPseudos (composant neutre partagé)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'voir' }));
     expect(onConflitVoir).toHaveBeenCalledWith('[PERSONNE]');
   });
+
+  it('affiche toutes les valeurs d\'un pseudo (aucun tronquage « +N »)', () => {
+    const valeurs = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6'];
+    rendu({ mapping: { '[PERSONNE]': valeurs } });
+    for (const v of valeurs) {
+      expect(screen.getByText(v)).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/^\+\d+$/)).not.toBeInTheDocument();
+  });
 });
