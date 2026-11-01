@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant } from './analyse';
+import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant, trouverPersonneLiee } from './analyse';
 import { reinitialiserCompteurs } from './mapping';
 import type { Detection } from './regex';
 
@@ -155,5 +155,64 @@ describe('fusionnerAvecMappingExistant', () => {
 
     // Les deux variantes aboutissent à la même valeur de pseudo
     expect(mapping[pseudo]).toEqual(['lefevre']);
+  });
+});
+describe('analyserTexte — détection contextuelle (DET-AUTO)', () => {
+  it('ajoute les personnes, dates et adresses aux détections regex', () => {
+    const types = analyserTexte('Mme Dupont, née le 12/03/1980, tél. 06 12 34 56 78.').map(d => d.type);
+    expect(types).toEqual(['TEL', 'PERSONNE', 'DATE']);
+  });
+});
+
+describe('trouverPersonneLiee', () => {
+  it('rattache un prénom seul à la seule personne qui le contient', () => {
+    const mapping = { '[PERSONNE]': ['Lucas Martin'], '[PERSONNE_2]': ['Emma Dupont'] };
+    expect(trouverPersonneLiee(mapping, 'Lucas')).toBe('[PERSONNE]');
+    expect(trouverPersonneLiee(mapping, 'dupont')).toBe('[PERSONNE_2]');
+  });
+
+  it('ne rattache rien en cas d\'ambiguïté ou pour une valeur de plusieurs mots', () => {
+    const mapping = { '[PERSONNE]': ['Paul Dupont'], '[PERSONNE_2]': ['Emma Dupont'] };
+    expect(trouverPersonneLiee(mapping, 'Dupont')).toBeNull();
+    expect(trouverPersonneLiee(mapping, 'Paul Dupont')).toBeNull();
+  });
+
+  it('ignore les tags qui ne sont pas des personnes', () => {
+    expect(trouverPersonneLiee({ '[LIEU]': ['Saint Lucas'] }, 'Lucas')).toBeNull();
+  });
+});
+
+describe('fusionnerAvecMappingExistant — entités (DET-AUTO)', () => {
+  beforeEach(() => reinitialiserCompteurs());
+
+  it('crée un tag par personne', () => {
+    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Lucas Martin voit Emma Dupont.'));
+    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin'], '[PERSONNE_2]': ['emma dupont'] });
+  });
+
+  it('rattache le prénom seul au nom complet', () => {
+    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Lucas Martin, 10 ans. Lucas dessine.'));
+    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin', 'lucas'] });
+  });
+
+  it('crée un tag par date distincte', () => {
+    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Le 01/02/2026 puis le 03/04/2026.'));
+    expect(Object.keys(mapping)).toHaveLength(2);
+  });
+
+  it('rattache un prénom à une personne d\'une clé chargée', () => {
+    const mapping = fusionnerAvecMappingExistant(
+      { '[PERSONNE]': ['lucas martin'] },
+      analyserTexte('Lucas va mieux.'),
+    );
+    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin', 'lucas'] });
+  });
+
+  it('ne duplique pas une personne déjà présente dans la clé', () => {
+    const mapping = fusionnerAvecMappingExistant(
+      { '[PERSONNE]': ['emma dupont'] },
+      analyserTexte('Emma Dupont va mieux.'),
+    );
+    expect(mapping).toEqual({ '[PERSONNE]': ['emma dupont'] });
   });
 });

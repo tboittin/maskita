@@ -7,7 +7,11 @@ export type TypePII =
   | 'IBAN'
   | 'IP'
   | 'URL'
-  | 'CARTE_BANCAIRE';
+  | 'CARTE_BANCAIRE'
+  // DET-AUTO — types détectés par le contexte (detectionContextuelle.ts)
+  | 'PERSONNE'
+  | 'DATE'
+  | 'ADRESSE';
 
 export interface Detection {
   valeur: string;

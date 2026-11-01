@@ -1,6 +1,7 @@
 import { type Detection, type TypePII, REGLES } from './regex';
 import { genererTag, reinitialiserCompteurs } from './mapping';
 import type { Mapping } from './mapping';
+import { detecterContexte } from './detectionContextuelle';
 
 export function analyserTexte(texte: string): Detection[] {
   const detections: Detection[] = [];
@@ -18,7 +19,7 @@ export function analyserTexte(texte: string): Detection[] {
     }
   }
 
-  return detections;
+  return [...detections, ...detecterContexte(texte)];
 }
 
 export interface GroupeDetection {
@@ -94,6 +95,29 @@ export function normaliserValeurCanonique(valeur: string): string {
 }
 
 /**
+ * DET-AUTO — types où chaque valeur distincte est une entité à part
+ * (deux personnes ne doivent pas partager le même tag).
+ */
+const TYPES_PAR_ENTITE: ReadonlySet<TypePII> = new Set<TypePII>(['PERSONNE', 'DATE', 'ADRESSE']);
+
+/**
+ * Rattache un prénom ou un nom seul (« Marie », « Dupont ») au tag PERSONNE
+ * dont une valeur contient ce mot, s'il y en a exactement un. En cas
+ * d'ambiguïté (deux « Dupont »), aucune liaison : l'utilisateur tranche.
+ */
+export function trouverPersonneLiee(mapping: Mapping, valeur: string): string | null {
+  const mot = valeur.trim().toLowerCase();
+  if (/\s/.test(mot)) return null;
+
+  const candidats = Object.entries(mapping).filter(
+    ([tag, valeurs]) =>
+      (tag.startsWith('[PERSONNE]') || tag.startsWith('[PERSONNE_')) &&
+      valeurs.some(v => v.toLowerCase().split(/\s+/).includes(mot)),
+  );
+  return candidats.length === 1 ? candidats[0][0] : null;
+}
+
+/**
  * Fusionne les nouvelles détections avec un mapping existant.
  * - Les valeurs déjà présentes dans le mapping ne sont pas dupliquées.
  * - Les nouvelles valeurs sont ajoutées aux tags existants du même type,
@@ -125,8 +149,15 @@ export function fusionnerAvecMappingExistant(
     }
   }
 
-  // 3. Ajouter les nouvelles détections
-  for (const d of detections) {
+  // 3. Ajouter les nouvelles détections. Les entités (personnes, dates,
+  // adresses) passent en premier, les plus longues d'abord, pour que
+  // « Marie » puisse se rattacher à « Marie Dupont ».
+  const entites = detections
+    .filter(d => TYPES_PAR_ENTITE.has(d.type))
+    .sort((a, b) => b.valeur.length - a.valeur.length);
+  const autres = detections.filter(d => !TYPES_PAR_ENTITE.has(d.type));
+
+  for (const d of [...entites, ...autres]) {
     const dejaPresent = Object.values(resultat).some(valeurs =>
       valeurs.some(v =>
         v.toLowerCase().replace(/[\s.-]+/g, '') ===
@@ -134,7 +165,18 @@ export function fusionnerAvecMappingExistant(
       ),
     );
 
-    if (!dejaPresent) {
+    if (dejaPresent) continue;
+
+    if (TYPES_PAR_ENTITE.has(d.type)) {
+      // DET-AUTO — une entité par tag (valeur canonique minuscule, DET-01)
+      const valeur = normaliserValeurCanonique(d.valeur);
+      const tagLie = d.type === 'PERSONNE' ? trouverPersonneLiee(resultat, valeur) : null;
+      if (tagLie) {
+        resultat[tagLie].push(valeur);
+      } else {
+        resultat[genererTag(d.type)] = [valeur];
+      }
+    } else {
       const tagExistant = Object.keys(resultat).find(t =>
         t.startsWith(`[${d.type}]`) || t.startsWith(`[${d.type}_`),
       );
