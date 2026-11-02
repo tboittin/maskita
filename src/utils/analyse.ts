@@ -86,12 +86,12 @@ export function resoudreConflitsSousChaine(
 }
 
 /**
- * Normalise une valeur détectée en forme canonique : trim + minuscule,
- * en conservant l'espacement interne (DET-01 : casse insensible).
- * Partagée par la déduplication pour garantir la cohérence de la casse.
+ * Clé de comparaison pour la déduplication : insensible à la casse et à la
+ * ponctuation de séparation (espaces, points, tirets). Elle sert uniquement
+ * à repérer les doublons — la forme stockée, elle, conserve la casse.
  */
-export function normaliserValeurCanonique(valeur: string): string {
-  return valeur.trim().toLowerCase();
+function cleNormalisation(valeur: string): string {
+  return valeur.trim().toLowerCase().replace(/[\s.-]+/g, '');
 }
 
 /**
@@ -122,7 +122,10 @@ export function trouverPersonneLiee(mapping: Mapping, valeur: string): string | 
  * - Les valeurs déjà présentes dans le mapping ne sont pas dupliquées.
  * - Les nouvelles valeurs sont ajoutées aux tags existants du même type,
  *   ou créent un nouveau tag si aucun tag du type n'existe.
- * - La valeur canonique stockée est la version minuscule (DET-01).
+ * - La valeur stockée est la forme d'origine (`trim`), afin que la
+ *   restauration restitue la casse du document (« Lucas Martin »).
+ * - La déduplication reste insensible à la casse ; si une variante mieux
+ *   capitalisée apparaît, la forme stockée est améliorée.
  * - Réinitialise les compteurs pour éviter les conflits de numérotation.
  */
 export function fusionnerAvecMappingExistant(
@@ -158,18 +161,35 @@ export function fusionnerAvecMappingExistant(
   const autres = detections.filter(d => !TYPES_PAR_ENTITE.has(d.type));
 
   for (const d of [...entites, ...autres]) {
-    const dejaPresent = Object.values(resultat).some(valeurs =>
-      valeurs.some(v =>
-        v.toLowerCase().replace(/[\s.-]+/g, '') ===
-        d.valeur.toLowerCase().replace(/[\s.-]+/g, ''),
-      ),
-    );
+    // Forme d'origine (trim) : c'est elle qui sera réinjectée à la restauration.
+    const valeur = d.valeur.trim();
+    const cle = cleNormalisation(valeur);
 
-    if (dejaPresent) continue;
+    // Déduplication insensible à la casse et à la ponctuation.
+    let tagContenant: string | null = null;
+    let indexContenant = -1;
+    for (const [tag, valeurs] of Object.entries(resultat)) {
+      const idx = valeurs.findIndex(v => cleNormalisation(v) === cle);
+      if (idx !== -1) {
+        tagContenant = tag;
+        indexContenant = idx;
+        break;
+      }
+    }
+
+    if (tagContenant !== null) {
+      // Amélioration de forme : « lucas martin » puis « Lucas Martin » →
+      // on retient « Lucas Martin » (jamais l'inverse : un email reste en
+      // minuscules, une forme déjà capitalisée n'est pas dégradée).
+      const stockee = resultat[tagContenant][indexContenant];
+      if (/^[a-zà-öø-ÿ]/.test(stockee) && /^[A-ZÀ-ÖØ-Þ]/.test(valeur)) {
+        resultat[tagContenant][indexContenant] = valeur;
+      }
+      continue;
+    }
 
     if (TYPES_PAR_ENTITE.has(d.type)) {
-      // DET-AUTO — une entité par tag (valeur canonique minuscule, DET-01)
-      const valeur = normaliserValeurCanonique(d.valeur);
+      // DET-AUTO — une entité par tag, forme d'origine conservée
       const tagLie = d.type === 'PERSONNE' ? trouverPersonneLiee(resultat, valeur) : null;
       if (tagLie) {
         resultat[tagLie].push(valeur);
@@ -182,10 +202,10 @@ export function fusionnerAvecMappingExistant(
       );
 
       if (tagExistant) {
-        resultat[tagExistant].push(normaliserValeurCanonique(d.valeur));
+        resultat[tagExistant].push(valeur);
       } else {
         const nouveauTag = genererTag(d.type);
-        resultat[nouveauTag] = [normaliserValeurCanonique(d.valeur)];
+        resultat[nouveauTag] = [valeur];
       }
     }
   }

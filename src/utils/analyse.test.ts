@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant, trouverPersonneLiee } from './analyse';
-import { reinitialiserCompteurs } from './mapping';
+import { reinitialiserCompteurs, restaurerTexte } from './mapping';
 import type { Detection } from './regex';
 
 describe('analyserTexte', () => {
@@ -119,8 +119,8 @@ describe('fusionnerAvecMappingExistant', () => {
     expect(mapping['[EMAIL]']).toContain('nouveau@exemple.fr');
   });
 
-  // DET-01 — Détection insensible à la casse
-  it('regroupe Lefevre et lefevre dans une seule entrée avec la valeur canonique minuscule', () => {
+  // DET-01 — Détection insensible à la casse (la forme d'origine est conservée)
+  it('regroupe Lefevre et lefevre dans une seule entrée, en gardant la forme d\'origine', () => {
     const detections: Detection[] = [
       { valeur: 'Lefevre', type: 'PERSONNE' as any, position: 0, longueur: 7 },
       { valeur: 'lefevre', type: 'PERSONNE' as any, position: 10, longueur: 7 },
@@ -129,7 +129,9 @@ describe('fusionnerAvecMappingExistant', () => {
     const mapping = fusionnerAvecMappingExistant(null, detections);
 
     expect(Object.keys(mapping)).toHaveLength(1);
-    expect(mapping['[PERSONNE]']).toEqual(['lefevre']);
+    // Déduplication insensible à la casse : une seule entrée, « Lefevre »
+    // (la première forme vue, déjà capitalisée, n'est pas dégradée).
+    expect(mapping['[PERSONNE]']).toEqual(['Lefevre']);
   });
 
   it('regroupe "Henri Lefevre" et "henri lefevre" dans une seule entrée', () => {
@@ -141,7 +143,7 @@ describe('fusionnerAvecMappingExistant', () => {
     const mapping = fusionnerAvecMappingExistant(null, detections);
 
     expect(Object.keys(mapping)).toHaveLength(1);
-    expect(mapping['[PERSONNE]']).toEqual(['henri lefevre']);
+    expect(mapping['[PERSONNE]']).toEqual(['Henri Lefevre']);
   });
 
   it('même pseudo pour deux variantes de casse (insensibilité à la casse)', () => {
@@ -154,7 +156,31 @@ describe('fusionnerAvecMappingExistant', () => {
     const pseudo = Object.keys(mapping)[0];
 
     // Les deux variantes aboutissent à la même valeur de pseudo
-    expect(mapping[pseudo]).toEqual(['lefevre']);
+    expect(mapping[pseudo]).toEqual(['Lefevre']);
+  });
+
+  it('conserve la forme capitalisée quand la première vue était en minuscules', () => {
+    const detections: Detection[] = [
+      { valeur: 'lucas martin', type: 'PERSONNE' as any, position: 0, longueur: 12 },
+      { valeur: 'Lucas Martin', type: 'PERSONNE' as any, position: 20, longueur: 12 },
+    ];
+
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+
+    expect(Object.keys(mapping)).toHaveLength(1);
+    expect(mapping['[PERSONNE]']).toEqual(['Lucas Martin']);
+  });
+
+  it('ne capitalise pas un email en minuscules (pas de casse abusive)', () => {
+    const detections: Detection[] = [
+      { valeur: 'lucas.martin@exemple.fr', type: 'EMAIL' as any, position: 0, longueur: 23 },
+      { valeur: 'lucas.martin@exemple.fr', type: 'EMAIL' as any, position: 30, longueur: 23 },
+    ];
+
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+
+    expect(Object.keys(mapping)).toHaveLength(1);
+    expect(mapping['[EMAIL]']).toEqual(['lucas.martin@exemple.fr']);
   });
 });
 describe('analyserTexte — détection contextuelle (DET-AUTO)', () => {
@@ -187,12 +213,19 @@ describe('fusionnerAvecMappingExistant — entités (DET-AUTO)', () => {
 
   it('crée un tag par personne', () => {
     const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Lucas Martin voit Emma Dupont.'));
-    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin'], '[PERSONNE_2]': ['emma dupont'] });
+    expect(mapping).toEqual({ '[PERSONNE]': ['Lucas Martin'], '[PERSONNE_2]': ['Emma Dupont'] });
+  });
+
+  it('conserve la casse d\'origine et la restitue à la restauration', () => {
+    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Patient : Lucas Martin, 10 ans.'));
+    expect(mapping['[PERSONNE]']).toEqual(['Lucas Martin']);
+    expect(restaurerTexte('Le patient [PERSONNE] va bien.', mapping))
+      .toBe('Le patient Lucas Martin va bien.');
   });
 
   it('rattache le prénom seul au nom complet', () => {
     const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Lucas Martin, 10 ans. Lucas dessine.'));
-    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin', 'lucas'] });
+    expect(mapping).toEqual({ '[PERSONNE]': ['Lucas Martin', 'Lucas'] });
   });
 
   it('crée un tag par date distincte', () => {
@@ -205,14 +238,14 @@ describe('fusionnerAvecMappingExistant — entités (DET-AUTO)', () => {
       { '[PERSONNE]': ['lucas martin'] },
       analyserTexte('Lucas va mieux.'),
     );
-    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin', 'lucas'] });
+    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin', 'Lucas'] });
   });
 
-  it('ne duplique pas une personne déjà présente dans la clé', () => {
+  it('ne duplique pas une personne déjà présente dans la clé et améliore sa forme', () => {
     const mapping = fusionnerAvecMappingExistant(
       { '[PERSONNE]': ['emma dupont'] },
       analyserTexte('Emma Dupont va mieux.'),
     );
-    expect(mapping).toEqual({ '[PERSONNE]': ['emma dupont'] });
+    expect(mapping).toEqual({ '[PERSONNE]': ['Emma Dupont'] });
   });
 });
