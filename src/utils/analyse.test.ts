@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant, trouverPersonneLiee } from './analyse';
+import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant } from './analyse';
 import { reinitialiserCompteurs, restaurerTexte } from './mapping';
 import type { Detection } from './regex';
 
@@ -184,48 +184,20 @@ describe('fusionnerAvecMappingExistant', () => {
   });
 });
 describe('analyserTexte — détection contextuelle (DET-AUTO)', () => {
-  it('ajoute les personnes, dates et adresses aux détections regex', () => {
-    const types = analyserTexte('Mme Dupont, née le 12/03/1980, tél. 06 12 34 56 78.').map(d => d.type);
-    expect(types).toEqual(['TEL', 'PERSONNE', 'DATE']);
-  });
-});
-
-describe('trouverPersonneLiee', () => {
-  it('rattache un prénom seul à la seule personne qui le contient', () => {
-    const mapping = { '[PERSONNE]': ['Lucas Martin'], '[PERSONNE_2]': ['Emma Dupont'] };
-    expect(trouverPersonneLiee(mapping, 'Lucas')).toBe('[PERSONNE]');
-    expect(trouverPersonneLiee(mapping, 'dupont')).toBe('[PERSONNE_2]');
-  });
-
-  it('ne rattache rien en cas d\'ambiguïté ou pour une valeur de plusieurs mots', () => {
-    const mapping = { '[PERSONNE]': ['Paul Dupont'], '[PERSONNE_2]': ['Emma Dupont'] };
-    expect(trouverPersonneLiee(mapping, 'Dupont')).toBeNull();
-    expect(trouverPersonneLiee(mapping, 'Paul Dupont')).toBeNull();
-  });
-
-  it('ignore les tags qui ne sont pas des personnes', () => {
-    expect(trouverPersonneLiee({ '[LIEU]': ['Saint Lucas'] }, 'Lucas')).toBeNull();
+  it('ajoute les dates et adresses aux détections regex', () => {
+    const types = analyserTexte('Mme Dupont, née le 12/03/1980, tél. 06 12 34 56 78, 69003 Lyon.').map(d => d.type);
+    expect(types).toEqual(['TEL', 'DATE', 'ADRESSE']);
   });
 });
 
 describe('fusionnerAvecMappingExistant — entités (DET-AUTO)', () => {
   beforeEach(() => reinitialiserCompteurs());
 
-  it('crée un tag par personne', () => {
-    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Lucas Martin voit Emma Dupont.'));
-    expect(mapping).toEqual({ '[PERSONNE]': ['Lucas Martin'], '[PERSONNE_2]': ['Emma Dupont'] });
-  });
-
   it('conserve la casse d\'origine et la restitue à la restauration', () => {
-    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Patient : Lucas Martin, 10 ans.'));
-    expect(mapping['[PERSONNE]']).toEqual(['Lucas Martin']);
-    expect(restaurerTexte('Le patient [PERSONNE] va bien.', mapping))
-      .toBe('Le patient Lucas Martin va bien.');
-  });
-
-  it('rattache le prénom seul au nom complet', () => {
-    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Lucas Martin, 10 ans. Lucas dessine.'));
-    expect(mapping).toEqual({ '[PERSONNE]': ['Lucas Martin', 'Lucas'] });
+    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Domicile : 4 rue des Lilas, 69003 Lyon.'));
+    expect(mapping['[ADRESSE]']).toEqual(['4 rue des Lilas, 69003 Lyon']);
+    expect(restaurerTexte('Il habite [ADRESSE].', mapping))
+      .toBe('Il habite 4 rue des Lilas, 69003 Lyon.');
   });
 
   it('crée un tag par date distincte', () => {
@@ -233,19 +205,11 @@ describe('fusionnerAvecMappingExistant — entités (DET-AUTO)', () => {
     expect(Object.keys(mapping)).toHaveLength(2);
   });
 
-  it('rattache un prénom à une personne d\'une clé chargée', () => {
+  it('ne duplique pas une date déjà présente dans la clé et améliore sa forme', () => {
     const mapping = fusionnerAvecMappingExistant(
-      { '[PERSONNE]': ['lucas martin'] },
-      analyserTexte('Lucas va mieux.'),
+      { '[DATE]': ['mars 2024'] },
+      analyserTexte('Depuis Mars 2024.'),
     );
-    expect(mapping).toEqual({ '[PERSONNE]': ['lucas martin', 'Lucas'] });
-  });
-
-  it('ne duplique pas une personne déjà présente dans la clé et améliore sa forme', () => {
-    const mapping = fusionnerAvecMappingExistant(
-      { '[PERSONNE]': ['emma dupont'] },
-      analyserTexte('Emma Dupont va mieux.'),
-    );
-    expect(mapping).toEqual({ '[PERSONNE]': ['Emma Dupont'] });
+    expect(mapping).toEqual({ '[DATE]': ['Mars 2024'] });
   });
 });

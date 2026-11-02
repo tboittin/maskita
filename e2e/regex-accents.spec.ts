@@ -3,7 +3,7 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 
 /**
  * REGEX-01 — Vérifie en e2e le scénario UTILISATEUR : une valeur accentuée
- * ('Mercié') est pseudonymisée correctement via le flux normal de l'application
+ * ('Chloé') est pseudonymisée correctement via le flux normal de l'application
  * (sélection dans le texte + ajout d'un pseudo dans le tableau), et n'apparaît
  * plus en clair dans le texte pseudonymisé.
  */
@@ -14,7 +14,7 @@ async function creerDocx(): Promise<Uint8Array> {
         children: [
           new Paragraph({
             children: [
-              new TextRun("J'ai discuté avec Mercié hier."),
+              new TextRun("J'ai discuté avec Chloé hier."),
             ],
           }),
         ],
@@ -34,13 +34,13 @@ async function texteVolet(page: import('@playwright/test').Page, titre: string):
 }
 
 test.describe('REGEX-01 — Pseudonymisation d\'une valeur accentuée (flux utilisateur)', () => {
-  test('Mercié est remplacée par un tag [PERSONNE] et n\'apparaît plus en clair', async ({ page }) => {
+  test('Chloé est remplacée par un tag [PERSONNE] et n\'apparaît plus en clair', async ({ page }) => {
     const fichier = await creerDocx();
     await page.goto('/');
 
-    // 1. Uploader le .docx contenant 'Mercié'
+    // 1. Uploader le .docx contenant 'Chloé'
     await page.locator('input[type="file"]').first().setInputFiles({
-      name: 'mercie.docx',
+      name: 'chloe.docx',
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       buffer: Buffer.from(fichier),
     });
@@ -52,7 +52,7 @@ test.describe('REGEX-01 — Pseudonymisation d\'une valeur accentuée (flux util
     await expect(page.getByText('Validate and continue')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/Pseudonymised text/i)).toBeVisible();
 
-    // 3. Flux normal : l'utilisateur crée le pseudo 'Mercié' via le bouton
+    // 3. Flux normal : l'utilisateur crée le pseudo 'Chloé' via le bouton
     //    "+ Add a pseudo" du tableau, avec le type PERSONNE
     const boutonAjoutPseudo = page.getByRole('button', { name: /Add a pseudo/i });
     await expect(boutonAjoutPseudo).toBeVisible();
@@ -61,9 +61,9 @@ test.describe('REGEX-01 — Pseudonymisation d\'une valeur accentuée (flux util
     const dialogue = page.getByRole('dialog', { name: /Add a pseudo/i });
     await expect(dialogue).toBeVisible({ timeout: 5000 });
 
-    // Valeur accentnée → 'Mercié' en fin de mot
+    // Valeur accentnée → 'Chloé' en fin de mot
     const inputValeur = page.getByPlaceholder('Value');
-    await inputValeur.fill('Mercié');
+    await inputValeur.fill('Chloé');
 
     const selectType = page.getByRole('combobox');
     await selectType.selectOption('PERSONNE');
@@ -75,14 +75,14 @@ test.describe('REGEX-01 — Pseudonymisation d\'une valeur accentuée (flux util
     await expect(page.getByText(/Pseudos? \(1\)/)).toBeVisible({ timeout: 5000 });
 
     // 5. Le volet pseudonymisé contient le tag [PERSONNE] et ne contient
-    //    plus 'Mercié' en clair
+    //    plus 'Chloé' en clair
     await expect(page.getByText('[PERSONNE]').first()).toBeVisible({ timeout: 5000 });
     const textePseudo = await texteVolet(page, 'Pseudonymised text');
     expect(textePseudo).toContain('[PERSONNE]');
-    expect(textePseudo).not.toContain('Mercié');
+    expect(textePseudo).not.toContain('Chloé');
 
     // 6. Le texte lisible (volet bas) garde la valeur d'origine avec l'accent
     const texteLisible = await texteVolet(page, 'Readable text');
-    expect(texteLisible).toContain('Mercié');
+    expect(texteLisible).toContain('Chloé');
   });
 });

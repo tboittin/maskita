@@ -96,26 +96,9 @@ function cleNormalisation(valeur: string): string {
 
 /**
  * DET-AUTO — types où chaque valeur distincte est une entité à part
- * (deux personnes ne doivent pas partager le même tag).
+ * (deux dates différentes ne doivent pas partager le même tag).
  */
-const TYPES_PAR_ENTITE: ReadonlySet<TypePII> = new Set<TypePII>(['PERSONNE', 'DATE', 'ADRESSE']);
-
-/**
- * Rattache un prénom ou un nom seul (« Marie », « Dupont ») au tag PERSONNE
- * dont une valeur contient ce mot, s'il y en a exactement un. En cas
- * d'ambiguïté (deux « Dupont »), aucune liaison : l'utilisateur tranche.
- */
-export function trouverPersonneLiee(mapping: Mapping, valeur: string): string | null {
-  const mot = valeur.trim().toLowerCase();
-  if (/\s/.test(mot)) return null;
-
-  const candidats = Object.entries(mapping).filter(
-    ([tag, valeurs]) =>
-      (tag.startsWith('[PERSONNE]') || tag.startsWith('[PERSONNE_')) &&
-      valeurs.some(v => v.toLowerCase().split(/\s+/).includes(mot)),
-  );
-  return candidats.length === 1 ? candidats[0][0] : null;
-}
+const TYPES_PAR_ENTITE: ReadonlySet<TypePII> = new Set<TypePII>(['DATE', 'ADRESSE']);
 
 /**
  * Fusionne les nouvelles détections avec un mapping existant.
@@ -152,15 +135,8 @@ export function fusionnerAvecMappingExistant(
     }
   }
 
-  // 3. Ajouter les nouvelles détections. Les entités (personnes, dates,
-  // adresses) passent en premier, les plus longues d'abord, pour que
-  // « Marie » puisse se rattacher à « Marie Dupont ».
-  const entites = detections
-    .filter(d => TYPES_PAR_ENTITE.has(d.type))
-    .sort((a, b) => b.valeur.length - a.valeur.length);
-  const autres = detections.filter(d => !TYPES_PAR_ENTITE.has(d.type));
-
-  for (const d of [...entites, ...autres]) {
+  // 3. Ajouter les nouvelles détections
+  for (const d of detections) {
     // Forme d'origine (trim) : c'est elle qui sera réinjectée à la restauration.
     const valeur = d.valeur.trim();
     const cle = cleNormalisation(valeur);
@@ -190,12 +166,7 @@ export function fusionnerAvecMappingExistant(
 
     if (TYPES_PAR_ENTITE.has(d.type)) {
       // DET-AUTO — une entité par tag, forme d'origine conservée
-      const tagLie = d.type === 'PERSONNE' ? trouverPersonneLiee(resultat, valeur) : null;
-      if (tagLie) {
-        resultat[tagLie].push(valeur);
-      } else {
-        resultat[genererTag(d.type)] = [valeur];
-      }
+      resultat[genererTag(d.type)] = [valeur];
     } else {
       const tagExistant = Object.keys(resultat).find(t =>
         t.startsWith(`[${d.type}]`) || t.startsWith(`[${d.type}_`),

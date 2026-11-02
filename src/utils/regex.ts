@@ -9,7 +9,6 @@ export type TypePII =
   | 'URL'
   | 'CARTE_BANCAIRE'
   // DET-AUTO — types détectés par le contexte (detectionContextuelle.ts)
-  | 'PERSONNE'
   | 'DATE'
   | 'ADRESSE';
 
@@ -38,7 +37,8 @@ export const REGLES: Regle[] = [
   { type: 'TEL',       pattern: /(0[1-9])([\s.-]?\d{2}){4}/g },
   { type: 'ADELI',     pattern: /(?<![\p{L}\p{N}])\d{9}(?![\p{L}\p{N}])/gu },
   { type: 'NIR',       pattern: /(?<![\p{L}\p{N}])[12]\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{3}\s?\d{2}(?![\p{L}\p{N}])/gu },
-  { type: 'SIRET',     pattern: /(?<![\p{L}\p{N}])\d{14}(?![\p{L}\p{N}])/gu },
+  // SIRET accepté groupé (« 490 123 456 00017 ») ou d'un bloc
+  { type: 'SIRET',     pattern: /(?<![\p{L}\p{N}])\d{3} ?\d{3} ?\d{3} ?\d{5}(?![\p{L}\p{N}])/gu },
   { type: 'IBAN',      pattern: /FR\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{3}/g },
   { type: 'IP',        pattern: /(?<![\p{L}\p{N}])\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?![\p{L}\p{N}])/gu },
   { type: 'URL',       pattern: /https?:\/\/[^\s]+/g },

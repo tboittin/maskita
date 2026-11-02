@@ -3,8 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 
 /**
- * DET-AUTO — Les noms, dates et adresses sont proposés automatiquement
- * dans l'écran de revue, sans ajout manuel.
+ * DET-AUTO — Les dates et adresses sont proposées automatiquement dans
+ * l'écran de revue, sans ajout manuel. Les noms restent à ajouter à la main.
  */
 async function creerDocx(): Promise<Uint8Array> {
   const doc = new Document({
@@ -14,6 +14,7 @@ async function creerDocx(): Promise<Uint8Array> {
           new Paragraph({ children: [new TextRun('Patient : Lucas Martin, né le 12 mars 2015.')] }),
           new Paragraph({ children: [new TextRun('Mme Dupont est venue le 03/10/2026 avec Lucas.')] }),
           new Paragraph({ children: [new TextRun('Domicile : 4 avenue Jean Jaurès, 69007 Lyon.')] }),
+          new Paragraph({ children: [new TextRun('SIRET : 490 123 456 00017')] }),
         ],
       },
     ],
@@ -26,7 +27,7 @@ async function creerDocxNom(): Promise<Uint8Array> {
     sections: [
       {
         children: [
-          new Paragraph({ children: [new TextRun('Patient : Lucas Martin, né le 12 mars 2015.')] }),
+          new Paragraph({ children: [new TextRun('Domicile : 4 avenue Jean Jaurès, 69007 Lyon.')] }),
         ],
       },
     ],
@@ -43,7 +44,7 @@ async function texteVolet(page: import('@playwright/test').Page, titre: string):
 }
 
 test.describe('DET-AUTO — Détection contextuelle', () => {
-  test('les personnes, dates et adresses sont pseudonymisées dès l\'analyse', async ({ page }) => {
+  test('les dates, adresses et le SIRET sont pseudonymisés dès l\'analyse', async ({ page }) => {
     const fichier = await creerDocx();
     await page.goto('/');
 
@@ -59,19 +60,21 @@ test.describe('DET-AUTO — Détection contextuelle', () => {
     await expect(page.getByText('Validate and continue')).toBeVisible({ timeout: 10000 });
 
     const textePseudo = await texteVolet(page, 'Pseudonymised text');
-    for (const tag of ['[PERSONNE]', '[PERSONNE_2]', '[DATE]', '[DATE_2]', '[ADRESSE]']) {
+    for (const tag of ['[DATE]', '[DATE_2]', '[ADRESSE]', '[SIRET]']) {
       expect(textePseudo).toContain(tag);
     }
-    for (const valeur of ['Lucas', 'Martin', 'Dupont', '12 mars 2015', '03/10/2026', 'Jaurès', '69007']) {
+    for (const valeur of ['12 mars 2015', '03/10/2026', 'Jaurès', '69007', '00017']) {
       expect(textePseudo).not.toContain(valeur);
     }
+    // Les noms ne sont pas détectés automatiquement
+    expect(textePseudo).toContain('Lucas Martin');
   });
 
-  test('restaure « Lucas Martin » avec ses majuscules (aller-retour)', async ({ page }) => {
+  test('restaure l\'adresse avec ses majuscules (aller-retour)', async ({ page }) => {
     const fichier = await creerDocxNom();
     await page.goto('/');
 
-    // 1. Pseudonymiser un document contenant « Lucas Martin »
+    // 1. Pseudonymiser un document contenant une adresse
     await page.locator('input[type="file"]').first().setInputFiles({
       name: 'rapport-nom.docx',
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -84,12 +87,12 @@ test.describe('DET-AUTO — Détection contextuelle', () => {
     await page.getByRole('button', { name: /Validate and continue/i }).click({ timeout: 10000 });
     await expect(page.getByText(/Download files/i)).toBeVisible({ timeout: 10000 });
 
-    // 2. La clé produite stocke la forme d'origine « Lucas Martin »
+    // 2. La clé produite stocke la forme d'origine de l'adresse
     const telechargementCle = page.waitForEvent('download');
     await page.getByRole('button', { name: /Download key/i }).click();
     const cheminCle = await (await telechargementCle).path();
     const cle = JSON.parse(await readFile(cheminCle as string, 'utf-8'));
-    expect(cle['[PERSONNE]']).toContain('Lucas Martin');
+    expect(cle['[ADRESSE]']).toContain('4 avenue Jean Jaurès, 69007 Lyon');
 
     // 3. Récupérer le document pseudonymisé pour le restaurer
     const telechargementDoc = page.waitForEvent('download');
@@ -115,6 +118,6 @@ test.describe('DET-AUTO — Détection contextuelle', () => {
 
     // 5. Le document restauré restitue la casse d'origine
     const texteRestaure = await texteVolet(page, 'Restored preview');
-    expect(texteRestaure).toContain('Lucas Martin');
+    expect(texteRestaure).toContain('4 avenue Jean Jaurès, 69007 Lyon');
   });
 });
