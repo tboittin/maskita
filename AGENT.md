@@ -54,6 +54,7 @@ de `main`, car il pilote tous les subagents.
 
 - couverture de test maximale. Chaque composant, fonction utilitaire doit avoir des tests unitaires associés
 - les tests e2e (Playwright) dans `e2e/` doivent être mis à jour pour couvrir les nouveaux comportements
+- `scripts/check-e2e.sh` est **OBLIGATOIRE** avant `gh pr create` : il refuse (exit 1) toute PR dont les changements de `src/` (hors `*.test.ts[x]`) ne sont pas accompagnés d'au moins un fichier `e2e/`. Échappatoire réservée au lead : `SKIP_E2E=1 bash scripts/check-e2e.sh` ou `bash scripts/check-e2e.sh --sans-e2e` (log explicite « e2e contourné explicitement (sans-e2e) »).
 - `npm test` doit passer avant chaque commit
 - `tsc --noEmit` doit passer avant chaque commit
 - Les bugs signalés par l'utilisateur sont prioritaires sur les nouvelles
@@ -62,8 +63,13 @@ de `main`, car il pilote tous les subagents.
 ## Décisions déjà prises
 
 - Pas de LLM, pas de NER spaCy, pas de serveur Python
-- Détection uniquement par regex (email, téléphone, NIR, ADELI, IBAN, SIRET, URL, IP)
-- Les noms, adresses, professions sont ajoutés manuellement par l'utilisateur
+- Détection par regex (email, téléphone, NIR, ADELI, IBAN, SIRET, URL, IP)
+- Détection contextuelle sans modèle (`detectionContextuelle.ts`) : dates et
+  adresses uniquement. Pas de noms par liste de prénoms ni par civilités : trop
+  de faux positifs (essai écarté le 02/11/2026)
+- Les noms, professions, et ce que la détection rate, sont ajoutés manuellement
+- Détection par modèle NER (palier 2) : seulement dans un second mode, sur une
+  page séparée avec son propre CSP ; la page principale garde `connect-src 'none'`
 - Fichier de mapping non chiffré (`.key.json`), utilisateur seul garant
 - Une table de mapping par patient, pas de persistance
 - mammoth pour l'extraction .docx, docx (npm) pour la reconstruction

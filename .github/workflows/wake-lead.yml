@@ -5,10 +5,9 @@ on:
     types: [opened, edited, closed, labeled]
   issue_comment:
     types: [created]
-  pull_request:
-    types: [opened, closed, review_requested]
-  pull_request_review:
-    types: [submitted]
+  # push sur main : un merge de PR produit un push exécuté depuis la branche par défaut (sûr).
+  push:
+    branches: [main]
 
 permissions:
   issues: read
@@ -16,6 +15,9 @@ permissions:
 
 jobs:
   wake:
+    # ⚠️ CRITIQUE : GitHub évalue ce `if` de JOB AVANT de dispatcher vers le runner.
+    # Un `if` d'étape serait évalué SUR le runner (trop tard, le code aurait tourné).
+    if: github.actor == 'tboittin'
     runs-on: self-hosted   # runner WSL — a accès à herdr
     steps:
       - name: Construire le message métier
@@ -31,13 +33,16 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body }}
           LABEL_NAME: ${{ github.event.label.name }}
           REVIEW_STATE: ${{ github.event.review.state }}
+          PUSH_MESSAGE: ${{ github.event.head_commit.message }}
+          PUSH_REF: ${{ github.ref_name }}
         run: |
           echo "Message du workflow :"
           echo "  event=$EVENT_NAME/$EVENT_ACTION par @$ACTOR"
           echo "  issue=$ISSUE_NUM title='$ISSUE_TITLE'"
           echo "  pr=$PR_NUM title='$PR_TITLE'"
-          echo "  comment='$(echo "$COMMENT_BODY" | head -c 200)'"
+          if [ -n "$COMMENT_BODY" ]; then echo "  comment: present"; else echo "  comment: absent"; fi
           echo "  label=$LABEL_NAME review=$REVIEW_STATE"
+          if [ -n "$PUSH_MESSAGE" ]; then echo "  push=$PUSH_REF commit: present"; else echo "  push: absent"; fi
 
       - name: Réveiller le lead agent
         shell: bash
@@ -52,17 +57,27 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body }}
           LABEL_NAME: ${{ github.event.label.name }}
           REVIEW_STATE: ${{ github.event.review.state }}
+          PUSH_MESSAGE: ${{ github.event.head_commit.message }}
+          PUSH_REF: ${{ github.ref_name }}
         run: |
           # Ignorer si le commentaire contient /no-wakeup
+          # (seul usage de COMMENT_BODY : un test de filtre, jamais injecté dans le prompt)
           if echo "$COMMENT_BODY" | grep -q '/no-wakeup'; then
             echo "Commentaire marque /no-wakeup — ignore"
             exit 0
           fi
 
+          # ⚠️ Anti-injection : on ne transmet QUE des métadonnées.
+          # Le corps du commentaire (texte potentiellement non fiable) n'est JAMAIS
+          # inclus dans le prompt. Le lead lira le commentaire via `gh api` s'il en a besoin.
           MSG="🔔 GitHub: $EVENT_NAME/$EVENT_ACTION par @$ACTOR"
+          if [ "$EVENT_NAME" = "push" ]; then
+            # Métadonnée uniquement : 1re ligne du message de commit, tronquée à ~150 chars.
+            FIRST_LINE=$(printf '%s' "$PUSH_MESSAGE" | head -n 1 | cut -c1-150)
+            MSG="🔔 GitHub: push sur main — $FIRST_LINE"
+          fi
           if [ -n "$ISSUE_NUM" ]; then MSG="$MSG — issue #$ISSUE_NUM ($ISSUE_TITLE)"; fi
           if [ -n "$PR_NUM" ]; then MSG="$MSG — PR #$PR_NUM ($PR_TITLE)"; fi
-          if [ -n "$COMMENT_BODY" ]; then MSG="$MSG — comment: $(echo "$COMMENT_BODY" | head -c 150)"; fi
           if [ -n "$LABEL_NAME" ]; then MSG="$MSG — label: $LABEL_NAME"; fi
           if [ -n "$REVIEW_STATE" ]; then MSG="$MSG — review: $REVIEW_STATE"; fi
 

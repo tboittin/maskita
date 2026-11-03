@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { analyserTexte, deduplicator, resoudreConflitsSousChaine, fusionnerAvecMappingExistant } from './analyse';
-import { reinitialiserCompteurs } from './mapping';
+import { reinitialiserCompteurs, restaurerTexte } from './mapping';
 import type { Detection } from './regex';
 
 describe('analyserTexte', () => {
@@ -119,8 +119,8 @@ describe('fusionnerAvecMappingExistant', () => {
     expect(mapping['[EMAIL]']).toContain('nouveau@exemple.fr');
   });
 
-  // DET-01 — Détection insensible à la casse
-  it('regroupe Lefevre et lefevre dans une seule entrée avec la valeur canonique minuscule', () => {
+  // DET-01 — Détection insensible à la casse (la forme d'origine est conservée)
+  it('regroupe Lefevre et lefevre dans une seule entrée, en gardant la forme d\'origine', () => {
     const detections: Detection[] = [
       { valeur: 'Lefevre', type: 'PERSONNE' as any, position: 0, longueur: 7 },
       { valeur: 'lefevre', type: 'PERSONNE' as any, position: 10, longueur: 7 },
@@ -129,7 +129,9 @@ describe('fusionnerAvecMappingExistant', () => {
     const mapping = fusionnerAvecMappingExistant(null, detections);
 
     expect(Object.keys(mapping)).toHaveLength(1);
-    expect(mapping['[PERSONNE]']).toEqual(['lefevre']);
+    // Déduplication insensible à la casse : une seule entrée, « Lefevre »
+    // (la première forme vue, déjà capitalisée, n'est pas dégradée).
+    expect(mapping['[PERSONNE]']).toEqual(['Lefevre']);
   });
 
   it('regroupe "Henri Lefevre" et "henri lefevre" dans une seule entrée', () => {
@@ -141,7 +143,7 @@ describe('fusionnerAvecMappingExistant', () => {
     const mapping = fusionnerAvecMappingExistant(null, detections);
 
     expect(Object.keys(mapping)).toHaveLength(1);
-    expect(mapping['[PERSONNE]']).toEqual(['henri lefevre']);
+    expect(mapping['[PERSONNE]']).toEqual(['Henri Lefevre']);
   });
 
   it('même pseudo pour deux variantes de casse (insensibilité à la casse)', () => {
@@ -154,6 +156,60 @@ describe('fusionnerAvecMappingExistant', () => {
     const pseudo = Object.keys(mapping)[0];
 
     // Les deux variantes aboutissent à la même valeur de pseudo
-    expect(mapping[pseudo]).toEqual(['lefevre']);
+    expect(mapping[pseudo]).toEqual(['Lefevre']);
+  });
+
+  it('conserve la forme capitalisée quand la première vue était en minuscules', () => {
+    const detections: Detection[] = [
+      { valeur: 'lucas martin', type: 'PERSONNE' as any, position: 0, longueur: 12 },
+      { valeur: 'Lucas Martin', type: 'PERSONNE' as any, position: 20, longueur: 12 },
+    ];
+
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+
+    expect(Object.keys(mapping)).toHaveLength(1);
+    expect(mapping['[PERSONNE]']).toEqual(['Lucas Martin']);
+  });
+
+  it('ne capitalise pas un email en minuscules (pas de casse abusive)', () => {
+    const detections: Detection[] = [
+      { valeur: 'lucas.martin@exemple.fr', type: 'EMAIL' as any, position: 0, longueur: 23 },
+      { valeur: 'lucas.martin@exemple.fr', type: 'EMAIL' as any, position: 30, longueur: 23 },
+    ];
+
+    const mapping = fusionnerAvecMappingExistant(null, detections);
+
+    expect(Object.keys(mapping)).toHaveLength(1);
+    expect(mapping['[EMAIL]']).toEqual(['lucas.martin@exemple.fr']);
+  });
+});
+describe('analyserTexte — détection contextuelle (DET-AUTO)', () => {
+  it('ajoute les dates et adresses aux détections regex', () => {
+    const types = analyserTexte('Mme Dupont, née le 12/03/1980, tél. 06 12 34 56 78, 69003 Lyon.').map(d => d.type);
+    expect(types).toEqual(['TEL', 'DATE', 'ADRESSE']);
+  });
+});
+
+describe('fusionnerAvecMappingExistant — entités (DET-AUTO)', () => {
+  beforeEach(() => reinitialiserCompteurs());
+
+  it('conserve la casse d\'origine et la restitue à la restauration', () => {
+    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Domicile : 4 rue des Lilas, 69003 Lyon.'));
+    expect(mapping['[ADRESSE]']).toEqual(['4 rue des Lilas, 69003 Lyon']);
+    expect(restaurerTexte('Il habite [ADRESSE].', mapping))
+      .toBe('Il habite 4 rue des Lilas, 69003 Lyon.');
+  });
+
+  it('crée un tag par date distincte', () => {
+    const mapping = fusionnerAvecMappingExistant(null, analyserTexte('Le 01/02/2026 puis le 03/04/2026.'));
+    expect(Object.keys(mapping)).toHaveLength(2);
+  });
+
+  it('ne duplique pas une date déjà présente dans la clé et améliore sa forme', () => {
+    const mapping = fusionnerAvecMappingExistant(
+      { '[DATE]': ['mars 2024'] },
+      analyserTexte('Depuis Mars 2024.'),
+    );
+    expect(mapping).toEqual({ '[DATE]': ['Mars 2024'] });
   });
 });
