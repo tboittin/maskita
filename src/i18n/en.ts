@@ -136,7 +136,7 @@ export const en: Dictionnaire = {
 
   /* Ouverture vers l'IA (écran Télécharger, pied de page) */
   'ia.panneau.titre': 'What next? Using an AI',
-  'ia.panneau.texte': "This document is not anonymous: it may still be health data covered by professional secrecy. Maskita reduces what you entrust to an AI to the strict minimum, including an HDS-certified AI, but the choice of tool is yours.",
+  'ia.panneau.texte': "This document is not anonymous: it remains health data covered by professional secrecy. Maskita reduces what you entrust to an AI to the strict minimum, including an HDS-certified AI, but the choice of tool is yours.",
   'ia.bouton.copier': 'Copy the prompt',
   'ia.bouton.copie': 'Prompt copied ✓',
   'ia.bouton.precautions': 'Precautions before using an AI',

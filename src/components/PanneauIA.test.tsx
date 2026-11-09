@@ -16,7 +16,7 @@ describe('PanneauIA', () => {
   it("affiche l'avertissement court et les deux actions", () => {
     renderAvecI18n(<PanneauIA />);
     expect(screen.getByText('Et ensuite ? Utiliser une IA')).toBeInTheDocument();
-    expect(screen.getByText(/il peut rester une donnée de santé couverte par le secret professionnel/)).toBeInTheDocument();
+    expect(screen.getByText(/il reste une donnée de santé couverte par le secret professionnel/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Copier le prompt' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: "Précautions avant d'utiliser une IA" })).toBeInTheDocument();
   });

@@ -134,7 +134,7 @@ export const fr = {
 
   /* Ouverture vers l'IA (écran Télécharger, pied de page) */
   'ia.panneau.titre': 'Et ensuite ? Utiliser une IA',
-  'ia.panneau.texte': "Ce document n'est pas anonyme : il peut rester une donnée de santé couverte par le secret professionnel. Maskita réduit au strict nécessaire ce que vous confiez à une IA, y compris une IA certifiée HDS, mais le choix de l'outil vous appartient.",
+  'ia.panneau.texte': "Ce document n'est pas anonyme : il reste une donnée de santé couverte par le secret professionnel. Maskita réduit au strict nécessaire ce que vous confiez à une IA, y compris une IA certifiée HDS, mais le choix de l'outil vous appartient.",
   'ia.bouton.copier': 'Copier le prompt',
   'ia.bouton.copie': 'Prompt copié ✓',
   'ia.bouton.precautions': 'Précautions avant d\'utiliser une IA',
