@@ -35,6 +35,17 @@ test('ner.html a son propre CSP et attend un clic avant de télécharger', async
   expect(requetes.some(u => u.includes('/modeles/'))).toBe(false);
 });
 
+test('ner.html prévient sans rien télécharger si le navigateur ne gère pas WebAssembly', async ({ page }) => {
+  // Simule un navigateur sans WebAssembly (ancien, ou Mode Isolement d'Apple)
+  await page.addInitScript(() => { delete (globalThis as { WebAssembly?: unknown }).WebAssembly; });
+  const requetes: string[] = [];
+  page.on('request', r => requetes.push(r.url()));
+  await page.goto('/ner.html');
+  await expect(page.getByText(/Votre navigateur ne permet pas la détection avancée/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Activer la détection avancée/ })).toHaveCount(0);
+  expect(requetes.some(u => u.includes('/modeles/') || u.includes('/ort/'))).toBe(false);
+});
+
 test('ner.html propose les noms trouvés comme suggestions à valider', async ({ page }) => {
   test.skip(!MODELE_PRESENT, 'modèle absent : lancer scripts/telecharger-modele.sh');
   test.setTimeout(180_000);

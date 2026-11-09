@@ -8,13 +8,21 @@ import type { DetectionAvancee } from './useDetectionAvancee';
 
 export function PanneauActivation({ detection }: { detection: DetectionAvancee }) {
   const { t } = useLangue();
-  const { etat, progression, erreur, activer } = detection;
+  const { etat, progression, erreur, activer, compatibilite } = detection;
   return (
     <Panneau title={t('ner.titre')}>
       <div style={{ padding: 'var(--espacement-md)', display: 'flex', flexDirection: 'column', gap: 'var(--espacement-sm)' }}>
         <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)' }}>
           {t('ner.description')}
         </p>
+        {etat === 'incompatible' && compatibilite.raison && (
+          <p role="alert" style={{ margin: 0, fontSize: '0.875rem' }}>
+            {t('ner.incompatible')} {t(`ner.incompatible.${compatibilite.raison}`)}
+          </p>
+        )}
+        {compatibilite.ok && compatibilite.memoireFaible && etat === 'inactif' && (
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)' }}>{t('ner.memoireFaible')}</p>
+        )}
         {(etat === 'inactif' || etat === 'erreur') && (
           <div>
             <Bouton variante="secondaire" onClick={activer}>{t('ner.bouton.activer')}</Bouton>

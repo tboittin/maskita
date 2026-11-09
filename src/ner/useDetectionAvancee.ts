@@ -10,14 +10,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Detection } from '../utils/regex';
 import type { MessageDuWorker, MessageVersWorker } from './messages';
 import { versDetections } from './regroupement';
+import { verifierCompatibilite, type Compatibilite } from './compatibilite';
 
-export type EtatDetectionAvancee = 'inactif' | 'chargement' | 'pret' | 'erreur';
+export type EtatDetectionAvancee = 'inactif' | 'incompatible' | 'chargement' | 'pret' | 'erreur';
 
 export interface DetectionAvancee {
   etat: EtatDetectionAvancee;
   /** Avancement du téléchargement, de 0 à 100. */
   progression: number;
   erreur: string | null;
+  /** Résultat de la vérification du navigateur, faite avant tout téléchargement. */
+  compatibilite: Compatibilite;
   activer: () => void;
   analyser: (texte: string) => Promise<Detection[]>;
 }
@@ -28,8 +31,12 @@ export type FabriqueWorker = () => Pick<Worker, 'postMessage' | 'terminate' | 'a
 const fabriqueParDefaut: FabriqueWorker = () =>
   new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 
-export function useDetectionAvancee(fabrique: FabriqueWorker = fabriqueParDefaut): DetectionAvancee {
-  const [etat, setEtat] = useState<EtatDetectionAvancee>('inactif');
+export function useDetectionAvancee(
+  fabrique: FabriqueWorker = fabriqueParDefaut,
+  verifier: () => Compatibilite = verifierCompatibilite,
+): DetectionAvancee {
+  const [compatibilite] = useState(verifier);
+  const [etat, setEtat] = useState<EtatDetectionAvancee>(compatibilite.ok ? 'inactif' : 'incompatible');
   const [progression, setProgression] = useState(0);
   const [erreur, setErreur] = useState<string | null>(null);
   const worker = useRef<ReturnType<FabriqueWorker> | null>(null);
@@ -89,11 +96,12 @@ export function useDetectionAvancee(fabrique: FabriqueWorker = fabriqueParDefaut
   }, [fabrique, surMessage]);
 
   const activer = useCallback(() => {
+    if (!compatibilite.ok) return; // rien n'est téléchargé
     setErreur(null);
     setEtat('chargement');
     const message: MessageVersWorker = { type: 'charger' };
     obtenirWorker().postMessage(message);
-  }, [obtenirWorker]);
+  }, [obtenirWorker, compatibilite.ok]);
 
   const analyser = useCallback((texte: string) => {
     const id = prochainId.current++;
@@ -104,5 +112,5 @@ export function useDetectionAvancee(fabrique: FabriqueWorker = fabriqueParDefaut
     });
   }, [obtenirWorker]);
 
-  return { etat, progression, erreur, activer, analyser };
+  return { etat, progression, erreur, compatibilite, activer, analyser };
 }

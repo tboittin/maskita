@@ -42,5 +42,7 @@ echo "empreintes SHA-256 vérifiées"
 
 ORT_DIST="$(dirname "$(dirname "$TRANSFORMERS")")/onnxruntime-web/dist"
 mkdir -p "$RACINE/public/ort"
+# Deux variantes : transformers.js choisit la simple pour Safari < 26.
 cp "$ORT_DIST"/ort-wasm-simd-threaded.asyncify.{mjs,wasm} "$RACINE/public/ort/"
+cp "$ORT_DIST"/ort-wasm-simd-threaded.{mjs,wasm} "$RACINE/public/ort/"
 echo "moteur WebAssembly copié depuis $ORT_DIST"

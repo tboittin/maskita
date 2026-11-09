@@ -16,10 +16,22 @@ function fauxWorker() {
   return { worker, recus, emettre };
 }
 
+const compatible = () => ({ ok: true, memoireFaible: false });
+
 describe('useDetectionAvancee', () => {
+  it('reste inactif et ne télécharge rien si le navigateur est incompatible', () => {
+    const fabrique = vi.fn();
+    const { result } = renderHook(() =>
+      useDetectionAvancee(fabrique as unknown as FabriqueWorker, () => ({ ok: false, raison: 'simd' as const, memoireFaible: false })));
+    expect(result.current.etat).toBe('incompatible');
+    act(() => result.current.activer());
+    expect(result.current.etat).toBe('incompatible');
+    expect(fabrique).not.toHaveBeenCalled();
+  });
+
   it('ne crée aucun worker tant que la détection n’est pas activée', () => {
     const fabrique = vi.fn();
-    const { result } = renderHook(() => useDetectionAvancee(fabrique as unknown as FabriqueWorker));
+    const { result } = renderHook(() => useDetectionAvancee(fabrique as unknown as FabriqueWorker, compatible));
     expect(result.current.etat).toBe('inactif');
     expect(fabrique).not.toHaveBeenCalled();
   });
@@ -27,7 +39,7 @@ describe('useDetectionAvancee', () => {
   it('suit le chargement puis passe à prêt', () => {
     vi.spyOn(console, 'info').mockImplementation(() => {});
     const { worker, recus, emettre } = fauxWorker();
-    const { result } = renderHook(() => useDetectionAvancee(() => worker));
+    const { result } = renderHook(() => useDetectionAvancee(() => worker, compatible));
     act(() => result.current.activer());
     expect(result.current.etat).toBe('chargement');
     expect(recus).toEqual([{ type: 'charger' }]);
@@ -43,7 +55,7 @@ describe('useDetectionAvancee', () => {
     vi.spyOn(console, 'info').mockImplementation(() => {});
     vi.spyOn(console, 'table').mockImplementation(() => {});
     const { worker, recus, emettre } = fauxWorker();
-    const { result } = renderHook(() => useDetectionAvancee(() => worker));
+    const { result } = renderHook(() => useDetectionAvancee(() => worker, compatible));
     let promesse!: Promise<unknown>;
     act(() => { promesse = result.current.analyser('Sophie à Lyon'); });
     const id = (recus[0] as { id: number }).id;
@@ -64,7 +76,7 @@ describe('useDetectionAvancee', () => {
   it('signale une erreur de chargement', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const { worker, emettre } = fauxWorker();
-    const { result } = renderHook(() => useDetectionAvancee(() => worker));
+    const { result } = renderHook(() => useDetectionAvancee(() => worker, compatible));
     act(() => result.current.activer());
     emettre({ type: 'erreur', message: 'introuvable' });
     expect(result.current.etat).toBe('erreur');

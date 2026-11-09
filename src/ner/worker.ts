@@ -12,17 +12,16 @@
 import { pipeline, env, type TokenClassificationPipeline } from '@huggingface/transformers';
 import { decouperTexte, regrouperEntites, type EntiteNer, type JetonNer } from './regroupement';
 import type { MessageVersWorker, MessageDuWorker } from './messages';
+import { cheminsLocaux } from './compatibilite';
 
 export const MODELE = 'Xenova/camembert-ner';
 
 env.allowRemoteModels = false;
 env.allowLocalModels = true;
 env.localModelPath = '/modeles/';
+// Moteur WebAssembly servi par le site : voir cheminsLocaux (compatibilite.ts).
 if (env.backends.onnx?.wasm) {
-  env.backends.onnx.wasm.wasmPaths = {
-    mjs: '/ort/ort-wasm-simd-threaded.asyncify.mjs',
-    wasm: '/ort/ort-wasm-simd-threaded.asyncify.wasm',
-  };
+  env.backends.onnx.wasm.wasmPaths = cheminsLocaux(env.backends.onnx.wasm.wasmPaths);
 }
 
 let ner: Promise<TokenClassificationPipeline> | null = null;

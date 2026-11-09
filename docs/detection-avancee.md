@@ -17,6 +17,23 @@ pnpm dev         # puis ouvrir http://localhost:5173/ner.html
 Les dossiers `public/modeles/` et `public/ort/` sont ignorés par git : le
 fichier du modèle dépasse la limite de 100 Mo de GitHub.
 
+## Compatibilité des navigateurs
+
+Avant tout téléchargement, `src/ner/compatibilite.ts` vérifie que le navigateur
+sait faire tourner le modèle : WebAssembly présent, instructions SIMD
+disponibles, Web Workers. Sinon, la page explique pourquoi et ne télécharge
+rien. Cas connus : navigateurs d'avant 2023 environ, Mode Isolement d'Apple
+(WebAssembly désactivé). Si l'appareil annonce moins de 4 Go de mémoire
+(Chrome seulement), un avertissement conseille un ordinateur, sans bloquer.
+
+Le moteur WebAssembly existe en deux variantes, toutes deux copiées dans
+`public/ort/` : transformers.js choisit la variante simple pour Safari < 26 et
+« asyncify » ailleurs. Le worker garde ce choix et remplace seulement l'adresse
+du CDN par `/ort/`.
+
+Non vérifié faute d'appareil : Safari (Mac, iPhone, iPad), mobiles d'entrée de
+gamme, réseaux d'entreprise qui filtrent les gros fichiers binaires.
+
 ## Vérification du modèle
 
 `scripts/telecharger-modele.sh` télécharge une **version figée** du modèle
