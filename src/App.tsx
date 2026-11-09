@@ -286,6 +286,17 @@ function AppInterieur({ detectionAvancee = false }: AppProps) {
               </div>
             </Panneau>
             {detectionAvancee && <PanneauActivation detection={ner} />}
+            {/* MSK-004 — passage d'une page à l'autre (simple navigation, aucune requête de données) */}
+            <p style={{ margin: 0, textAlign: 'center', fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)' }}>
+              {detectionAvancee ? (
+                <a href="/" style={{ color: 'var(--couleur-primaire)' }}>{t('ner.lien.retour')}</a>
+              ) : (
+                <>
+                  {t('ner.lien.texte')}{' '}
+                  <a href="/ner.html" style={{ color: 'var(--couleur-primaire)' }}>{t('ner.lien.essayer')}</a>
+                </>
+              )}
+            </p>
             {analysePrete && (
               <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <Bouton variante="primaire" taille="lg" onClick={handleLancerAnalyse} disabled={analyseEnCours || (detectionAvancee && ner.etat === 'chargement')}>

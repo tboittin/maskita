@@ -21,7 +21,16 @@ test('la page par défaut garde connect-src none et ne propose pas la détection
   await page.goto('/');
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
   expect(csp).toContain("connect-src 'none'");
-  await expect(page.getByText(/Détection avancée/i)).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Activer la détection avancée/ })).toHaveCount(0);
+});
+
+test('un lien mène de la page par défaut à ner.html, et retour', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /Essayer la détection avancée/ }).click();
+  await expect(page).toHaveURL(/\/ner\.html$/);
+  await expect(page.getByRole('button', { name: /Activer la détection avancée/ })).toBeVisible();
+  await page.getByRole('link', { name: /Revenir à Maskita/ }).click();
+  await expect(page.getByRole('link', { name: /Essayer la détection avancée/ })).toBeVisible();
 });
 
 test('ner.html a son propre CSP et attend un clic avant de télécharger', async ({ page }) => {
