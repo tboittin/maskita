@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Bouton, Modal } from '@khaleeno/maskita-design-system';
-import { estValeurValide } from '../utils/mapping';
+import { estValeurTropCourte, estValeurValide } from '../utils/mapping';
 import {
   extraireMots,
   filtrerParPrefixe,
@@ -24,6 +24,7 @@ interface ModalAjoutClassiqueProps {
   placeholderType: string;
   placeholderValeur: string;
   alerteCrochet: string;
+  alerteTropCourte: string;
 }
 
 const TYPES_SUGGERES = [
@@ -60,6 +61,7 @@ export function ModalAjoutClassique({
   placeholderType,
   placeholderValeur,
   alerteCrochet,
+  alerteTropCourte,
 }: ModalAjoutClassiqueProps) {
   const [type, setType] = useState('');
   const [valeur, setValeur] = useState('');
@@ -135,7 +137,8 @@ export function ModalAjoutClassique({
   }
 
   const valeurEstInvalide = valeur.trim() !== '' && !estValeurValide(valeur);
-  const peutValider = type.trim() !== '' && valeur.trim() !== '' && !valeurEstInvalide;
+  const valeurTropCourte = valeur.trim() !== '' && estValeurTropCourte(valeur);
+  const peutValider = type.trim() !== '' && valeur.trim() !== '' && !valeurEstInvalide && !valeurTropCourte;
 
   const handleValider = () => {
     if (!peutValider) return;
@@ -272,6 +275,11 @@ export function ModalAjoutClassique({
           {valeurEstInvalide && (
             <span style={{ color: 'var(--couleur-erreur, #d32f2f)', fontSize: '0.8rem', marginTop: 'var(--espacement-xs)' }}>
               {alerteCrochet}
+            </span>
+          )}
+          {valeurTropCourte && (
+            <span role="alert" style={{ color: 'var(--couleur-erreur, #d32f2f)', fontSize: '0.8rem', marginTop: 'var(--espacement-xs)' }}>
+              {alerteTropCourte}
             </span>
           )}
         </label>

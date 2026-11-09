@@ -52,4 +52,16 @@ describe('Dictionnaires i18n (fr/en)', () => {
       expect(typeof fr[cle as keyof typeof fr]).toBe(typeof en[cle as keyof typeof en]);
     }
   });
+
+  it("les textes sur l'IA respectent le wording validé (pas de promesse de conformité)", () => {
+    for (const dico of [fr, en]) {
+      for (const [cle, valeur] of Object.entries(dico)) {
+        if (!cle.startsWith('ia.') || typeof valeur !== 'string') continue;
+        expect(valeur, `clé ${cle}`).not.toMatch(/\b(conforme|compliant)\b/i);
+        expect(valeur, `clé ${cle}`).not.toMatch(/sans exposer|without exposing/i);
+        expect(valeur, `clé ${cle}`).not.toMatch(/chatgpt/i);
+        expect(valeur, `clé ${cle}`).not.toMatch(/\bHAS\b/);
+      }
+    }
+  });
 });

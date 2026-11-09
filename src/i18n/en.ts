@@ -30,6 +30,7 @@ export const en: Dictionnaire = {
   'revue.ajoutClassique.labelType': 'Pseudonym',
   'revue.ajoutClassique.labelValeur': 'Value',
   'revue.ajoutClassique.alerteCrochet': "The value cannot contain brackets '[' or ']'",
+  'revue.ajoutClassique.alerteTropCourte': 'The value must be at least 2 characters long: a single letter would also replace every standalone "a" or "y" in the text. Enter the full name.',
   'revue.picker.titre.deplacer': (v: string) => `Move « ${v} » to which pseudo?`,
   'revue.picker.titre.ajouter': 'Add to which pseudo?',
   'revue.picker.valeur': (v: string) => `Value: ${v}`,
@@ -111,6 +112,10 @@ export const en: Dictionnaire = {
 
   /* EcranRestaurationRevue */
   'restaurationRevue.titre.restaure': 'Restored preview',
+  'restaurationRevue.tagsInconnus': (nb: number, tags: string) =>
+    nb > 1
+      ? `${nb} pseudos in the text are not in the key and will not be restored: ${tags}. The AI may have altered or invented them. You can add them to the key in the table below.`
+      : `One pseudo in the text is not in the key and will not be restored: ${tags}. The AI may have altered or invented it. You can add it to the key in the table below.`,
 
   /* FooterLegal */
   'footer.mentions': 'Legal notice',
@@ -133,6 +138,69 @@ export const en: Dictionnaire = {
   'footer.privacy': 'This application processes your documents exclusively in your browser. No personal data, documents, or identifying information is transmitted, stored, or processed on an external server. All processing (extraction, analysis, pseudonymisation, reconstruction) is performed locally, in memory, without persistence. No cookies, trackers, or analytics tools are used. You retain full control of your data at every step.',
   'footer.intellectualProperty': 'Maskita is free software distributed under the MIT license. The source code is available on GitHub. The icons and emojis used in the interface are provided for informational purposes and are not subject to specific copyright.',
   'footer.liability': 'This software is provided "as is", without warranty of any kind, express or implied. The user is solely responsible for their use of pseudonymised and restored documents. It is their responsibility to verify the completeness of pseudonymisation before transmitting documents to a third party. The author shall not be held liable for any data breach resulting from misuse of the software.',
+
+  /* MSK-004 — advanced detection (ner.html page) */
+  'ner.titre': 'Advanced name detection (experimental)',
+  'ner.description': 'An AI model (CamemBERT-NER, 111 MB) finds names of people, places and organisations. It is downloaded from this site once, then runs in your browser: your document never leaves your computer.',
+  'ner.bouton.activer': 'Enable advanced detection (111 MB)',
+  'ner.chargement': (p: number) => `Downloading the model… ${p}%`,
+  'ner.pret': 'Model ready. The names found will be suggested for review.',
+  'ner.erreur': (m: string) => `The model could not be loaded: ${m}`,
+  'ner.incompatible': 'Your browser does not support advanced detection. Nothing was downloaded.',
+  'ner.incompatible.webassembly': "It does not support WebAssembly (browser too old, or Apple's Lockdown Mode is on).",
+  'ner.incompatible.simd': 'It is too old to run the model: please update it.',
+  'ner.incompatible.worker': 'It does not allow background computation (Web Workers).',
+  'ner.memoireFaible': 'This device reports little memory: advanced detection may be slow or close the tab. A computer is recommended.',
+  'ner.lien.texte': 'Want Maskita to find names too?',
+  'ner.lien.essayer': 'Try advanced detection (experimental, 111 MB download)',
+  'ner.lien.retour': '← Back to Maskita without download',
+  'ner.analyse': 'Looking for names…',
+  'ner.suggestions.titre': (n: number) => `Advanced detection suggestions (${n})`,
+  'ner.suggestions.aide': 'Nothing is added without your consent. Accept real names, ignore the rest, and check the text: the model can miss some.',
+  'ner.suggestions.accepter': 'Accept',
+  'ner.suggestions.ignorer': 'Ignore',
+  'ner.suggestions.toutAccepter': 'Accept all',
+  'ner.suggestions.aucune': 'No more suggestions.',
+
+  /* Ouverture vers l'IA (écran Télécharger, pied de page) */
+  'ia.panneau.titre': 'What next? Using an AI',
+  'ia.panneau.texte': "This document is not anonymous: it remains health data covered by professional secrecy. Maskita reduces what you entrust to an AI to the strict minimum, including an HDS-certified AI, but the choice of tool is yours.",
+  'ia.bouton.copier': 'Copy the prompt',
+  'ia.bouton.copie': 'Prompt copied ✓',
+  'ia.bouton.precautions': 'Precautions before using an AI',
+  'ia.copie.echec': 'Automatic copy failed. Select the text below and copy it.',
+  'ia.prompt.libelle': 'Prompt to copy',
+  'ia.prompt.explication': 'A prompt is the instruction message you give the AI. This one asks it to copy the pseudos exactly, without changing them or guessing what they hide, so that Maskita can then restore the real values. Paste it at the start of your conversation, complete your request, then add the content of the pseudonymised document.',
+  'ia.prompt.voir': 'Show the prompt',
+  'ia.prompt.aide': 'Paste this prompt into the AI, complete your request, then paste the content of the pseudonymised document after it.',
+  'ia.footer.lien': 'Using an AI',
+  'ia.modal.titre': 'Precautions before using an AI',
+  'ia.modal.fait.titre': 'What Maskita does',
+  'ia.modal.fait.texte': 'Maskita replaces identifying information with pseudos, directly in your browser. Nothing is sent over the internet.',
+  'ia.modal.faitPas.titre': 'What it does not do',
+  'ia.modal.faitPas.texte': 'The resulting document is not anonymous. For you, as the key holder, it remains personal health data, covered by professional secrecy where applicable.',
+  'ia.modal.relire.titre': 'Proofread it before sending',
+  'ia.modal.relire.texte': 'Ages, dates, places, school, occupation, family composition, significant events: these details can be enough to recognise someone. Add them as pseudos if needed.',
+  'ia.modal.choisir.titre': 'Choose a suitable service',
+  'ia.modal.choisir.texte': 'Preferably, an AI offered by an HDS-certified host (French certification for health data hosting) in Europe. Failing that, a service that does not retain your exchanges or use them for training. Consumer assistants that keep conversation history are not HDS-certified.',
+  'ia.modal.cle.titre': 'Keep the key to yourself',
+  'ia.modal.cle.texte': 'Never send the .key.json file to the AI: it contains the real values.',
+  'ia.modal.prompt.titre': 'Preserving pseudos',
+  'ia.modal.prompt.texte': 'The suggested prompt asks the AI to copy pseudos exactly, so that Maskita can restore the document. During restoration, Maskita flags any pseudo it does not recognise.',
+  'ia.modal.responsabilite': 'Maskita reduces what you entrust to an AI to the strict minimum, including an HDS-certified AI. It does not guarantee the compliance of your use, which remains your responsibility.',
+  'ia.prompt': `The document below has been pseudonymised: personal information has been replaced by tags in square brackets, for example [PERSONNE], [PERSONNE_2] or [EMAIL].
+
+Rules you must follow:
+1. Copy each tag exactly as written: same brackets, same UPPERCASE, same number, no added spaces. For example, [PERSONNE_2] must never become [Personne_2], [PERSONNE 2], PERSONNE_2 or [PERSONNE2].
+2. Never replace a tag with a name, first name or invented value, and do not try to guess what it hides.
+3. Do not create new tags and do not merge two different tags.
+4. A tag always refers to the same person or the same information throughout the document.
+5. If you rephrase or summarise, keep the tags in the sentences where they are meaningful.
+
+My request: (describe here what you want the AI to do)
+
+Document:
+`,
 
   /* errors courants */
   'erreur.generique': 'An error occurred.',

@@ -10,7 +10,11 @@ export type TypePII =
   | 'CARTE_BANCAIRE'
   // DET-AUTO — types détectés par le contexte (detectionContextuelle.ts)
   | 'DATE'
-  | 'ADRESSE';
+  | 'ADRESSE'
+  // MSK-004 — types proposés par la détection avancée (src/ner/), page ner.html
+  | 'PERSONNE'
+  | 'LIEU'
+  | 'ETABLISSEMENT';
 
 export interface Detection {
   valeur: string;

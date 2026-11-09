@@ -7,8 +7,12 @@ import { useFileUpload } from './hooks/useFileUpload';
 import { analyserTexte, fusionnerAvecMappingExistant } from './utils/analyse';
 import { type Mapping } from './utils/mapping';
 import { FooterLegal } from './components/FooterLegal';
+import { PanneauIA } from './components/PanneauIA';
 import { I18nProvider, useLangue } from './i18n/context';
 import { type EtapeRestauration } from './hooks/useRestauration';
+import { type Detection } from './utils/regex';
+import { useDetectionAvancee } from './ner/useDetectionAvancee';
+import { PanneauActivation } from './ner/PanneauActivation';
 import {
   Bouton,
   BrochetteIcon,
@@ -20,8 +24,18 @@ import {
 type Onglet = 'pseudonymiser' | 'restaurer';
 type Etape = 'upload' | 'revue' | 'telechargement';
 
-function AppInterieur() {
+interface AppProps {
+  /** MSK-004 — vrai sur la page ner.html : propose la détection avancée. */
+  detectionAvancee?: boolean;
+}
+
+function AppInterieur({ detectionAvancee = false }: AppProps) {
   const { t, langue, basculer } = useLangue();
+  // MSK-004 — le hook ne crée le Web Worker qu'au clic sur « Activer » :
+  // sur la page par défaut, il reste inerte (aucune requête).
+  const ner = useDetectionAvancee();
+  const [suggestions, setSuggestions] = useState<Detection[] | undefined>(undefined);
+  const [analyseEnCours, setAnalyseEnCours] = useState(false);
   const [onglet, setOnglet] = useState<Onglet>('pseudonymiser');
   const [messageSucces, setMessageSucces] = useState<string | null>(null);
   const {
@@ -62,13 +76,26 @@ function AppInterieur() {
     }
   }, [texte]);
 
-  const handleLancerAnalyse = useCallback(() => {
+  const handleLancerAnalyse = useCallback(async () => {
     if (texte === null) return;
     const detections = analyserTexte(texte);
     const mappingGenere = fusionnerAvecMappingExistant(cle, detections);
+    // MSK-004 — les entités du modèle restent des suggestions, hors mapping.
+    let suggestionsNer: Detection[] | undefined;
+    if (detectionAvancee && ner.etat === 'pret') {
+      setAnalyseEnCours(true);
+      try {
+        suggestionsNer = await ner.analyser(texte);
+      } catch {
+        suggestionsNer = undefined;
+      } finally {
+        setAnalyseEnCours(false);
+      }
+    }
+    setSuggestions(suggestionsNer);
     setMapping(mappingGenere);
     setEtape('revue');
-  }, [texte, cle]);
+  }, [texte, cle, detectionAvancee, ner]);
 
   const handleValider = useCallback(
     (mFinal: Mapping, textePseudo: string) => {
@@ -258,10 +285,22 @@ function AppInterieur() {
                 )}
               </div>
             </Panneau>
+            {detectionAvancee && <PanneauActivation detection={ner} />}
+            {/* MSK-004 — passage d'une page à l'autre (simple navigation, aucune requête de données) */}
+            <p style={{ margin: 0, textAlign: 'center', fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)' }}>
+              {detectionAvancee ? (
+                <a href="/" style={{ color: 'var(--couleur-primaire)' }}>{t('ner.lien.retour')}</a>
+              ) : (
+                <>
+                  {t('ner.lien.texte')}{' '}
+                  <a href="/ner.html" style={{ color: 'var(--couleur-primaire)' }}>{t('ner.lien.essayer')}</a>
+                </>
+              )}
+            </p>
             {analysePrete && (
               <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <Bouton variante="primaire" taille="lg" onClick={handleLancerAnalyse}>
-                  {t('app.bouton.analyser')}
+                <Bouton variante="primaire" taille="lg" onClick={handleLancerAnalyse} disabled={analyseEnCours || (detectionAvancee && ner.etat === 'chargement')}>
+                  {analyseEnCours ? t('ner.analyse') : t('app.bouton.analyser')}
                 </Bouton>
               </div>
             )}
@@ -274,6 +313,7 @@ function AppInterieur() {
               texteOriginal={texte}
               mappingInitial={mapping}
               onValider={handleValider}
+              suggestions={suggestions}
             />
             <div style={{ marginTop: 'var(--espacement-md)', textAlign: 'center' }}>
               <Bouton variante="secondaire" onClick={handleRetour}>
@@ -302,6 +342,7 @@ function AppInterieur() {
               succesCle={t('telechargement.succes.cle')}
               boutonRetour={t('telechargement.bouton.retour')}
               verifierNomSensible
+              complement={<PanneauIA />}
             />
           </section>
         )}
@@ -318,10 +359,10 @@ function AppInterieur() {
   );
 }
 
-export default function App() {
+export default function App({ detectionAvancee = false }: AppProps) {
   return (
     <I18nProvider>
-      <AppInterieur />
+      <AppInterieur detectionAvancee={detectionAvancee} />
     </I18nProvider>
   );
 }
