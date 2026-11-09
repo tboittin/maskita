@@ -255,11 +255,10 @@ test.describe('Warning données sensibles inline (MessageErreur) — Pseudonymis
     // 7. Vérifier qu'aucune Modal ne s'affiche (pas d'ancien comportement popup)
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
-    // 8. Le téléchargement est bloqué — cliquer ne fait rien
+    // 8. Le warning est informatif : le téléchargement n'est pas bloqué
     await expect(champDoc).toHaveAttribute('aria-invalid', 'true');
     await page.getByRole('button', { name: /Download document/i }).click();
-    await expect(page.getByRole('button', { name: /Download document/i })).toBeVisible();
-    await expect(page.getByText(/Document downloaded/i)).not.toBeVisible();
+    await expect(page.getByText(/Document downloaded/i)).toBeVisible({ timeout: 10000 });
 
     // 9. Corriger le nom : enlever la donnée sensible
     await champDoc.fill('rapport-propre.docx');
@@ -269,8 +268,8 @@ test.describe('Warning données sensibles inline (MessageErreur) — Pseudonymis
     await expect(page.getByRole('alert')).not.toBeVisible();
     await expect(champDoc).toHaveAttribute('aria-invalid', 'false');
 
-    // 11. Le téléchargement fonctionne maintenant
-    await page.getByRole('button', { name: /Download document/i }).click();
+    // 11. Le téléchargement fonctionne toujours, avec le nom corrigé
+    await page.getByRole('button', { name: /Document downloaded/i }).click();
     await expect(page.getByText(/Document downloaded/i)).toBeVisible({ timeout: 10000 });
   });
 });

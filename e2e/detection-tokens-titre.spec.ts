@@ -56,9 +56,9 @@ test.describe('Détection par tokens du titre (DET-02)', () => {
     // Vérifier qu'aucune Modal ne s'affiche (non-régression : plus d'ancienne popup)
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
-    // Le champ a aria-invalid="true" et le clic n'a pas téléchargé
+    // Le champ a aria-invalid="true" mais le warning est informatif : le document est téléchargé
     await expect(champDoc).toHaveAttribute('aria-invalid', 'true');
-    await expect(page.getByText('Document downloaded ✓')).toHaveCount(0);
+    await expect(page.getByText('Document downloaded ✓')).toBeVisible({ timeout: 10000 });
 
     // Corriger le nom : enlever le token sensible "12"
     await champDoc.fill('releve-nettoye.txt');
@@ -68,8 +68,8 @@ test.describe('Détection par tokens du titre (DET-02)', () => {
     await expect(page.getByRole('alert')).not.toBeVisible();
     await expect(champDoc).toHaveAttribute('aria-invalid', 'false');
 
-    // Le téléchargement fonctionne maintenant
-    await page.getByRole('button', { name: /Download document/i }).click();
+    // Le téléchargement fonctionne toujours
+    await page.getByRole('button', { name: /Document downloaded/i }).click();
     await expect(page.getByText('Document downloaded ✓')).toBeVisible({ timeout: 10000 });
   });
 });
