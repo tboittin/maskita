@@ -17,6 +17,13 @@ pnpm dev         # puis ouvrir http://localhost:5173/ner.html
 Les dossiers `public/modeles/` et `public/ort/` sont ignorés par git : le
 fichier du modèle dépasse la limite de 100 Mo de GitHub.
 
+## En ligne (Vercel)
+
+Vercel lance le script `vercel-build` de `package.json` à la place de
+`build` : il télécharge le modèle depuis Hugging Face **pendant la
+construction**, puis construit le site. Le modèle est donc servi par
+maskita.vercel.app lui-même, et la page ne contacte que son propre domaine.
+
 ## Fonctionnement
 
 1. L'utilisateur clique sur « Activer la détection avancée ». Avant ce clic,

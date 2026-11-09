@@ -14,7 +14,8 @@
     "check-coverage": "bash scripts/check-coverage.sh",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "modele": "bash scripts/telecharger-modele.sh"
+    "modele": "bash scripts/telecharger-modele.sh",
+    "vercel-build": "bash scripts/telecharger-modele.sh && pnpm build"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",
