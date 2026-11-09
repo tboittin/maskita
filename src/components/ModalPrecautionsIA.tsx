@@ -29,7 +29,9 @@ export function ModalPrecautionsIA({ ouvert, onFermer }: ModalPrecautionsIAProps
         </Bouton>
       }
     >
+      {/* La classe élargit la modale sur ordinateur (voir index.css) */}
       <div
+        className="modale-large"
         style={{
           fontSize: '0.875rem',
           color: 'var(--couleur-texte-secondaire)',
@@ -37,7 +39,7 @@ export function ModalPrecautionsIA({ ouvert, onFermer }: ModalPrecautionsIAProps
           display: 'flex',
           flexDirection: 'column',
           gap: 'var(--espacement-md)',
-          maxHeight: '60vh',
+          maxHeight: '70vh',
           overflowY: 'auto',
         }}
       >

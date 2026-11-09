@@ -38,6 +38,31 @@ export function PanneauIA() {
         <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', lineHeight: 1.6 }}>
           {t('ia.panneau.texte')}
         </p>
+        <p style={{ fontSize: '0.875rem', color: 'var(--couleur-texte-secondaire)', lineHeight: 1.6 }}>
+          {t('ia.prompt.explication')}
+        </p>
+        <details>
+          <summary style={{ cursor: 'pointer', fontSize: '0.875rem', color: 'var(--couleur-primaire)' }}>
+            {t('ia.prompt.voir')}
+          </summary>
+          <pre
+            style={{
+              marginTop: 'var(--espacement-sm)',
+              whiteSpace: 'pre-wrap',
+              fontSize: '0.8125rem',
+              fontFamily: 'var(--police-mono, monospace)',
+              lineHeight: 1.6,
+              background: 'var(--couleur-fond)',
+              border: '1px solid var(--couleur-bordure)',
+              borderRadius: 'var(--rayon-bordure)',
+              padding: 'var(--espacement-md)',
+              maxHeight: '320px',
+              overflowY: 'auto',
+            }}
+          >
+            {prompt}
+          </pre>
+        </details>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--espacement-sm)' }}>
           <Bouton
             variante="secondaire"
@@ -71,7 +96,7 @@ export function PanneauIA() {
                 width: '100%',
                 fontSize: '0.8125rem',
                 fontFamily: 'var(--police-donnees, monospace)',
-                border: '1px solid var(--couleur-bord, #ccc)',
+                border: '1px solid var(--couleur-bordure)',
                 borderRadius: '4px',
                 padding: '8px',
               }}

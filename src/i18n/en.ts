@@ -142,6 +142,8 @@ export const en: Dictionnaire = {
   'ia.bouton.precautions': 'Precautions before using an AI',
   'ia.copie.echec': 'Automatic copy failed. Select the text below and copy it.',
   'ia.prompt.libelle': 'Prompt to copy',
+  'ia.prompt.explication': 'A prompt is the instruction message you give the AI. This one asks it to copy the pseudos exactly, without changing them or guessing what they hide, so that Maskita can then restore the real values. Paste it at the start of your conversation, complete your request, then add the content of the pseudonymised document.',
+  'ia.prompt.voir': 'Show the prompt',
   'ia.prompt.aide': 'Paste this prompt into the AI, complete your request, then paste the content of the pseudonymised document after it.',
   'ia.footer.lien': 'Using an AI',
   'ia.modal.titre': 'Precautions before using an AI',

@@ -41,6 +41,30 @@ test.describe("Ouverture vers l'IA", () => {
     await expect(modale).toContainText('Never send the .key.json file');
   });
 
+  test('montre le prompt avant la copie', async ({ page }) => {
+    await allerAuTelechargement(page);
+    await expect(page.getByText(/A prompt is the instruction message you give the AI/)).toBeVisible();
+    await page.getByText('Show the prompt').click();
+    await expect(page.locator('details pre')).toContainText('Copy each tag exactly as written');
+  });
+
+  test('élargit la modale des précautions sur ordinateur', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Using an AI' }).click();
+    const boite = await page.getByRole('dialog', { name: 'Precautions before using an AI' }).boundingBox();
+    expect(boite!.width).toBeGreaterThan(700);
+  });
+
+  test('garde la modale des précautions dans l\'écran sur téléphone', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 700 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Using an AI' }).click();
+    const boite = await page.getByRole('dialog', { name: 'Precautions before using an AI' }).boundingBox();
+    expect(boite!.x).toBeGreaterThanOrEqual(0);
+    expect(boite!.x + boite!.width).toBeLessThanOrEqual(375);
+  });
+
   test('ouvre les précautions depuis le pied de page', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Using an AI' }).click();

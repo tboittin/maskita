@@ -140,6 +140,8 @@ export const fr = {
   'ia.bouton.precautions': 'Précautions avant d\'utiliser une IA',
   'ia.copie.echec': 'Copie automatique impossible. Sélectionnez le texte ci-dessous et copiez-le.',
   'ia.prompt.libelle': 'Prompt à copier',
+  'ia.prompt.explication': "Un prompt est le message d'instructions que vous donnez à l'IA. Celui-ci lui demande de recopier les pseudos à l'identique, sans les modifier ni deviner ce qu'ils cachent, pour que Maskita puisse ensuite restaurer les vraies valeurs. Collez-le au début de votre conversation, complétez votre demande, puis ajoutez le contenu du document pseudonymisé.",
+  'ia.prompt.voir': 'Voir le prompt',
   'ia.prompt.aide': "Collez ce prompt dans l'IA, complétez votre demande, puis collez le contenu du document pseudonymisé à la suite.",
   'ia.footer.lien': 'Utiliser une IA',
   'ia.modal.titre': 'Précautions avant d\'utiliser une IA',

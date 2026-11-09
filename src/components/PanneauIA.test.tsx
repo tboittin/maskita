@@ -21,6 +21,14 @@ describe('PanneauIA', () => {
     expect(screen.getByRole('button', { name: "Précautions avant d'utiliser une IA" })).toBeInTheDocument();
   });
 
+  it('explique le prompt et permet de le lire avant de le copier', () => {
+    const { container } = renderAvecI18n(<PanneauIA />);
+    expect(screen.getByText(/Un prompt est le message d'instructions que vous donnez à l'IA/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Voir le prompt'));
+    expect(container.querySelector('details')).toHaveAttribute('open');
+    expect(container.querySelector('pre')).toHaveTextContent('Recopie chaque balise exactement telle');
+  });
+
   it('copie le prompt dans le presse-papier et le confirme', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     simulerPressePapier(writeText);
