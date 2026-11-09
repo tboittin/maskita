@@ -44,3 +44,6 @@ EXPERIENCE.MD
 
 # Suivi de progression
 PROGRESS.MD
+# MSK-004 — modèle NER et moteur WebAssembly (scripts/telecharger-modele.sh)
+public/modeles/
+public/ort/

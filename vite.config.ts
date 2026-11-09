@@ -13,4 +13,22 @@ export default defineConfig({
     port: 5173,
     host: true,
   },
+  build: {
+    rollupOptions: {
+      // MSK-004 — deux pages : index.html (sans aucune requête) et
+      // ner.html (détection avancée, modèle chargé depuis le site).
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        ner: resolve(__dirname, 'ner.html'),
+      },
+    },
+  },
+  worker: {
+    format: 'es',
+  },
+  optimizeDeps: {
+    // transformers.js embarque onnxruntime-web : le pré-bundling casse ses
+    // imports dynamiques du moteur WebAssembly.
+    exclude: ['@huggingface/transformers'],
+  },
 });

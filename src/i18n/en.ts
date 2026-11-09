@@ -138,6 +138,21 @@ export const en: Dictionnaire = {
   'footer.intellectualProperty': 'Maskita is free software distributed under the MIT license. The source code is available on GitHub. The icons and emojis used in the interface are provided for informational purposes and are not subject to specific copyright.',
   'footer.liability': 'This software is provided "as is", without warranty of any kind, express or implied. The user is solely responsible for their use of pseudonymised and restored documents. It is their responsibility to verify the completeness of pseudonymisation before transmitting documents to a third party. The author shall not be held liable for any data breach resulting from misuse of the software.',
 
+  /* MSK-004 — advanced detection (ner.html page) */
+  'ner.titre': 'Advanced name detection (experimental)',
+  'ner.description': 'An AI model (CamemBERT-NER, 111 MB) finds names of people, places and organisations. It is downloaded from this site once, then runs in your browser: your document never leaves your computer.',
+  'ner.bouton.activer': 'Enable advanced detection (111 MB)',
+  'ner.chargement': (p: number) => `Downloading the model… ${p}%`,
+  'ner.pret': 'Model ready. The names found will be suggested for review.',
+  'ner.erreur': (m: string) => `The model could not be loaded: ${m}`,
+  'ner.analyse': 'Looking for names…',
+  'ner.suggestions.titre': (n: number) => `Advanced detection suggestions (${n})`,
+  'ner.suggestions.aide': 'Nothing is added without your consent. Accept real names, ignore the rest, and check the text: the model can miss some.',
+  'ner.suggestions.accepter': 'Accept',
+  'ner.suggestions.ignorer': 'Ignore',
+  'ner.suggestions.toutAccepter': 'Accept all',
+  'ner.suggestions.aucune': 'No more suggestions.',
+
   /* errors courants */
   'erreur.generique': 'An error occurred.',
 };

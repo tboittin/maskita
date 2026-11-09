@@ -136,6 +136,21 @@ export const fr = {
   'footer.intellectualProperty': 'Maskita est un logiciel libre distribué sous licence MIT. Le code source est disponible sur GitHub. Les icônes et emojis utilisés dans l\'interface sont fournis à titre indicatif et ne font pas l\'objet de droits d\'auteur spécifiques.',
   'footer.liability': 'Ce logiciel est fourni « en l\'état », sans garantie d\'aucune sorte, expresse ou implicite. L\'utilisateur est seul responsable de l\'utilisation qu\'il fait des documents pseudonymisés et restaurés. Il lui incombe de vérifier l\'exhaustivité de la pseudonymisation avant de transmettre les documents à un tiers. L\'auteur ne saurait être tenu responsable d\'une fuite de données résultant d\'une mauvaise utilisation du logiciel.',
 
+  /* MSK-004 — détection avancée (page ner.html) */
+  'ner.titre': 'Détection avancée des noms (expérimental)',
+  'ner.description': "Un modèle d'intelligence artificielle (CamemBERT-NER, 111 Mo) repère les noms de personnes, de lieux et d'établissements. Il est téléchargé depuis ce site une seule fois, puis tourne dans votre navigateur : votre document ne quitte jamais votre ordinateur.",
+  'ner.bouton.activer': 'Activer la détection avancée (111 Mo)',
+  'ner.chargement': (p: number) => `Téléchargement du modèle… ${p} %`,
+  'ner.pret': 'Modèle prêt. Les noms trouvés seront proposés à la vérification.',
+  'ner.erreur': (m: string) => `Le modèle n'a pas pu être chargé : ${m}`,
+  'ner.analyse': 'Recherche des noms…',
+  'ner.suggestions.titre': (n: number) => `Suggestions de la détection avancée (${n})`,
+  'ner.suggestions.aide': 'Rien n’est ajouté sans votre accord. Acceptez les vrais noms, ignorez le reste, et vérifiez le texte : le modèle peut en rater.',
+  'ner.suggestions.accepter': 'Accepter',
+  'ner.suggestions.ignorer': 'Ignorer',
+  'ner.suggestions.toutAccepter': 'Tout accepter',
+  'ner.suggestions.aucune': 'Plus aucune suggestion.',
+
   /* errors courants */
   'erreur.generique': 'Une erreur est survenue.',
 };
