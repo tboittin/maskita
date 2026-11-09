@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { estValeurValide } from '../utils/mapping';
+import { estValeurTropCourte, estValeurValide } from '../utils/mapping';
 
 export type SourceApercu = 'haut' | 'bas';
 
@@ -39,6 +39,9 @@ export function useAjoutRapide({
     // c'est un tag existant → ne pas afficher la barre d'ajout
     // CORR-1 : si la sélection est à l'intérieur d'un tag, idem
     if (source === 'haut' && (!estValeurValide(valeur) || estDansTag)) return;
+    // Un seul caractère sélectionné : presque toujours un clic involontaire,
+    // et une valeur d'un caractère n'est pas pseudonymisable
+    if (estValeurTropCourte(valeur)) return;
     selectionRef.current = valeur;
     setSelection({ valeur, source });
   };

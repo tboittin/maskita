@@ -302,6 +302,7 @@ export function EcranRevue({
         placeholderType={t('tableau.placeholder.type')}
         placeholderValeur={t('tableau.placeholder.valeur')}
         alerteCrochet={t('revue.ajoutClassique.alerteCrochet')}
+        alerteTropCourte={t('revue.ajoutClassique.alerteTropCourte')}
       />
     </div>
   );

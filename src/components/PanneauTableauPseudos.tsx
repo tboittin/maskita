@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bouton, Modal, PseudoTableau, type LignePseudo } from '@khaleeno/maskita-design-system';
+import { Bouton, MessageErreur, Modal, PseudoTableau, type LignePseudo } from '@khaleeno/maskita-design-system';
 import { useLangue } from '../i18n/context';
-import type { Mapping } from '../utils/mapping';
+import { estValeurTropCourte, type Mapping } from '../utils/mapping';
 
 interface PanneauTableauPseudosProps {
   mapping: Mapping;
@@ -68,6 +68,18 @@ export function PanneauTableauPseudos({
   const [showCustomType, setShowCustomType] = useState(false);
   const [supprimerTag, setSupprimerTag] = useState<string | null>(null);
   const refAjoutType = useRef<HTMLSelectElement>(null);
+  // Valeur d'un seul caractère refusée à l'ajout dans le tableau
+  const [erreurValeurCourte, setErreurValeurCourte] = useState(false);
+  const valeurAjoutTropCourte = valeurAjout.trim() !== '' && estValeurTropCourte(valeurAjout);
+
+  const ajouterValeurControlee = (tag: string, valeur: string) => {
+    if (estValeurTropCourte(valeur)) {
+      setErreurValeurCourte(true);
+      return;
+    }
+    setErreurValeurCourte(false);
+    onAjouterValeur(tag, valeur);
+  };
 
   const lignes: LignePseudo[] = Object.entries(mapping).map(([tag, valeurs]) => {
     const extra = construireLigne(tag, valeurs);
@@ -106,6 +118,11 @@ export function PanneauTableauPseudos({
         overflowY: 'auto',
       }}
     >
+      {erreurValeurCourte && (
+        <div style={{ marginBottom: 'var(--espacement-sm)' }}>
+          <MessageErreur>{t('revue.ajoutClassique.alerteTropCourte')}</MessageErreur>
+        </div>
+      )}
       <PseudoTableau
         lignes={lignes}
         activeTag={activeTag ?? ''}
@@ -121,7 +138,7 @@ export function PanneauTableauPseudos({
         onRenommer={onRenommerTag}
         onRetirerValeur={onRetirerValeur}
         onViderTag={(tag) => setSupprimerTag(tag)}
-        onAjouterValeur={onAjouterValeur}
+        onAjouterValeur={ajouterValeurControlee}
         onConflitVoir={onConflitVoir ? (tag) => onConflitVoir(tag) : undefined}
         libelleAjouter={t('tableau.bouton.ajouterPseudoClassique')}
         libelleAjouterValeur={t('tableau.tooltip.ajouterValeur')}
@@ -143,7 +160,7 @@ export function PanneauTableauPseudos({
               <Bouton
                 variante="primaire"
                 onClick={() => {
-                  if (typeAjout.trim() && valeurAjout.trim()) {
+                  if (typeAjout.trim() && valeurAjout.trim() && !valeurAjoutTropCourte) {
                     onAjouterTag(typeAjout.trim(), valeurAjout.trim());
                     setTypeAjout('');
                     setValeurAjout('');
@@ -197,6 +214,11 @@ export function PanneauTableauPseudos({
               placeholder={t('tableau.placeholder.valeur')}
               style={{ fontSize: '0.875rem', padding: 'var(--espacement-sm)' }}
             />
+            {valeurAjoutTropCourte && (
+              <span role="alert" style={{ color: 'var(--couleur-erreur, #d32f2f)', fontSize: '0.8rem' }}>
+                {t('revue.ajoutClassique.alerteTropCourte')}
+              </span>
+            )}
           </div>
         </Modal>
       )}

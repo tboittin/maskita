@@ -23,6 +23,7 @@ function rendu(overrides: Partial<Parameters<typeof ModalAjoutClassique>[0]> = {
       placeholderType="Type (ex: PERSONNE)"
       placeholderValeur="Valeur"
       alerteCrochet="Alerte crochet"
+      alerteTropCourte="Alerte trop courte"
       {...overrides}
     />,
   );
@@ -141,6 +142,13 @@ describe('SUG-C — Autocomplétion du champ Valeur', () => {
     fireEvent.change(select, { target: { value: 'PERSONNE' } });
     expect(screen.getByRole('button', { name: 'Ajouter' })).toBeDisabled();
     expect(screen.getByText('Alerte crochet')).toBeInTheDocument();
+  });
+
+  it("désactive le bouton si la valeur ne fait qu'un caractère", () => {
+    rendu({ valeurInitiale: 'A' });
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'PERSONNE' } });
+    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeDisabled();
+    expect(screen.getByText('Alerte trop courte')).toBeInTheDocument();
   });
 });
 describe('ModalAjoutClassique', () => {
