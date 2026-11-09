@@ -108,6 +108,7 @@ export function PanneauTableauPseudos({
     >
       <PseudoTableau
         lignes={lignes}
+        maxValeursAffichees={Infinity}
         activeTag={activeTag ?? ''}
         onSelect={onSelectTag}
         onValeurClick={onClicValeur}
