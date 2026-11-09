@@ -50,9 +50,14 @@ export function appliquerMapping(texte: string, mapping: Mapping): string {
     for (const valeur of valeursTriees) {
       // INT-1 — garde : une valeur contenant des crochets n'est pas pseudonymisable
       if (!estValeurValide(valeur)) continue;
+      // Garde : une valeur d'un seul caractère remplacerait toutes les
+      // lettres isolées du texte (le verbe « a », « y »...)
+      if (estValeurTropCourte(valeur)) continue;
       const echapee = valeur.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // REGEX-01 : lookarounds Unicode (accents é, è, ê... via \p{L}), flag u
-      const regex = new RegExp(`(?<!\\p{L})${echapee}(?!\\p{L})`, 'giu');
+      // REGEX-01 : lookarounds Unicode (accents é, è, ê... via \p{L}), flag u.
+      // \p{N} : une valeur collée à un chiffre n'est pas remplacée
+      // (« 10 » ne doit pas toucher « 2010 » ni « 103 »).
+      const regex = new RegExp(`(?<![\\p{L}\\p{N}])${echapee}(?![\\p{L}\\p{N}])`, 'giu');
       let match: RegExpExecArray | null;
       while ((match = regex.exec(texte)) !== null) {
         correspondances.push({
@@ -259,6 +264,17 @@ export function chargerCleJson(contenu: string): ChargementCleResult {
  * INT-1 — Garde-fou à la sélection : si la sélection contient '[' ou ']',
  * on est en train de sélectionner un tag existant, pas une valeur à pseudonymiser.
  */
+export const LONGUEUR_MIN_VALEUR = 2;
+
+/**
+ * Une valeur d'un seul caractère (ex. l'initiale « A ») n'est pas
+ * pseudonymisable : elle remplacerait toutes les lettres isolées du texte,
+ * comme le verbe « a ». Il faut saisir le nom complet.
+ */
+export function estValeurTropCourte(valeur: string): boolean {
+  return valeur.trim().length < LONGUEUR_MIN_VALEUR;
+}
+
 export function estValeurValide(valeur: string): boolean {
   return !valeur.includes('[') && !valeur.includes(']');
 }

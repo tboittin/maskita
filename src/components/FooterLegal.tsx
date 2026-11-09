@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import legal from '../legal.json';
 import { useLangue } from '../i18n/context';
 import { Bouton, BouclierIcon, Modal } from '@khaleeno/maskita-design-system';
+import { ModalPrecautionsIA } from './ModalPrecautionsIA';
 
 const styleFooter: React.CSSProperties = {
   borderTop: '1px solid var(--couleur-bordure)',
@@ -22,6 +23,7 @@ export function FooterLegal() {
   const { t } = useLangue();
   const [ouvert, setOuvert] = useState(false);
   const [coordonneesVisibles, setCoordonneesVisibles] = useState(false);
+  const [precautionsIAOuvertes, setPrecautionsIAOuvertes] = useState(false);
   const blocCoordonneesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,7 +45,12 @@ export function FooterLegal() {
         <Bouton variante="ghost" taille="sm" onClick={() => setOuvert(true)}>
           {t('footer.mentions')}
         </Bouton>
+        <Bouton variante="ghost" taille="sm" onClick={() => setPrecautionsIAOuvertes(true)}>
+          {t('ia.footer.lien')}
+        </Bouton>
       </footer>
+
+      <ModalPrecautionsIA ouvert={precautionsIAOuvertes} onFermer={() => setPrecautionsIAOuvertes(false)} />
 
       <Modal
         ouvert={ouvert}

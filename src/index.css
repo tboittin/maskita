@@ -59,3 +59,16 @@
     font-family: inherit;
   }
 }
+
+/*
+ * Modale large : le composant Modal du design system est limité à 480px.
+ * Pour les notices longues (ModalPrecautionsIA), on l'élargit sur ordinateur
+ * en ciblant la boîte de dialogue qui contient .modale-large.
+ * Hors layer, pour passer devant les utilitaires du design system.
+ * À remplacer par une prop de taille quand le design system en aura une.
+ */
+@media (min-width: 768px) {
+  [role='dialog']:has(.modale-large) {
+    max-width: min(800px, 90vw);
+  }
+}

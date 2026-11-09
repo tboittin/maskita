@@ -53,6 +53,28 @@ describe('PanneauTableauPseudos (composant neutre partagé)', () => {
     expect(onAjouterValeur).toHaveBeenCalledWith('[PERSONNE]', 'Martin');
   });
 
+  it("refuse une valeur d'un seul caractère saisie dans le tableau", () => {
+    const onAjouterValeur = vi.fn();
+    rendu({ onAjouterValeur });
+    fireEvent.click(screen.getByLabelText('Ajouter une valeur'));
+    const input = screen.getByPlaceholderText('Nouvelle valeur…');
+    fireEvent.change(input, { target: { value: 'A' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    expect(onAjouterValeur).not.toHaveBeenCalled();
+    expect(screen.getByText(/au moins 2 caractères/)).toBeInTheDocument();
+  });
+
+  it("refuse une valeur d'un seul caractère dans la modale d'ajout manuel", () => {
+    const onAjouterTag = vi.fn();
+    rendu({ onAjouterTag });
+    fireEvent.click(screen.getByText('+ Ajouter un pseudo'));
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'PERSONNE' } });
+    fireEvent.change(screen.getAllByPlaceholderText('Valeur')[0], { target: { value: 'A' } });
+    fireEvent.click(screen.getByText('Ajouter'));
+    expect(onAjouterTag).not.toHaveBeenCalled();
+    expect(screen.getByText(/au moins 2 caractères/)).toBeInTheDocument();
+  });
+
   it('ouvre la modale d\'ajout manuel et appelle onAjouterTag', () => {
     const onAjouterTag = vi.fn();
     rendu({ onAjouterTag });
