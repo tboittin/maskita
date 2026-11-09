@@ -100,6 +100,18 @@ export function appliquerMapping(texte: string, mapping: Mapping): string {
   return resultat;
 }
 
+/**
+ * Types de pseudos que Maskita génère ou propose : détection automatique
+ * (regex.ts, detectionContextuelle.ts) et types suggérés à l'ajout manuel.
+ * Sert à distinguer un tag Maskita d'un sigle ordinaire entre crochets
+ * ("[TDAH]", "[NB]", "[X]").
+ */
+const TYPES_MASKITA: ReadonlySet<string> = new Set([
+  'EMAIL', 'TEL', 'ADELI', 'NIR', 'SIRET', 'IBAN', 'IP', 'URL', 'CARTE_BANCAIRE',
+  'DATE', 'ADRESSE',
+  'PERSONNE', 'LIEU', 'PROFESSION', 'ETABLISSEMENT', 'TELEPHONE',
+]);
+
 // Toute séquence entre crochets susceptible d'être un tag (une seule ligne, sans crochet imbriqué)
 const REGEX_CANDIDAT_TAG = /\[([^[\]\n]{1,80})\]/g;
 
@@ -176,10 +188,10 @@ export function restaurerTexte(texte: string, mapping: Mapping): string {
  * absents du texte ne sont pas signalés : la clé peut venir d'un document
  * connexe.
  *
- * Pour ne pas signaler les crochets ordinaires ("[sic]", "[1]", "[...]"),
- * un candidat n'est retenu que s'il a la forme d'un tag Maskita
- * (MAJUSCULES, chiffres, "_") ou s'il partage le type d'un tag de la clé
- * (ex: "[Nom_3]" quand la clé contient "[NOM]").
+ * Pour ne pas signaler les crochets ordinaires ("[sic]", "[1]", "[...]")
+ * ni les sigles ("[TDAH]", "[NB]", "[X]"), un candidat n'est retenu que si
+ * son type est un type de pseudo Maskita (ex: "[LIEU]", "[Personne_3]") ou
+ * le type d'un tag de la clé (ex: "[Nom_3]" quand la clé contient "[NOM]").
  */
 export function tagsInconnus(texte: string, mapping: Mapping): string[] {
   const index = indexerTags(mapping);
@@ -192,9 +204,9 @@ export function tagsInconnus(texte: string, mapping: Mapping): string[] {
     if (!/^[\p{L}\d][\p{L}\d\s_-]*$/u.test(contenu) || !/\p{L}/u.test(contenu)) continue;
     if (resoudreTag(candidat, mapping, index) !== undefined) continue;
 
-    const formeMaskita = /^[A-Z][A-Z0-9_]*$/.test(contenu);
-    const typeConnu = basesConnues.has(baseTag(normaliserTag(candidat)));
-    if ((formeMaskita || typeConnu) && !inconnus.includes(candidat)) {
+    const base = baseTag(normaliserTag(candidat));
+    const typeConnu = TYPES_MASKITA.has(base) || basesConnues.has(base);
+    if (typeConnu && !inconnus.includes(candidat)) {
       inconnus.push(candidat);
     }
   }

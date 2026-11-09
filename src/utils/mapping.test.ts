@@ -251,6 +251,14 @@ describe('tagsInconnus', () => {
     expect(tagsInconnus('Il a dit [sic], voir [1], coupé [...], [ ]', mapping)).toEqual([]);
   });
 
+  it('ignore les sigles et cases à cocher en majuscules', () => {
+    expect(tagsInconnus('- [X] fait, [TDAH] suspecté, [NB] voir plus bas', mapping)).toEqual([]);
+  });
+
+  it("signale un type de pseudo Maskita absent de la clé, quelle que soit la casse", () => {
+    expect(tagsInconnus('[Personne_3] à [ETABLISSEMENT]', mapping)).toEqual(['[Personne_3]', '[ETABLISSEMENT]']);
+  });
+
   it('ne signale chaque tag inconnu qu\'une fois', () => {
     expect(tagsInconnus('[LIEU] puis [LIEU]', mapping)).toEqual(['[LIEU]']);
   });
