@@ -17,6 +17,16 @@ pnpm dev         # puis ouvrir http://localhost:5173/ner.html
 Les dossiers `public/modeles/` et `public/ort/` sont ignorés par git : le
 fichier du modèle dépasse la limite de 100 Mo de GitHub.
 
+## Tests
+
+- Tests unitaires (`pnpm test`) : le regroupement des entités, le hook et le
+  panneau de suggestions sont testés sans le modèle.
+- Tests e2e (`e2e/detection-avancee.spec.ts`) : deux tests tournent toujours
+  (CSP des deux pages, aucun téléchargement avant le clic). Le troisième, le
+  parcours complet avec le vrai modèle, **est sauté si le modèle est absent**
+  de `public/modeles/`. Playwright l'affiche alors comme « skipped ».
+  Pour le lancer : `pnpm modele` une fois, puis `pnpm test:e2e`.
+
 ## En ligne (Vercel)
 
 Vercel lance le script `vercel-build` de `package.json` à la place de
