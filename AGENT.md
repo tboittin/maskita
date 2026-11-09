@@ -63,8 +63,13 @@ de `main`, car il pilote tous les subagents.
 ## Décisions déjà prises
 
 - Pas de LLM, pas de NER spaCy, pas de serveur Python
-- Détection uniquement par regex (email, téléphone, NIR, ADELI, IBAN, SIRET, URL, IP)
-- Les noms, adresses, professions sont ajoutés manuellement par l'utilisateur
+- Détection par regex (email, téléphone, NIR, ADELI, IBAN, SIRET, URL, IP)
+- Détection contextuelle sans modèle (`detectionContextuelle.ts`) : dates et
+  adresses uniquement. Pas de noms par liste de prénoms ni par civilités : trop
+  de faux positifs (essai écarté le 02/11/2026)
+- Les noms, professions, et ce que la détection rate, sont ajoutés manuellement
+- Détection par modèle NER (palier 2) : seulement dans un second mode, sur une
+  page séparée avec son propre CSP ; la page principale garde `connect-src 'none'`
 - Fichier de mapping non chiffré (`.key.json`), utilisateur seul garant
 - Une table de mapping par patient, pas de persistance
 - mammoth pour l'extraction .docx, docx (npm) pour la reconstruction

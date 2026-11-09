@@ -49,6 +49,13 @@ describe('Règles regex', () => {
     expect(match?.[0]).toBe('12345678901234');
   });
 
+  it('detecte un SIRET groupé avec des espaces', () => {
+    const r = REGLES.find(r => r.type === 'SIRET')!;
+    r.pattern.lastIndex = 0;
+    const match = r.pattern.exec('SIRET : 490 123 456 00017');
+    expect(match?.[0]).toBe('490 123 456 00017');
+  });
+
   it('detecte un IBAN', () => {
     const r = REGLES.find(r => r.type === 'IBAN')!;
     r.pattern.lastIndex = 0;
