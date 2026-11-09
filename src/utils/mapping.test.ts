@@ -51,6 +51,21 @@ describe('genererMapping', () => {
 });
 
 describe('appliquerMapping', () => {
+  it("ignore une valeur d'un seul caractère (le verbe « a » reste intact)", () => {
+    const mapping = { '[PERSONNE]': ['A', 'Alice'] };
+    expect(appliquerMapping("Alice a vu A au parc", mapping)).toBe('[PERSONNE] a vu A au parc');
+  });
+
+  it('ne remplace pas une valeur collée à un chiffre', () => {
+    const mapping = { '[DATE]': ['10'] };
+    expect(appliquerMapping('Né en 2010, il a 10 ans, chambre 103.', mapping)).toBe('Né en 2010, il a [DATE] ans, chambre 103.');
+  });
+
+  it('remplace encore une valeur numérique entourée de ponctuation', () => {
+    const mapping = { '[TEL]': ['06 12 34 56 78'] };
+    expect(appliquerMapping('Tél. : 06 12 34 56 78.', mapping)).toBe('Tél. : [TEL].');
+  });
+
   it('remplace les valeurs par leurs tags', () => {
     const mapping = {
       '[EMAIL]': ['test@exemple.fr'],

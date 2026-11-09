@@ -30,6 +30,7 @@ export const en: Dictionnaire = {
   'revue.ajoutClassique.labelType': 'Pseudonym',
   'revue.ajoutClassique.labelValeur': 'Value',
   'revue.ajoutClassique.alerteCrochet': "The value cannot contain brackets '[' or ']'",
+  'revue.ajoutClassique.alerteTropCourte': 'The value must be at least 2 characters long: a single letter would also replace every standalone "a" or "y" in the text. Enter the full name.',
   'revue.picker.titre.deplacer': (v: string) => `Move « ${v} » to which pseudo?`,
   'revue.picker.titre.ajouter': 'Add to which pseudo?',
   'revue.picker.valeur': (v: string) => `Value: ${v}`,
