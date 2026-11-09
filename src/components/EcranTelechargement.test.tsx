@@ -141,7 +141,7 @@ describe('EcranTelechargement', () => {
       expect(boutonDocAfter).not.toBeDisabled();
     });
 
-    it('affiche un warning inline quand le nom contient des valeurs sensibles et bloque le téléchargement', async () => {
+    it('affiche un warning inline quand le nom contient des valeurs sensibles sans bloquer le téléchargement', async () => {
       nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
 
       renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
@@ -154,10 +154,15 @@ describe('EcranTelechargement', () => {
       // Aucun dialog/modal de warning
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-      // Le téléchargement est bloqué
+      // Le warning est informatif : le téléchargement reste possible
       fireEvent.click(screen.getByText('Télécharger le document'));
-      expect(buildDocumentMock).not.toHaveBeenCalled();
-      expect(declencherTelechargementMock).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(buildDocumentMock).toHaveBeenCalledTimes(1);
+        expect(declencherTelechargementMock).toHaveBeenCalledWith(
+          expect.any(Blob),
+          'mon-rapport-pseudonymise.docx',
+        );
+      });
     });
 
     it("met aria-invalid sur l'input du document quand des valeurs sensibles sont détectées", () => {
@@ -189,15 +194,11 @@ describe('EcranTelechargement', () => {
       expect(inputDoc).toHaveAttribute('aria-invalid', 'false');
     });
 
-    it('permet de télécharger une fois le nom corrigé', async () => {
+    it('télécharge avec le nom corrigé', async () => {
       // D'abord, le nom est sensible
       nomContientValeursMappingMock.mockReturnValue(['Jean Dupont']);
 
       renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
-
-      // Tenter de télécharger → bloqué
-      fireEvent.click(screen.getByText('Télécharger le document'));
-      expect(buildDocumentMock).not.toHaveBeenCalled();
 
       // Corriger le nom
       nomContientValeursMappingMock.mockReturnValue([]);

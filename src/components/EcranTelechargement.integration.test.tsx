@@ -68,10 +68,14 @@ describe('Intégration — détection token dans le titre (nomContientValeursMap
     expect(screen.getByRole('alert')).toHaveTextContent(/Henri Lefevre/);
     expect(champDoc).toHaveAttribute('aria-invalid', 'true');
 
-    // 4. Le téléchargement est bloqué
+    // 4. Le warning est informatif : le téléchargement n'est pas bloqué
     fireEvent.click(screen.getByText('Télécharger le document'));
-    expect(buildDocumentMock).not.toHaveBeenCalled();
-    expect(declencherTelechargementMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(declencherTelechargementMock).toHaveBeenCalledWith(
+        expect.any(Blob),
+        'rapport Lefevre-pseudonymise.docx',
+      );
+    });
   });
 
   it('permet le téléchargement après avoir corrigé le nom', async () => {

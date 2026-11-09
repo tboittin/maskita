@@ -83,13 +83,11 @@ export function EcranTelechargement({
   );
 
   const handleTelechargerDocument = useCallback(async () => {
-    // Bloqué tant que le nom contient des données sensibles
-    if (valeursSuspectes.length > 0) return;
-
+    // Le warning de nom sensible est informatif : il ne bloque pas le téléchargement
     const blobDoc = await buildDocument(contenuDocument, extension as 'docx' | 'txt' | 'md');
     declencherTelechargement(blobDoc, nomDocEdite);
     setDocTelecharge(true);
-  }, [contenuDocument, extension, nomDocEdite, valeursSuspectes]);
+  }, [contenuDocument, extension, nomDocEdite]);
 
   const handleTelechargerCle = useCallback(async () => {
     const contenuCle = genererCleJson(mappingFinal);
