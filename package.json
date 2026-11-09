@@ -13,9 +13,12 @@
     "test:output": "pnpm test > test-output.txt 2>&1",
     "check-coverage": "bash scripts/check-coverage.sh",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "modele": "bash scripts/telecharger-modele.sh",
+    "vercel-build": "bash scripts/telecharger-modele.sh && pnpm build"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.3.2",
     "@khaleeno/maskita-design-system": "^1.2.3",
     "@rollup/rollup-linux-x64-gnu": "^4.62.5",
     "docx": "^8.5.0",

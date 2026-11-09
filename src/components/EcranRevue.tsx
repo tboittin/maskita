@@ -9,17 +9,22 @@ import { BarreAjoutSelection } from './BarreAjoutSelection';
 import { PickerAjoutValeur } from './PickerAjoutValeur';
 import { ModalAjoutClassique } from './ModalAjoutClassique';
 import type { Mapping } from '../utils/mapping';
+import type { Detection } from '../utils/regex';
+import { PanneauSuggestions } from '../ner/PanneauSuggestions';
 
 interface EcranRevueProps {
   texteOriginal: string;
   mappingInitial: Mapping;
   onValider: (mappingFinal: Mapping, textePseudonymise: string) => void;
+  /** MSK-004 — suggestions de la détection avancée (page ner.html seulement). */
+  suggestions?: Detection[];
 }
 
 export function EcranRevue({
   texteOriginal,
   mappingInitial,
   onValider,
+  suggestions,
 }: EcranRevueProps) {
   const { t } = useLangue();
   const revue = useRevue(texteOriginal, mappingInitial);
@@ -201,6 +206,13 @@ export function EcranRevue({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--espacement-md)' }}>
+      {suggestions && (
+        <PanneauSuggestions
+          suggestions={suggestions}
+          mapping={revue.mappingFinal}
+          onAccepter={revue.ajouterTag}
+        />
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espacement-md)' }}>
         {/* Volet gauche : tableau des pseudos (composant neutre partagé) */}
         <PanneauTableauPseudos
