@@ -104,7 +104,7 @@ test.describe('Parcours complet Maskita', () => {
 
     // 7. Vérifier l'écran de téléchargement
     await expect(page.getByText(/Download files/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/Pseudonymised document/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pseudonymised document' })).toBeVisible();
     await expect(page.getByText(/\.key\.json key/i)).toBeVisible();
 
     // Vérifier les noms de fichiers dans les champs texte et les boutons de téléchargement
