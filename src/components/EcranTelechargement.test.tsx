@@ -57,6 +57,13 @@ describe('EcranTelechargement', () => {
     URL.revokeObjectURL = vi.fn();
   });
 
+  it('affiche le complément avant le bouton retour', () => {
+    renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} complement={<p>Complément</p>} />);
+    const complement = screen.getByText('Complément');
+    const retour = screen.getByRole('button', { name: PROPS_DEFAUT.boutonRetour });
+    expect(complement.compareDocumentPosition(retour) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('affiche le titre et le sous-titre', () => {
     renderAvecI18n(<EcranTelechargement {...PROPS_DEFAUT} />);
     expect(screen.getByText('Télécharger les fichiers')).toBeInTheDocument();

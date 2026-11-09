@@ -7,6 +7,7 @@ import { useFileUpload } from './hooks/useFileUpload';
 import { analyserTexte, fusionnerAvecMappingExistant } from './utils/analyse';
 import { type Mapping } from './utils/mapping';
 import { FooterLegal } from './components/FooterLegal';
+import { PanneauIA } from './components/PanneauIA';
 import { I18nProvider, useLangue } from './i18n/context';
 import { type EtapeRestauration } from './hooks/useRestauration';
 import {
@@ -302,6 +303,7 @@ function AppInterieur() {
               succesCle={t('telechargement.succes.cle')}
               boutonRetour={t('telechargement.bouton.retour')}
               verifierNomSensible
+              complement={<PanneauIA />}
             />
           </section>
         )}
