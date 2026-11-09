@@ -10,6 +10,11 @@ set -euo pipefail
 
 RACINE="$(cd "$(dirname "$0")/.." && pwd)"
 MODELE="Xenova/camembert-ner"
+# Version figée du dépôt Hugging Face (commit) : un changement côté
+# Hugging Face ne modifie pas silencieusement ce que Maskita sert.
+REVISION="8e1988247e872ba0137062653b1e5033a31e14fc"
+# Empreintes SHA-256 attendues, vérifiées après chaque téléchargement.
+EMPREINTES="$RACINE/scripts/modele.sha256"
 DEST="$RACINE/public/modeles/$MODELE"
 FICHIERS="config.json tokenizer.json tokenizer_config.json special_tokens_map.json onnx/model_quantized.onnx"
 
@@ -19,13 +24,22 @@ for f in $FICHIERS; do
     echo "déjà présent : $f"
   else
     echo "téléchargement : $f"
-    curl -fL --retry 3 -o "$DEST/$f" "https://huggingface.co/$MODELE/resolve/main/$f"
+    curl -fL --retry 3 -o "$DEST/$f" "https://huggingface.co/$MODELE/resolve/$REVISION/$f"
   fi
 done
 
 # onnxruntime-web est une dépendance de @huggingface/transformers : avec pnpm,
 # il se trouve à côté du paquet réel (lien symbolique résolu).
 TRANSFORMERS="$(realpath "$RACINE/node_modules/@huggingface/transformers")"
+# Vérification des empreintes : le script échoue (et la construction Vercel
+# aussi) si un fichier ne correspond pas exactement à la version attendue.
+if ! (cd "$DEST" && sha256sum --quiet -c "$EMPREINTES"); then
+  echo "ERREUR : empreinte SHA-256 incorrecte, fichiers du modèle supprimés." >&2
+  rm -rf "$DEST"
+  exit 1
+fi
+echo "empreintes SHA-256 vérifiées"
+
 ORT_DIST="$(dirname "$(dirname "$TRANSFORMERS")")/onnxruntime-web/dist"
 mkdir -p "$RACINE/public/ort"
 cp "$ORT_DIST"/ort-wasm-simd-threaded.asyncify.{mjs,wasm} "$RACINE/public/ort/"

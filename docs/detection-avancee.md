@@ -17,6 +17,19 @@ pnpm dev         # puis ouvrir http://localhost:5173/ner.html
 Les dossiers `public/modeles/` et `public/ort/` sont ignorés par git : le
 fichier du modèle dépasse la limite de 100 Mo de GitHub.
 
+## Vérification du modèle
+
+`scripts/telecharger-modele.sh` télécharge une **version figée** du modèle
+(commit `8e19882…` du dépôt Hugging Face, pas `main`), puis vérifie l'empreinte
+SHA-256 de chaque fichier avec `scripts/modele.sha256`. Si une empreinte ne
+correspond pas, le script supprime les fichiers et échoue : la construction
+Vercel échoue aussi, et rien n'est mis en ligne. L'empreinte du fichier ONNX
+est celle que publie Hugging Face. Le moteur WebAssembly vient de npm, vérifié
+par `pnpm-lock.yaml`.
+
+Pour changer de version du modèle : mettre à jour `REVISION` dans le script
+et les empreintes dans `scripts/modele.sha256`.
+
 ## Tests
 
 - Tests unitaires (`pnpm test`) : le regroupement des entités, le hook et le
