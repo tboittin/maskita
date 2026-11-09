@@ -25,6 +25,12 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+    rollupOptions: {
+      output: {
+        // Nom stable : vercel.json applique sa CSP au worker par ce préfixe.
+        entryFileNames: 'assets/ner-worker-[hash].js',
+      },
+    },
   },
   optimizeDeps: {
     // transformers.js embarque onnxruntime-web : le pré-bundling casse ses

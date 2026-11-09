@@ -78,10 +78,10 @@ La console du navigateur affiche :
 Par rapport à `index.html` : `connect-src 'self'`, `'wasm-unsafe-eval'` et
 `blob:` dans `script-src`, `worker-src 'self' blob:`. Aucune origine extérieure.
 
-Point à traiter à l'intégration (J3) : une balise `<meta>` CSP ne s'applique
-pas au Web Worker, qui suit les en-têtes HTTP de son propre script. Le worker
-est déjà configuré pour ne rien charger hors du site, mais la garantie
-complète demandera un en-tête `Content-Security-Policy` servi par Vercel
-(`vercel.json`) pour `ner.html` et les fichiers du worker. Il faudra aussi
-vérifier la limite de taille des fichiers statiques sur Vercel (modèle de
-107 Mo, moteur WebAssembly de 26 Mo).
+Une balise `<meta>` CSP ne s'applique pas au Web Worker, qui suit les en-têtes
+HTTP de son propre script. `vercel.json` envoie donc la même CSP en en-tête
+HTTP pour `ner.html` et pour le script du worker (`/assets/ner-worker-*.js`,
+nom fixé dans `vite.config.ts`). Le worker ne peut ainsi contacter que le site
+lui-même, même si le code de transformers.js tentait d'appeler Hugging Face ou
+un CDN.
+
